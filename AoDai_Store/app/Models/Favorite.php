@@ -2,44 +2,29 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Favorite extends Model
 {
-    use HasFactory;
-
     protected $table = 'yeuthich';
 
     protected $primaryKey = 'MaYeuThich';
 
     public $timestamps = false;
 
+    public $incrementing = true;
+
     protected $fillable = [
         'MaTaiKhoan',
         'MaSanPham',
-        'NgayThem',
+        'NgayThem'
     ];
 
     protected $casts = [
-        'NgayThem' => 'datetime',
+        'NgayThem' => 'datetime'
     ];
 
-    /**
-     * Tài khoản đã yêu thích sản phẩm.
-     */
-    public function account()
-    {
-        return $this->belongsTo(
-            Account::class,
-            'MaTaiKhoan',
-            'MaTaiKhoan'
-        );
-    }
-
-    /**
-     * Sản phẩm được yêu thích.
-     */
+    // Yêu thích thuộc về một sản phẩm
     public function product()
     {
         return $this->belongsTo(

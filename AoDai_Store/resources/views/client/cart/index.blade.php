@@ -891,16 +891,32 @@ function checkoutSelected() {
         return;
     }
 
-    // Chưa chuyển thẳng sang checkout vì backend
-    // cần nhận và xác thực danh sách sản phẩm được chọn.
-    Swal.fire({
-        icon: 'info',
-        title: 'Đã chọn sản phẩm',
-        text: 'Cần kết nối CheckoutController để đặt đúng các sản phẩm đã chọn.',
-        confirmButtonColor: '#991b1b'
-    });
-}
+    // Tạo form gửi danh sách MaGioHang lên Laravel
+    const form = document.createElement('form');
 
+    form.method = 'POST';
+    form.action = "{{ route('checkout.selected') }}";
+
+    const csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = '_token';
+    csrf.value = "{{ csrf_token() }}";
+
+    form.appendChild(csrf);
+
+    selectedIds.forEach(id => {
+        const input = document.createElement('input');
+
+        input.type = 'hidden';
+        input.name = 'selected_ids[]';
+        input.value = id;
+
+        form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+}
 </script>
 
 @endsection

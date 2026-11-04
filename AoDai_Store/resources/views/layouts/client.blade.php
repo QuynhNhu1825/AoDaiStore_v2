@@ -32,6 +32,19 @@
     </style>
 </head>
 
+
+
+@if(session('error'))
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Đặt hàng thất bại!',
+        text: @json(session('error')),
+        confirmButtonText: 'Đóng',
+        confirmButtonColor: '#991b1b'
+    });
+</script>
+@endif
 <body class="bg-slate-50 text-stone-800">
 
     {{-- HEADER --}}
@@ -233,5 +246,33 @@
         }
     });
 </script>
+{{-- THÔNG BÁO THÀNH CÔNG / THẤT BẠI --}}
+@if(session()->has('order_success'))
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+        icon: 'success',
+        title: 'Đặt hàng thành công!',
+        text: @json(session()->pull('success')),
+        confirmButtonText: 'Tiếp tục mua sắm',
+        confirmButtonColor: '#991b1b'
+    });
+});
+</script>
+@endif
+
+@if(session()->has('order_error'))
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+        icon: 'error',
+        title: 'Đặt hàng thất bại!',
+        text: @json(session()->pull('error')),
+        confirmButtonText: 'Đóng',
+        confirmButtonColor: '#991b1b'
+    });
+});
+</script>
+@endif
 </body>
 </html>
