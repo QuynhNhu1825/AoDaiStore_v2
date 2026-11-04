@@ -250,15 +250,34 @@ class CartController extends Controller
                 ->with('error', 'Vui lòng đăng nhập để thanh toán!');
         }
 
-        $cartItems = Cart::with('productDetail')
-            ->where('MaTaiKhoan', Auth::id())
-            ->get();
+       $selectedIds = session('selected_cart_ids', []);
 
-        if ($cartItems->isEmpty()) {
+        if (empty($selectedIds)) {
             return redirect()->route('cart.index')
-                ->with('error', 'Giỏ hàng của bạn đang trống!');
+                ->with('error', 'Vui lòng chọn sản phẩm trước khi thanh toán.');
         }
 
+        $cartItems = Cart::with([
+            'productDetail.product',
+            'productDetail.color',
+            'productDetail.size',
+        ])
+            ->where('MaTaiKhoan', Auth::id())
+            ->whereIn('MaGioHang', $selectedIds)
+            ->get();
+
+        if ($cartItems->isEmpty() || $cartItems->count() !== count($selectedIds)) {
+            session()->forget('selected_cart_ids');
+
+            return redirect()->route('cart.index')
+                ->with('error', 'Sản phẩm đã chọn không còn trong giỏ hàng.');
+        }
+
+        $totalPrice = 0;
+
+        foreach ($cartItems as $item) {
+            $totalPrice += $item->productDetail->Gia * $item->SoLuong;
+        }
         $info = Auth::user();
         $addressData = [
             'soNha' => '',
@@ -275,9 +294,37 @@ class CartController extends Controller
             $addressData['tinhThanh'] = $parts[3] ?? '';
         }
 
-        return view('client.checkout.index', compact('cartItems', 'info', 'addressData'));
+        return view('client.checkout.index', compact('cartItems', 'info', 'addressData', 'totalPrice'));
+    }
+    public function checkoutSelected(Request $request)
+{
+    $request->validate([
+        'selected_ids' => 'required|array|min:1',
+        'selected_ids.*' => 'required|integer',
+    ], [
+        'selected_ids.required' => 'Vui lòng chọn sản phẩm muốn đặt hàng.',
+        'selected_ids.min' => 'Vui lòng chọn ít nhất một sản phẩm.',
+    ]);
+
+    $selectedIds = array_unique(
+        array_map('intval', $request->selected_ids)
+    );
+
+    $validCount = Cart::where('MaTaiKhoan', Auth::id())
+        ->whereIn('MaGioHang', $selectedIds)
+        ->count();
+
+    if ($validCount !== count($selectedIds)) {
+        return redirect()->route('cart.index')
+            ->with('error', 'Danh sách sản phẩm không hợp lệ. Vui lòng chọn lại.');
     }
 
+    session([
+        'selected_cart_ids' => $selectedIds,
+    ]);
+
+    return redirect()->route('checkout.home');
+}
     /**
      * Trang checkout thành công.
      */

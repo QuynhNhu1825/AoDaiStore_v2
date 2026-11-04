@@ -86,8 +86,8 @@
                     </li>
 
                     <li>
-                        <a href="{{ url('/return-policy') }}"
-                           class="hover:text-white transition">
+                        <a href="{{ route('return-policy') }}"
+                        class="hover:text-white transition">
                             Chính sách đổi trả
                         </a>
                     </li>

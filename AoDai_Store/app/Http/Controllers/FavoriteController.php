@@ -2,69 +2,80 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Favorite;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
-     public function toggle($id) // ✅ nhận từ URL
-    {
-        $productId = $id;
-        $userId = Auth::id();
+    // Thêm hoặc bỏ yêu thích
+    public function toggle($id)
+{
+    $maTaiKhoan = Auth::id();
 
-        $exists = DB::table('yeuthich')
-            ->where('MaSanPham', $productId)
-            ->where('MaTaiKhoan', $userId)
-            ->exists();
+    $product = Product::findOrFail($id);
 
-        if ($exists) {
-            DB::table('yeuthich')
-                ->where('MaSanPham', $productId)
-                ->where('MaTaiKhoan', $userId)
-                ->delete();
+    $favorite = Favorite::where('MaTaiKhoan', $maTaiKhoan)
+        ->where('MaSanPham', $product->MaSanPham)
+        ->first();
 
-            $count = DB::table('yeuthich')
-                ->where('MaSanPham', $productId)
-                ->count();
+    if ($favorite) {
+        $favorite->delete();
+        $isFavorite = false;
+        $message = 'Đã bỏ yêu thích sản phẩm.';
+    } else {
+        Favorite::firstOrCreate([
+            'MaTaiKhoan' => $maTaiKhoan,
+            'MaSanPham' => $product->MaSanPham,
+        ]);
 
-            return response()->json([
-                'liked' => false,
-                'count' => $count
-            ]);
-        } else {
-            DB::table('yeuthich')->insert([
-                'MaSanPham' => $productId,
-                'MaTaiKhoan' => $userId
-            ]);
-
-            $count = DB::table('yeuthich')
-                ->where('MaSanPham', $productId)
-                ->count();
-
-            return response()->json([
-                'liked' => true,
-                'count' => $count
-            ]);
-        }
+        $isFavorite = true;
+        $message = 'Đã thêm vào danh sách yêu thích.';
     }
 
-    public function index()
-{
-    $userId = auth()->id();
+    $favoriteCount = Favorite::where(
+        'MaSanPham',
+        $product->MaSanPham
+    )->count();
 
-    $favoriteProducts = \DB::table('yeuthich')
-        ->join('sanpham', 'yeuthich.MaSanPham', '=', 'sanpham.MaSanPham')
-        ->where('yeuthich.MaTaiKhoan', $userId)
-        ->select(
-            'sanpham.MaSanPham',
-            'sanpham.TenSanPham',
-            'sanpham.GiaBan',
-            'sanpham.HinhAnh'
-        )
-         ->paginate(8);
-
-    return view('client.favorite.index', compact('favoriteProducts'));
+    return response()->json([
+        'success' => true,
+        'isFavorite' => $isFavorite,
+        'favoriteCount' => $favoriteCount,
+        'message' => $message
+    ]);
 }
 
+    // Xem danh sách yêu thích
+    public function index()
+    {
+        $favoriteProducts = Favorite::where(
+            'MaTaiKhoan',
+            Auth::id()
+        )
+            ->with('product.chiTietSanPham')
+            ->latest('NgayThem')
+            ->paginate(12);
+
+        return view(
+            'client.favorite.index',
+            compact('favoriteProducts')
+        );
+    }
+
+    // Xóa sản phẩm khỏi danh sách yêu thích
+    public function destroy($id)
+    {
+        $favorite = Favorite::where('MaYeuThich', $id)
+            ->where('MaTaiKhoan', Auth::id())
+            ->firstOrFail();
+
+        $favorite->delete();
+
+        return back()->with(
+            'favorite_success',
+            'Đã xóa sản phẩm khỏi danh sách yêu thích.'
+        );
+    }
 }

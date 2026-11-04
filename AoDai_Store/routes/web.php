@@ -82,7 +82,9 @@ Route::post('/admin/products/toggle-status/{MaSanPham}', [AdminProductController
 
 //check out
 Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.home')->middleware('auth');
-
+Route::post('/checkout/selected', [CartController::class, 'checkoutSelected'])
+    ->name('checkout.selected')
+    ->middleware('auth');
 //category
 Route::get('/admin/categories', [AdminCategoryController::class, 'index'])->name('admin.categories.index');
 Route::get('/admin/categories/create', [AdminCategoryController::class, 'create'])->name('admin.categories.create');
@@ -130,9 +132,14 @@ Route::post('/favorite/toggle/{id}', [FavoriteController::class, 'toggle'])
     ->name('favorite.toggle')
     ->middleware('auth');
 
-Route::get('/favorites', [FavoriteController::class, 'index'])
+Route::get('/favorite', [FavoriteController::class, 'index'])
     ->name('favorite.index')
     ->middleware('auth');    
+
+Route::delete('/favorite/{id}', [FavoriteController::class, 'destroy'])
+    ->name('favorite.destroy')
+    ->middleware('auth');
+
 //rating
 Route::post('/rating/{MaSanPham}', 
     [App\Http\Controllers\RatingController::class, 'store']
@@ -161,3 +168,6 @@ Route::get('/san-pham-da-mua',
 //gioithieu
 Route::view('/gioithieu', 'client.gioithieu')
     ->name('gioithieu');
+//chinh sach doi tra
+Route::view('/chinh-sach-doi-tra', 'client.chinh-sach-doi-tra')
+    ->name('return-policy');

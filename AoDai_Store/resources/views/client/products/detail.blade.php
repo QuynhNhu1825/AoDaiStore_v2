@@ -91,35 +91,92 @@
                     </h1>
 
                     {{-- LƯỢT BÁN, YÊU THÍCH, ĐÁNH GIÁ --}}
-                    <div class="flex items-center flex-wrap gap-5 mt-3 mb-4 text-sm text-stone-500">
-                        <span>
-                            🛍️ {{ number_format($luotBan ?? 0) }} lượt bán
-                        </span>
+                    {{-- LƯỢT BÁN, YÊU THÍCH, ĐÁNH GIÁ --}}
+<div class="flex items-center flex-wrap gap-5 mt-3 mb-4 text-sm text-stone-500">
 
-                        <span class="flex items-center gap-1">
-                            ❤️
-                            <span id="favorite-count">{{ $soLuotThich }}</span>
-                            yêu thích
-                        </span>
+    {{-- Lượt bán --}}
+    <span class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="19" height="19"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="#D97706"
+             stroke-width="1.8"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+            <path d="M6 7h12l1 13H5L6 7Z"/>
+            <path d="M9 7a3 3 0 0 1 6 0"/>
+            <path d="M9 11v2m6-2v2"/>
+        </svg>
 
-                        <span>
-                            ⭐ {{ $avgRating ? number_format($avgRating, 1) : '0.0' }}/5
-                        </span>
+        {{ number_format($luotBan ?? 0) }} lượt bán
+    </span>
 
-                        {{-- NÚT YÊU THÍCH --}}
-                        <button
-                            type="button"
-                            id="btnFavorite"
-                            data-id="{{ $product->MaSanPham }}"
-                            data-authenticated="{{ Auth::check() ? '1' : '0' }}"
-                            class="w-10 h-9 border border-stone-300 flex items-center justify-center hover:bg-stone-50 text-xl"
-                        >
-                            <span id="icon-heart">
-                                {{ $isFavorite ? '❤️' : '♡' }}
-                            </span>
-                        </button>
-                    </div>
+            {{-- Lượt yêu thích --}}
+        <span class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                width="19" height="19"
+                viewBox="0 0 24 24"
+                fill="#E11D48"
+                stroke="#BE123C"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>
+            </svg>
 
+            <span id="favorite-count">{{ $soLuotThich }}</span>
+            lượt yêu thích
+        </span>
+
+            {{-- Đánh giá --}}
+            <span class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    width="19" height="19"
+                    viewBox="0 0 24 24"
+                    fill="#EAB308"
+                    stroke="#CA8A04"
+                    stroke-width="1.2"
+                    stroke-linejoin="round">
+                    <path d="m12 2 3.09 6.26 6.91 1-5 4.87 1.18 6.87L12 17.77l-6.18 3.23L7 14.13 2 9.26l6.91-1L12 2Z"/>
+                </svg>
+
+                {{ $avgRating ? number_format($avgRating, 1) : '0.0' }}/5
+            </span>
+
+
+                                        {{-- NÚT YÊU THÍCH --}}
+                <button
+                    type="button"
+                    id="btnFavorite"
+                    data-id="{{ $product->MaSanPham }}"
+                    data-authenticated="{{ Auth::check() ? '1' : '0' }}"
+                    aria-pressed="{{ $isFavorite ? 'true' : 'false' }}"
+                    class="flex items-center gap-2 px-4 py-2 border rounded-md transition duration-200
+                        {{ $isFavorite
+                            ? 'bg-amber-100 border-amber-600 text-amber-900'
+                            : 'bg-white border-amber-700 text-amber-800 hover:bg-amber-50' }}"
+                >
+                    <svg
+                        id="favorite-heart"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="21"
+                        height="21"
+                        fill="{{ $isFavorite ? '#DC2626' : 'none' }}"
+                        stroke="{{ $isFavorite ? '#DC2626' : 'currentColor' }}"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>
+                    </svg>
+
+                    <span id="favorite-label">
+                        {{ $isFavorite ? 'Đã yêu thích' : 'Yêu thích' }}
+                    </span>
+                </button>
+                 </div>
                     {{-- Giá sản phẩm --}}
                     <p id="product-price" class="text-2xl text-red-800 font-bold mt-2">
                         {{ number_format($product->chiTietSanPham->first()?->Gia ?? 0, 0, ',', '.') }} đ
@@ -559,10 +616,21 @@
 {{-- =========================
      POPUP YÊU CẦU ĐĂNG NHẬP
 ========================== --}}
-<div id="loginFavoriteModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 px-4">
-    <div class="bg-white w-full max-w-sm rounded-lg p-6 text-center shadow-xl relative">
-        <button type="button" id="closeLoginFavorite" class="absolute top-3 right-4 text-2xl text-stone-400 hover:text-black">&times;</button>
-        <div class="text-4xl mb-4">❤️</div>
+    <div id="loginFavoriteModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 px-4">
+        <div class="bg-white w-full max-w-sm rounded-lg p-6 text-center shadow-xl relative">
+            <button type="button" id="closeLoginFavorite" class="absolute top-3 right-4 text-2xl text-stone-400 hover:text-black">&times;</button>
+            <div class="flex justify-center mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            class="w-10 h-10 text-red-500"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8z"/>
+        </svg>
+    </div>
         <h3 class="text-lg font-bold text-stone-800 mb-2">Đăng nhập để yêu thích sản phẩm</h3>
         <p class="text-sm text-stone-500 mb-6">
             Vui lòng đăng nhập tài khoản để lưu sản phẩm yêu thích và dễ dàng tìm lại sau này.
@@ -769,48 +837,109 @@
 
 
     // ===============================
-    // YÊU THÍCH SẢN PHẨM
     // ===============================
-    const favoriteButton = document.getElementById('btnFavorite');
-    const loginFavoriteModal = document.getElementById('loginFavoriteModal');
+// YÊU THÍCH SẢN PHẨM
+// ===============================
+const favoriteButton = document.getElementById('btnFavorite');
+const loginFavoriteModal = document.getElementById('loginFavoriteModal');
 
-    if (favoriteButton) {
-        favoriteButton.addEventListener('click', function (e) {
-            if (this.dataset.authenticated === '0') {
-                e.preventDefault();
+if (favoriteButton) {
+    favoriteButton.addEventListener('click', function (e) {
+
+        if (this.dataset.authenticated === '0') {
+            e.preventDefault();
+            loginFavoriteModal.classList.remove('hidden');
+            loginFavoriteModal.classList.add('flex');
+            return;
+        }
+
+        if (this.disabled) return;
+
+        const productId = this.dataset.id;
+        const button = this;
+
+        button.disabled = true;
+
+        fetch(`/favorite/toggle/${productId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.status === 401) {
                 loginFavoriteModal.classList.remove('hidden');
                 loginFavoriteModal.classList.add('flex');
-                return;
+                return null;
             }
 
-            const productId = this.dataset.id;
-            const icon = document.getElementById('icon-heart');
+            if (!response.ok) {
+                throw new Error('Không thể cập nhật yêu thích');
+            }
 
-            fetch(`/favorite/toggle/${productId}`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(res => {
-                if (res.status === 401) {
-                    loginFavoriteModal.classList.remove('hidden');
-                    loginFavoriteModal.classList.add('flex');
-                    return null;
-                }
-                if (!res.ok) throw new Error('Không thể cập nhật yêu thích');
-                return res.json();
-            })
-            .then(data => {
-                if (!data) return;
-                icon.innerText = data.liked ? '❤️' : '♡';
-                document.getElementById('favorite-count').innerText = data.count;
-            })
-            .catch(() => alert('Không thể cập nhật yêu thích. Vui lòng thử lại.'));
+            return response.json();
+        })
+        .then(data => {
+            if (!data) return;
+
+            const heart = document.getElementById('favorite-heart');
+            const label = document.getElementById('favorite-label');
+
+            if (data.isFavorite) {
+                heart.setAttribute('fill', '#DC2626');
+                heart.setAttribute('stroke', '#DC2626');
+
+                label.textContent = 'Đã yêu thích';
+
+                button.classList.remove(
+                    'bg-white',
+                    'border-amber-700',
+                    'text-amber-800',
+                    'hover:bg-amber-50'
+                );
+
+                button.classList.add(
+                    'bg-amber-100',
+                    'border-amber-600',
+                    'text-amber-900'
+                );
+
+            } else {
+                heart.setAttribute('fill', 'none');
+                heart.setAttribute('stroke', 'currentColor');
+
+                label.textContent = 'Yêu thích';
+
+                button.classList.remove(
+                    'bg-amber-100',
+                    'border-amber-600',
+                    'text-amber-900'
+                );
+
+                button.classList.add(
+                    'bg-white',
+                    'border-amber-700',
+                    'text-amber-800',
+                    'hover:bg-amber-50'
+                );
+            }
+
+            button.setAttribute(
+                'aria-pressed',
+                data.isFavorite ? 'true' : 'false'
+            );
+
+            document.getElementById('favorite-count').textContent = data.favoriteCount;
+        })
+        .catch(error => {
+            alert(error.message);
+        })
+        .finally(() => {
+            button.disabled = false;
         });
-    }
-
+    });
+}
     function closeFavoriteModal() {
         loginFavoriteModal.classList.add('hidden');
         loginFavoriteModal.classList.remove('flex');
