@@ -73,7 +73,7 @@
                                 <input
                                     type="tel"
                                     name="SDTNguoiNhan"
-                                    value="{{ old('SDTNguoiNhan', $info->SoDienThoai ?? '') }}"
+                                    value="{{ old('SDTNguoiNhan', $info->SDT ?? '') }}"
                                     required
                                     maxlength="15"
                                     pattern="[0-9]{10,11}"
@@ -186,23 +186,28 @@
                         </div>
                     </label>
 
-                    <label class="flex items-center gap-3 p-4 border border-stone-200 rounded-xl cursor-pointer hover:border-red-800 transition">
-                        <input
-                            type="radio"
-                            name="PhuongThucThanhToan"
-                            value="vnpay"
-                            {{ old('PhuongThucThanhToan') == 'vnpay' ? 'checked' : '' }}
-                            class="text-red-800 focus:ring-red-800">
+                    
+<label class="flex items-center gap-3 p-4 border border-stone-200 rounded-xl cursor-pointer hover:border-red-800 transition">
+    <input
+        type="radio"
+        name="PhuongThucThanhToan"
+        value="vietqr"
+        {{ old('PhuongThucThanhToan') == 'vietqr' ? 'checked' : '' }}
+        class="text-red-800 focus:ring-red-800"
+    >
 
-                        <div>
-                            <p class="font-semibold text-stone-800">
-                                Thanh toán trực tuyến qua VNPay
-                            </p>
-                            <p class="text-xs text-stone-500 mt-1">
-                                Thanh toán nhanh chóng và an toàn qua VNPay.
-                            </p>
-                        </div>
-                    </label>
+    <div>
+        <p class="font-semibold text-stone-800">
+            Thanh toán qua VietQR.
+        </p>
+
+        <p class="text-xs text-stone-500 mt-1">
+            Quét mã QR và xác nhận thanh toán.
+            Không phát sinh giao dịch ngân hàng thực tế.
+        </p>
+    </div>
+</label>
+
 
                 </div>
             </div>

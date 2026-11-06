@@ -13,8 +13,8 @@ use Exception;
 class AdminOrder extends Controller
 {
     /**
-     * Danh sách đơn hàng Admin.
-     * Tìm kiếm, lọc trạng thái và phân trang.
+     * 1. Danh sách đơn hàng Admin
+     * Tìm kiếm, lọc và phân trang.
      */
     public function index(Request $request)
     {
@@ -29,7 +29,7 @@ class AdminOrder extends Controller
             );
         }
 
-        // Lọc trạng thái
+        // Lọc theo trạng thái đơn hàng
         $validStatuses = [
             'ChoXacNhan',
             'DaXacNhan',
@@ -38,11 +38,43 @@ class AdminOrder extends Controller
             'DaHuy',
         ];
 
-        if (
-            $request->filled('status') &&
-            in_array($request->status, $validStatuses, true)
-        ) {
+        if (in_array($request->status, $validStatuses, true)) {
             $query->where('TrangThai', $request->status);
+        }
+
+        // Lọc theo phương thức thanh toán
+        $paymentMethods = [
+            'cod',
+            'vietqr',
+        ];
+
+        if (in_array(
+            $request->payment_method,
+            $paymentMethods,
+            true
+        )) {
+            $query->where(
+                'PhuongThucThanhToan',
+                $request->payment_method
+            );
+        }
+
+        // Lọc theo trạng thái thanh toán
+        $paymentStatuses = [
+            'ChuaThanhToan',
+            'ChoXacNhanThanhToan',
+            'DaThanhToan',
+        ];
+
+        if (in_array(
+            $request->payment_status,
+            $paymentStatuses,
+            true
+        )) {
+            $query->where(
+                'TrangThaiThanhToan',
+                $request->payment_status
+            );
         }
 
         $orders = $query
@@ -50,11 +82,14 @@ class AdminOrder extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.order.index', compact('orders'));
+        return view(
+            'admin.order.index',
+            compact('orders')
+        );
     }
 
     /**
-     * Xem chi tiết đơn hàng.
+     * 2. Xem chi tiết đơn hàng.
      */
     public function show($id)
     {
@@ -68,22 +103,22 @@ class AdminOrder extends Controller
 
         $orderDetails = $order->orderDetails;
 
-        return view('admin.order.show', compact(
-            'order',
-            'orderDetails'
-        ));
+        return view(
+            'admin.order.show',
+            compact('order', 'orderDetails')
+        );
     }
 
     /**
-     * Cập nhật trạng thái đơn hàng.
+     * 3. Cập nhật trạng thái đơn hàng.
      */
     public function updateStatus(Request $request, $id)
     {
-        $request->validate([
+        // Kiểm tra dữ liệu đầu vào
+        $validated = $request->validate([
             'status' => [
                 'required',
                 Rule::in([
-                    'ChoXacNhan',
                     'DaXacNhan',
                     'DangGiao',
                     'DaGiao',
@@ -96,28 +131,44 @@ class AdminOrder extends Controller
         ]);
 
         try {
-            DB::transaction(function () use ($request, $id) {
 
+            DB::transaction(function () use ($validated, $id) {
+
+                // Khóa đơn hàng để tránh cập nhật đồng thời
                 $order = Order::where('MaDonHang', $id)
                     ->lockForUpdate()
                     ->firstOrFail();
 
                 $currentStatus = $order->TrangThai;
-                $newStatus = $request->status;
+                $newStatus = $validated['status'];
 
                 // Quy tắc chuyển trạng thái
                 $rules = [
-                    'ChoXacNhan' => ['DaXacNhan', 'DaHuy'],
-                    'DaXacNhan' => ['DangGiao', 'DaHuy'],
-                    'DangGiao' => ['DaGiao'],
+                    'ChoXacNhan' => [
+                        'DaXacNhan',
+                        'DaHuy',
+                    ],
+
+                    'DaXacNhan' => [
+                        'DangGiao',
+                        'DaHuy',
+                    ],
+
+                    'DangGiao' => [
+                        'DaGiao',
+                    ],
+
                     'DaGiao' => [],
+
                     'DaHuy' => [],
                 ];
 
+                // Trạng thái không thay đổi
                 if ($newStatus === $currentStatus) {
                     return;
                 }
 
+                // Kiểm tra chuyển trạng thái hợp lệ
                 if (!in_array(
                     $newStatus,
                     $rules[$currentStatus] ?? [],
@@ -128,64 +179,110 @@ class AdminOrder extends Controller
                     );
                 }
 
-                // Admin hủy đơn hàng
+                /**
+                 * VIETQR
+                 *
+                 * Không cho xác nhận đơn nếu
+                 * thanh toán chưa được xác nhận.
+                 *
+                 * Việc xác nhận VietQR được thực hiện
+                 * bằng hàm confirmPayment().
+                 */
+                if (
+                    $newStatus === 'DaXacNhan' &&
+                    $order->PhuongThucThanhToan === 'vietqr' &&
+                    $order->TrangThaiThanhToan !== 'DaThanhToan'
+                ) {
+                    throw new Exception(
+                        'Đơn VietQR chưa được xác nhận thanh toán.'
+                    );
+                }
+
+                /**
+                 * KIỂM TRA HỦY ĐƠN
+                 *
+                 * Không hủy trực tiếp đơn đã thanh toán
+                 * vì chưa có quy trình hoàn tiền.
+                 */
+                if (
+                    $newStatus === 'DaHuy' &&
+                    $order->TrangThaiThanhToan === 'DaThanhToan'
+                ) {
+                    throw new Exception(
+                        'Đơn hàng đã thanh toán. Vui lòng xử lý hoàn tiền trước khi hủy.'
+                    );
+                }
+
+                /**
+                 * HỦY ĐƠN HÀNG
+                 * Hoàn lại tồn kho.
+                 */
                 if ($newStatus === 'DaHuy') {
 
-                    $orderDetails = OrderDetail::where(
+                    $details = OrderDetail::where(
                         'MaDonHang',
                         $order->MaDonHang
                     )
                         ->orderBy('MaChiTietSP')
                         ->get();
 
-                    if ($orderDetails->isEmpty()) {
+                    if ($details->isEmpty()) {
                         throw new Exception(
                             'Không tìm thấy chi tiết đơn hàng để hoàn kho.'
                         );
                     }
 
-                    // Hoàn lại tồn kho
-                    foreach ($orderDetails as $detail) {
+                    foreach ($details as $detail) {
 
-                        $productDetail = ProductDetail::where(
+                        $variant = ProductDetail::where(
                             'MaChiTietSP',
                             $detail->MaChiTietSP
                         )
                             ->lockForUpdate()
                             ->first();
 
-                        if (!$productDetail) {
+                        if (!$variant) {
                             throw new Exception(
-                                'Không tìm thấy biến thể sản phẩm.'
+                                'Không tìm thấy biến thể sản phẩm để hoàn kho.'
                             );
                         }
 
-                        $productDetail->increment(
+                        // Hoàn lại số lượng sản phẩm
+                        $variant->increment(
                             'SoLuong',
                             $detail->SoLuong
                         );
                     }
                 }
 
-                // Cập nhật trạng thái
+                /**
+                 * CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
+                 */
                 $order->TrangThai = $newStatus;
 
-                // COD: chỉ đánh dấu thanh toán khi đã giao
-                // và được xác nhận theo quy trình của hệ thống.
+                /**
+                 * THANH TOÁN COD
+                 *
+                 * Khi Admin xác nhận đã giao hàng,
+                 * hệ thống ghi nhận đã thanh toán.
+                 */
                 if (
                     $newStatus === 'DaGiao' &&
                     $order->PhuongThucThanhToan === 'cod' &&
-                    !$order->NgayThanhToan
+                    $order->TrangThaiThanhToan !== 'DaThanhToan'
                 ) {
+                    $order->TrangThaiThanhToan = 'DaThanhToan';
+
                     $order->NgayThanhToan = now();
                 }
 
+                // Lưu thay đổi
                 $order->save();
             });
 
             return back()->with(
                 'success',
-                'Cập nhật trạng thái đơn hàng thành công.'
+                'Cập nhật trạng thái đơn hàng thành công!'
             );
 
         } catch (\Throwable $e) {
@@ -200,11 +297,109 @@ class AdminOrder extends Controller
     }
 
     /**
-     * Route cũ dùng để xác nhận trạng thái.
-     * Chuyển về cùng một logic để tránh bỏ qua quy tắc.
+     * 4. Xác nhận trạng thái đơn hàng.
+     *
+     * Giữ tương thích với route cũ.
      */
     public function confirmstatus(Request $request, $id)
     {
         return $this->updateStatus($request, $id);
+    }
+
+    /**
+     * 5. Xác nhận thanh toán VietQR.
+     *
+     * Khi Admin xác nhận thanh toán:
+     *
+     * - Thanh toán: DaThanhToan
+     * - Đơn hàng: DaXacNhan
+     * - Lưu thời gian thanh toán
+     *
+     * Thực hiện trong cùng transaction.
+     */
+    public function confirmPayment($id)
+    {
+        try {
+
+            DB::transaction(function () use ($id) {
+
+                // Khóa đơn hàng để tránh xử lý đồng thời
+                $order = Order::where('MaDonHang', $id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                /**
+                 * Kiểm tra phương thức thanh toán.
+                 */
+                if (
+                    $order->PhuongThucThanhToan !== 'vietqr'
+                ) {
+                    throw new Exception(
+                        'Đơn hàng không sử dụng phương thức VietQR.'
+                    );
+                }
+
+                /**
+                 * Chỉ xử lý đơn đang chờ xác nhận.
+                 *
+                 * Không xác nhận lại đơn đã xử lý
+                 * hoặc đơn đã hủy.
+                 */
+                if (
+                    $order->TrangThai !== 'ChoXacNhan'
+                ) {
+                    throw new Exception(
+                        'Đơn hàng không ở trạng thái chờ xác nhận.'
+                    );
+                }
+
+                /**
+                 * Khách phải nhấn "Đã chuyển khoản"
+                 * trước khi Admin có thể xác nhận.
+                 */
+                if (
+                    $order->TrangThaiThanhToan !==
+                    'ChoXacNhanThanhToan'
+                ) {
+                    throw new Exception(
+                        'Đơn hàng chưa ở trạng thái chờ xác nhận thanh toán.'
+                    );
+                }
+
+                /**
+                 * BƯỚC 1:
+                 * Xác nhận thanh toán VietQR.
+                 */
+                $order->TrangThaiThanhToan = 'DaThanhToan';
+
+                $order->NgayThanhToan = now();
+
+                /**
+                 * BƯỚC 2:
+                 * Tự động xác nhận đơn hàng.
+                 */
+                $order->TrangThai = 'DaXacNhan';
+
+                /**
+                 * BƯỚC 3:
+                 * Lưu đồng thời hai trạng thái.
+                 */
+                $order->save();
+            });
+
+            return back()->with(
+                'success',
+                'Xác nhận thanh toán VietQR và đơn hàng thành công!'
+            );
+
+        } catch (\Throwable $e) {
+
+            report($e);
+
+            return back()->with(
+                'error',
+                $e->getMessage()
+            );
+        }
     }
 }

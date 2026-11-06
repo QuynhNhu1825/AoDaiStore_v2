@@ -1,34 +1,26 @@
 <?php
 
 use App\Http\Controllers\AdminAccountController;
-
 use App\Http\Controllers\AdminOrder;
-use App\Http\Controllers\Adminpromotion;
 use App\Http\Controllers\AdminSizeController;
 
-use App\Http\Controllers\VNPAYController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AdminCategoryController;
-use App\Http\Controllers\AdminSupplierController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\ContactController;
 use App\Http\Controllers\AdminMaterialController;
 use App\Http\Controllers\AdminColorController;
-use App\Http\Controllers\AdminContactController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminDashboardController;
-use App\Http\Controllers\AdminInfoWebController;
 use App\Http\Controllers\StatisticsController;
-use App\Http\Controllers\PostController;
-use App\Http\Controllers\AdminPostController;
 
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AdminRatingController;
+use App\Http\Controllers\VietQRController;
 
 //login
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -106,13 +98,15 @@ Route::post('/admin/sizes/toggle-status/{MaSize}', [AdminSizeController::class, 
 //order
 Route::resource('/admin/orders', App\Http\Controllers\AdminOrder::class)->names('orders');
 Route::post('/admin/orders/status/{id}', [AdminOrder::class, 'confirmstatus'])->name('orders.confirmstatus');
+Route::patch('/orders/{id}/confirm-payment', [AdminOrder::class, 'confirmPayment'])->name('orders.confirmPayment');
+Route::post('/orders/status/{id}', [AdminOrder::class, 'confirmstatus'])
+    ->name('orders.confirmstatus');
+Route::patch('/orders/{id}/confirm-payment', [AdminOrder::class, 'confirmPayment'])
+    ->name('orders.confirmPayment');
 
 //order client
 Route::resource(('/order'), App\Http\Controllers\OrderController::class)->names('order');
 
-//vnpay
-Route::post('/vnpay-payment', [VNPAYController::class, 'createPayment'])->name('vnpay.pay');
-Route::get('/vnpay-return', [VNPAYController::class, 'vnpayReturn']); // Nhận kết quả
 //profile
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])
@@ -189,3 +183,20 @@ Route::view('/gioithieu', 'client.gioithieu')
 //chinh sach doi tra
 Route::view('/chinh-sach-doi-tra', 'client.chinh-sach-doi-tra')
     ->name('return-policy');
+
+//vietqr
+Route::middleware('auth')->group(function () {
+
+    // Trang thanh toán VietQR
+    Route::get('/vietqr/{id}', [
+        VietQRController::class,
+        'show'
+    ])->name('vietqr.show');
+
+    // Khách xác nhận đã chuyển khoản
+    Route::post('/vietqr/{id}/confirm', [
+        OrderController::class,
+        'confirmTransfer'
+    ])->name('vietqr.confirm');
+
+});
