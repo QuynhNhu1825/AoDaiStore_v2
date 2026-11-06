@@ -1,8 +1,30 @@
 <nav class="bg-white shadow-sm sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-20">
-        <a href="/" class="text-2xl font-bold serif text-red-800 tracking-tighter">
-            ÁO DÀI HERITAGE
-        </a>
+
+{{-- LOGO VÀ TÊN THƯƠNG HIỆU --}}
+<a href="{{ url('/') }}"
+   class="inline-flex items-center gap-3 group">
+
+    {{-- LOGO --}}
+    <img
+        src="{{ asset('img/logo/logo.jpg') }}"
+        alt="Logo Áo Dài Heritage"
+        class="w-12 h-12 object-contain rounded-lg
+               flex-shrink-0"
+    >
+
+    {{-- TÊN THƯƠNG HIỆU --}}
+    <span class="serif text-xl md:text-2xl
+                 font-bold text-red-900
+                 tracking-wide leading-none
+                 whitespace-nowrap
+                 group-hover:text-red-700
+                 transition-colors">
+        ÁO DÀI HERITAGE
+    </span>
+
+</a>
+
         
         <div class="hidden md:flex space-x-8 font-medium text-stone-600 items-center">
             <a href="/" class="hover:text-red-700 transition">Trang chủ</a>
@@ -27,8 +49,7 @@
                 </div>
             </div>
 
-           
-            <a href="{{ url('/gioithieu') }}" class="hover:text-red-700 transition">Giới thiệu</a>
+            <a href="{{ route('pages.introduction') }}" class="hover:text-red-700 transition">Giới thiệu</a>
         </div>
 
         <div class="flex items-center space-x-6">

@@ -1,4 +1,3 @@
-
 @extends('layouts.client')
 
 @section('title', 'Chính sách đổi trả')
@@ -26,7 +25,19 @@
                 những sản phẩm chất lượng và trải nghiệm mua sắm tốt nhất.
             </p>
         </div>
+        
+        {{-- NÚT QUAY LẠI --}}
+<div class="text-left mt-10">
+    <a href="{{ url('/') }}"
+       class="inline-flex items-center gap-2
+              text-base font-medium text-stone-600
+              hover:text-red-900 transition-colors">
 
+        <span>←</span>
+        <span>Quay lại trang chủ</span>
+
+    </a>
+</div>
         {{-- NỘI DUNG CHÍNH SÁCH --}}
         <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 md:p-12">
 
@@ -329,30 +340,7 @@
                     Chúng tôi luôn sẵn sàng tiếp nhận và hỗ trợ khách hàng.
                 </p>
 
-                <div class="bg-stone-50 border border-stone-200 rounded-xl p-6 text-center">
-                    <h3 class="text-xl font-bold text-red-800 serif mb-2">
-                        ÁO DÀI HERITAGE
-                    </h3>
-
-                    <p class="text-sm text-stone-500 italic">
-                        Gìn giữ nét đẹp truyền thống Việt
-                    </p>
-                </div>
-
             </section>
-
-        </div>
-
-        {{-- NÚT QUAY LẠI --}}
-        <div class="text-center mt-10">
-
-            <a href="{{ url('/') }}"
-               class="inline-flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 text-white px-8 py-3 rounded-xl font-semibold text-sm transition duration-300 shadow-md">
-
-                <span>←</span>
-                <span>Quay lại trang chủ</span>
-
-            </a>
 
         </div>
 

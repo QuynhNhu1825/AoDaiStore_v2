@@ -176,13 +176,24 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders/{id}/reorder',[OrderController::class, 'reorder'])
         ->name('order.reorder');
 });
+// Trang thông tin (Footer) - Hỗ trợ khách hàng
+Route::view('/huong-dan-chon-size', 'client.pages.size-guide')
+    ->name('pages.size-guide');
 
-//gioithieu
-Route::view('/gioithieu', 'client.gioithieu')
-    ->name('gioithieu');
-//chinh sach doi tra
-Route::view('/chinh-sach-doi-tra', 'client.chinh-sach-doi-tra')
-    ->name('return-policy');
+Route::view('/huong-dan-mua-hang', 'client.pages.shopping-guide')
+    ->name('pages.shopping-guide');
+
+Route::view('/chinh-sach-van-chuyen', 'client.pages.shipping-policy')
+    ->name('pages.shipping-policy');
+
+Route::view('/chinh-sach-doi-tra', 'client.pages.return-policy')
+    ->name('pages.return-policy');
+
+Route::view('/phuong-thuc-thanh-toan', 'client.pages.payment-methods')
+    ->name('pages.payment-methods');
+
+Route::view('/gioi-thieu', 'client.pages.introduction')
+    ->name('pages.introduction');
 
 //vietqr
 Route::middleware('auth')->group(function () {
