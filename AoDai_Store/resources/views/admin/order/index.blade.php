@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Quản lý Hóa đơn')
+@section('title', 'Quản lý Đơn Hàng')
 
 @section('content')
 <div class="space-y-6">
@@ -62,7 +62,7 @@
                 @forelse($orders as $order)
                 <tr class="hover:bg-stone-50/50 transition duration-150">
                     <td class="px-6 py-5">
-                        <span class="font-mono font-bold text-stone-800">#HD-{{ $order->MaHoaDon }}</span>
+                        <span class="font-mono font-bold text-stone-800">#HD-{{ $order->MaDonHang }}</span>
                     </td>
                     <td class="px-6 py-5">
                         <p class="font-bold text-stone-800">{{ $order->TenNguoiNhan }}</p>
@@ -109,7 +109,7 @@
                     <div class="flex justify-end space-x-2">
 
                         {{-- XEM --}}
-                        <a href="{{ route('orders.show', $order->MaHoaDon) }}"
+                        <a href="{{ route('orders.show', $order->MaDonHang) }}"
                         class="w-8 h-8 flex items-center justify-center text-stone-500 hover:bg-stone-900 hover:text-white transition-all rounded-lg border border-stone-200">
                             <i class="fas fa-eye text-xs"></i>
                         </a>
@@ -119,7 +119,7 @@
     {{-- 1. TRẠNG THÁI: CHỜ XÁC NHẬN --}}
     @if($order->TrangThai == 'ChoXacNhan')
         {{-- Nút Xác nhận -> Sang DaXacNhan --}}
-        <form action="{{ route('orders.confirmstatus', $order->MaHoaDon) }}" method="POST">
+        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}" method="POST">
             @csrf
             <input type="hidden" name="status" value="DaXacNhan">
             <button type="submit" class="w-8 h-8 flex items-center justify-center text-green-600 hover:bg-green-600 hover:text-white transition-all rounded-lg border border-green-200" title="Xác nhận đơn">
@@ -128,7 +128,7 @@
         </form>
 
         {{-- Nút Hủy -> Sang DaHuy --}}
-        <form action="{{ route('orders.confirmstatus', $order->MaHoaDon) }}" method="POST" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn này?')">
+        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}" method="POST" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn này?')">
             @csrf
             <input type="hidden" name="status" value="DaHuy">
             <button type="submit" class="w-8 h-8 flex items-center justify-center text-red-600 hover:bg-red-600 hover:text-white transition-all rounded-lg border border-red-200" title="Hủy đơn">
@@ -140,7 +140,7 @@
     {{-- 2. TRẠNG THÁI: ĐÃ XÁC NHẬN --}}
     @if($order->TrangThai == 'DaXacNhan')
         {{-- Nút Giao hàng -> Sang DangGiao --}}
-        <form action="{{ route('orders.confirmstatus', $order->MaHoaDon) }}" method="POST">
+        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}" method="POST">
             @csrf
             <input type="hidden" name="status" value="DangGiao">
             <button type="submit" class="w-8 h-8 flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all rounded-lg border border-indigo-200" title="Giao hàng">
@@ -152,7 +152,7 @@
     {{-- 3. TRẠNG THÁI: ĐANG GIAO --}}
     @if($order->TrangThai == 'DangGiao')
         {{-- Nút Hoàn tất -> Sang DaGiao --}}
-        <form action="{{ route('orders.confirmstatus', $order->MaHoaDon) }}" method="POST">
+        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}" method="POST">
             @csrf
             <input type="hidden" name="status" value="DaGiao">
             <button type="submit" class="w-8 h-8 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-all rounded-lg border border-blue-200" title="Xác nhận đã giao">
@@ -176,7 +176,7 @@
                 <tr>
                     <td colspan="7" class="px-6 py-12 text-center text-stone-400 italic font-light">
                         <i class="fas fa-box-open fa-3x mb-4 opacity-20"></i><br>
-                        Không có dữ liệu hóa đơn nào được tìm thấy.
+                        Không có dữ liệu đơn hàng nào được tìm thấy.
                     </td>
                 </tr>
                 @endforelse

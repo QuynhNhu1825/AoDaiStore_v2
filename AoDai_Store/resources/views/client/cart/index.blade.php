@@ -82,177 +82,177 @@
                     </div>
 
                     
-{{-- ==================== TỪNG SẢN PHẨM ==================== --}}
-@foreach($cartItems as $item)
-    @php
-        $detail = $item->productDetail;
-        $sanPham = $detail?->product;
-    @endphp
+                {{-- ==================== TỪNG SẢN PHẨM ==================== --}}
+                @foreach($cartItems as $item)
+                    @php
+                        $detail = $item->productDetail;
+                        $sanPham = $detail?->product;
+                    @endphp
 
-    @if($detail && $sanPham)
+                    @if($detail && $sanPham)
 
-        <div
-            class="cart-item flex flex-col md:flex-row
-                   bg-white shadow-sm border border-stone-100
-                   p-6 group hover:shadow-md transition
-                   rounded-lg gap-4"
+                        <div
+                            class="cart-item flex flex-col md:flex-row
+                                bg-white shadow-sm border border-stone-100
+                                p-6 group hover:shadow-md transition
+                                rounded-lg gap-4"
 
-            data-id="{{ $item->MaGioHang }}"
-            data-price="{{ $detail->Gia ?? 0 }}"
-            data-quantity="{{ $item->SoLuong }}"
-        >
-
-            {{-- CHECKBOX CHỌN SẢN PHẨM --}}
-            <div class="flex items-start md:pt-16">
-                <input
-                    type="checkbox"
-                    name="selected_items[]"
-                    value="{{ $item->MaGioHang }}"
-                    class="cart-checkbox w-5 h-5
-                           accent-red-800 cursor-pointer"
-                >
-            </div>
-
-            {{-- HÌNH ẢNH --}}
-            <div class="w-full md:w-32 h-44 overflow-hidden
-                        mb-4 md:mb-0 bg-stone-100 shrink-0">
-
-                @if($sanPham->HinhAnh)
-                    <img
-                        src="{{ asset('img/products/' . $sanPham->HinhAnh) }}"
-                        class="w-full h-full object-cover"
-                        alt="{{ $sanPham->TenSanPham }}"
-                    >
-                @else
-                    <div class="w-full h-full flex items-center
-                                justify-center text-stone-400 text-sm">
-                        Chưa có hình
-                    </div>
-                @endif
-
-            </div>
-
-            {{-- THÔNG TIN --}}
-            <div class="md:ml-4 flex-1 flex flex-col justify-between">
-
-                <div>
-                    <div class="flex justify-between items-start gap-4">
-
-                        <h3 class="serif text-xl font-semibold
-                                   text-stone-700 uppercase">
-                            {{ $sanPham->TenSanPham }}
-                        </h3>
-
-                        {{-- XÓA SẢN PHẨM --}}
-                        <form
-                            action="{{ route('cart.remove', $item->MaGioHang) }}"
-                            method="POST"
-                            class="form-remove-item"
-                        >
-                            @csrf
-                            @method('DELETE')
-
-                            <button
-                                type="button"
-                                onclick="confirmRemoveItem(this)"
-                                class="text-stone-400 hover:text-red-700 transition"
-                                title="Xóa sản phẩm"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                     class="h-5 w-5"
-                                     fill="none"
-                                     viewBox="0 0 24 24"
-                                     stroke="currentColor">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </form>
-
-                    </div>
-
-                    {{-- THUỘC TÍNH --}}
-                    <div class="mt-3 grid grid-cols-2 gap-y-1
-                                text-sm text-stone-500 italic">
-
-                        <p>
-                            Màu sắc:
-                            <span class="text-stone-700">
-                                {{ $detail->color?->TenMau ?? 'N/A' }}
-                            </span>
-                        </p>
-
-                        <p>
-                            Kích cỡ:
-                            <span class="font-bold text-red-800">
-                                {{ $detail->size?->TenSize ?? 'N/A' }}
-                            </span>
-                        </p>
-
-                    </div>
-                </div>
-
-                {{-- SỐ LƯỢNG + GIÁ --}}
-                <div class="flex justify-between items-center mt-6 gap-3">
-
-                    <div class="flex items-center border
-                                border-stone-300 rounded">
-
-                        <button
-                            type="button"
-                            class="btn-update px-3 py-1
-                                   hover:bg-stone-100
-                                   border-r border-stone-300
-                                   text-stone-600"
                             data-id="{{ $item->MaGioHang }}"
-                            data-type="decrease"
-                        >
-                            -
-                        </button>
-
-                        <input
-                            type="text"
-                            id="qty-{{ $item->MaGioHang }}"
-                            value="{{ $item->SoLuong }}"
-                            class="w-12 text-center border-none
-                                   focus:ring-0 text-stone-700 font-semibold"
-                            readonly
+                            data-price="{{ $detail->Gia ?? 0 }}"
+                            data-quantity="{{ $item->SoLuong }}"
                         >
 
-                        <button
-                            type="button"
-                            class="btn-update px-3 py-1
-                                   hover:bg-stone-100
-                                   border-l border-stone-300
-                                   text-stone-600"
-                            data-id="{{ $item->MaGioHang }}"
-                            data-type="increase"
-                        >
-                            +
-                        </button>
+                            {{-- CHECKBOX CHỌN SẢN PHẨM --}}
+                            <div class="flex items-start md:pt-16">
+                                <input
+                                    type="checkbox"
+                                    name="selected_items[]"
+                                    value="{{ $item->MaGioHang }}"
+                                    class="cart-checkbox w-5 h-5
+                                        accent-red-800 cursor-pointer"
+                                >
+                            </div>
 
-                    </div>
+                            {{-- HÌNH ẢNH --}}
+                            <div class="w-full md:w-32 h-44 overflow-hidden
+                                        mb-4 md:mb-0 bg-stone-100 shrink-0">
 
-                    <div class="text-right">
+                                @if($sanPham->HinhAnh)
+                                    <img
+                                        src="{{ asset('img/products/' . $sanPham->HinhAnh) }}"
+                                        class="w-full h-full object-cover"
+                                        alt="{{ $sanPham->TenSanPham }}"
+                                    >
+                                @else
+                                    <div class="w-full h-full flex items-center
+                                                justify-center text-stone-400 text-sm">
+                                        Chưa có hình
+                                    </div>
+                                @endif
 
-                        <p class="text-red-800 font-bold text-xl">
-                            {{ number_format(
-                                ($detail->Gia ?? 0) * $item->SoLuong,
-                                0, ',', '.'
-                            ) }}đ
-                        </p>
+                            </div>
 
-                    </div>
+                            {{-- THÔNG TIN --}}
+                            <div class="md:ml-4 flex-1 flex flex-col justify-between">
 
-                </div>
-            </div>
-        </div>
-    @endif
-@endforeach
+                                <div>
+                                    <div class="flex justify-between items-start gap-4">
+
+                                        <h3 class="serif text-xl font-semibold
+                                                text-stone-700 uppercase">
+                                            {{ $sanPham->TenSanPham }}
+                                        </h3>
+
+                                        {{-- XÓA SẢN PHẨM --}}
+                                        <form
+                                            action="{{ route('cart.remove', $item->MaGioHang) }}"
+                                            method="POST"
+                                            class="form-remove-item"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button
+                                                type="button"
+                                                onclick="confirmRemoveItem(this)"
+                                                class="text-stone-400 hover:text-red-700 transition"
+                                                title="Xóa sản phẩm"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    class="h-5 w-5"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M6 18L18 6M6 6l12 12"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        </form>
+
+                                    </div>
+
+                                    {{-- THUỘC TÍNH --}}
+                                    <div class="mt-3 grid grid-cols-2 gap-y-1
+                                                text-sm text-stone-500 italic">
+
+                                        <p>
+                                            Màu sắc:
+                                            <span class="text-stone-700">
+                                                {{ $detail->color?->TenMau ?? 'N/A' }}
+                                            </span>
+                                        </p>
+
+                                        <p>
+                                            Kích cỡ:
+                                            <span class="font-bold text-red-800">
+                                                {{ $detail->size?->TenSize ?? 'N/A' }}
+                                            </span>
+                                        </p>
+
+                                    </div>
+                                </div>
+
+                                {{-- SỐ LƯỢNG + GIÁ --}}
+                                <div class="flex justify-between items-center mt-6 gap-3">
+
+                                    <div class="flex items-center border
+                                                border-stone-300 rounded">
+
+                                        <button
+                                            type="button"
+                                            class="btn-update px-3 py-1
+                                                hover:bg-stone-100
+                                                border-r border-stone-300
+                                                text-stone-600"
+                                            data-id="{{ $item->MaGioHang }}"
+                                            data-type="decrease"
+                                        >
+                                            -
+                                        </button>
+
+                                        <input
+                                            type="text"
+                                            id="qty-{{ $item->MaGioHang }}"
+                                            value="{{ $item->SoLuong }}"
+                                            class="w-12 text-center border-none
+                                                focus:ring-0 text-stone-700 font-semibold"
+                                            readonly
+                                        >
+
+                                        <button
+                                            type="button"
+                                            class="btn-update px-3 py-1
+                                                hover:bg-stone-100
+                                                border-l border-stone-300
+                                                text-stone-600"
+                                            data-id="{{ $item->MaGioHang }}"
+                                            data-type="increase"
+                                        >
+                                            +
+                                        </button>
+
+                                    </div>
+
+                                    <div class="text-right">
+
+                                        <p class="text-red-800 font-bold text-xl">
+                                            {{ number_format(
+                                                ($detail->Gia ?? 0) * $item->SoLuong,
+                                                0, ',', '.'
+                                            ) }}đ
+                                        </p>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
 
                     {{-- PHÂN TRANG --}}
                     <div class="mt-8 flex justify-center">
@@ -269,49 +269,49 @@
                         </h3>
 
                         
-<div class="space-y-4 text-stone-600">
+                    <div class="space-y-4 text-stone-600">
 
-    <div class="flex justify-between">
-        <span>
-            Tạm tính (<span id="summary-quantity">0</span> món)
-        </span>
-        <span id="summary-subtotal">0đ</span>
-    </div>
+                        <div class="flex justify-between">
+                            <span>
+                                Tạm tính (<span id="summary-quantity">0</span> món)
+                            </span>
+                            <span id="summary-subtotal">0đ</span>
+                        </div>
 
-    <div class="flex justify-between">
-        <span>Phí vận chuyển</span>
-        <span class="text-green-700 font-medium">
-            Miễn phí
-        </span>
-    </div>
+                        <div class="flex justify-between">
+                            <span>Phí vận chuyển</span>
+                            <span class="text-green-700 font-medium">
+                                Miễn phí
+                            </span>
+                        </div>
 
-    <div class="border-t border-stone-300 pt-4
-                flex justify-between text-stone-900
-                font-bold text-lg uppercase">
+                        <div class="border-t border-stone-300 pt-4
+                                    flex justify-between text-stone-900
+                                    font-bold text-lg uppercase">
 
-        <span>Tổng thanh toán</span>
+                            <span>Tổng thanh toán</span>
 
-        <span id="summary-total" class="text-red-800">
-            0đ
-        </span>
-    </div>
+                            <span id="summary-total" class="text-red-800">
+                                0đ
+                            </span>
+                        </div>
 
-</div>
+                    </div>
 
-{{-- NÚT ĐẶT HÀNG --}}
-<button
-    type="button"
-    id="btn-checkout"
-    onclick="checkoutSelected()"
-    disabled
-    class="block w-full text-center bg-red-800
-           hover:bg-red-900 text-white font-bold
-           py-4 mt-8 transition uppercase
-           tracking-widest shadow-lg
-           disabled:opacity-50 disabled:cursor-not-allowed"
->
-    Vui lòng chọn sản phẩm
-</button>
+                        {{-- NÚT ĐẶT HÀNG --}}
+                        <button
+                            type="button"
+                            id="btn-checkout"
+                            onclick="checkoutSelected()"
+                            disabled
+                            class="block w-full text-center bg-red-800
+                                hover:bg-red-900 text-white font-bold
+                                py-4 mt-8 transition uppercase
+                                tracking-widest shadow-lg
+                                disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Vui lòng chọn sản phẩm
+                        </button>
 
 
                         {{-- Thông tin --}}

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -6,19 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title') - Áo Dài Heritage</title>
+    <title>@yield('title', 'Áo Dài Heritage') - Áo Dài Heritage</title>
 
-    <!-- Tailwind -->
+    {{-- ==================== TAILWIND ==================== --}}
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- CSS -->
+    {{-- ==================== CSS ==================== --}}
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 
-    <!-- Swiper -->
+    {{-- ==================== SWIPER ==================== --}}
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+
+    {{-- ==================== SWEETALERT2 ==================== --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    {{-- ==================== GOOGLE FONTS ==================== --}}
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display&family=Roboto:wght@300;400;700&display=swap');
 
@@ -32,247 +34,310 @@
     </style>
 </head>
 
-
-
-@if(session('error'))
-<script>
-    Swal.fire({
-        icon: 'error',
-        title: 'Đặt hàng thất bại!',
-        text: @json(session('error')),
-        confirmButtonText: 'Đóng',
-        confirmButtonColor: '#991b1b'
-    });
-</script>
-@endif
 <body class="bg-slate-50 text-stone-800">
 
-    {{-- HEADER --}}
+    {{-- ==================== HEADER ==================== --}}
     @include('partials.client._header')
 
-    {{-- CONTENT --}}
+    {{-- ==================== NỘI DUNG ==================== --}}
     <main>
         @yield('content')
     </main>
 
-    {{-- LOGIN POPUP --}}
+    {{-- ==================== LOGIN POPUP ==================== --}}
     @include('auth.login')
 
-    {{-- FOOTER --}}
+    {{-- ==================== FOOTER ==================== --}}
     @include('partials.client._footer')
 
-    {{-- JS MODAL --}}
+
+    {{-- ========================================================
+        XỬ LÝ MODAL ĐĂNG NHẬP
+    ======================================================== --}}
     <script>
         function openLoginModal() {
             const modal = document.getElementById('loginModal');
 
-            if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            }
+            if (!modal) return;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
         function closeLoginModal() {
             const modal = document.getElementById('loginModal');
 
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
+            if (!modal) return;
+
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
-        // Toggle password
-        document.addEventListener('click', function (e) {
-            if (e.target.closest('.toggle-password')) {
-                const button = e.target.closest('.toggle-password');
-                const wrapper = button.closest('.relative');
-                const input = wrapper.querySelector('.password-input');
+        // Hiển thị / ẩn mật khẩu
+        document.addEventListener('click', function (event) {
 
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    button.textContent = '👁‍🗨️';
-                } else {
-                    input.type = 'password';
-                    button.textContent = '👁';
-                }
+            const button = event.target.closest('.toggle-password');
+
+            if (!button) return;
+
+            const wrapper = button.closest('.relative');
+
+            if (!wrapper) return;
+
+            const input = wrapper.querySelector('.password-input');
+
+            if (!input) return;
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '👁‍🗨️';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁';
             }
         });
 
-        // Tự mở login modal khi có ?login=1
+        // Tự mở modal khi URL có ?login=1
         document.addEventListener('DOMContentLoaded', function () {
-            const params = new URLSearchParams(window.location.search);
 
-            if (params.has('login')) {
+            const url = new URL(window.location.href);
+
+            if (url.searchParams.has('login')) {
+
                 openLoginModal();
+
+                url.searchParams.delete('login');
 
                 window.history.replaceState(
                     {},
                     document.title,
-                    window.location.pathname
+                    url.pathname + url.search + url.hash
                 );
             }
         });
     </script>
 
-    {{-- AUTO OPEN LOGIN WHEN ERROR --}}
-    @if ($errors->has('TenDangNhap') || $errors->has('password'))
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            openLoginModal();
-        });
-    </script>
+
+    {{-- ========================================================
+        TỰ MỞ MODAL KHI ĐĂNG NHẬP THẤT BẠI
+    ======================================================== --}}
+    @if(
+        $errors->has('TenDangNhap') ||
+        $errors->has('MatKhau') ||
+        $errors->has('password')
+    )
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                openLoginModal();
+            });
+        </script>
     @endif
 
-    {{-- ĐỒNG BỘ GIỎ HÀNG SAU ĐĂNG NHẬP --}}
-    @if(session('merge_cart_pending'))
-    <script>
-        document.addEventListener('DOMContentLoaded', async function () {
 
-            let cart = [];
+    {{-- ========================================================
+        CẬP NHẬT BADGE GIỎ HÀNG KHÁCH VÃNG LAI
+    ======================================================== --}}
+    <script>
+        const heritageIsGuest = @json(!Auth::check());
+
+        function updateGuestCartBadge() {
+
+            if (!heritageIsGuest) return;
+
+            const cartBadge = document.getElementById('header-cart-count');
+
+            if (!cartBadge) return;
+
+            let guestCart = [];
 
             try {
-                cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            } catch (error) {
-            console.error('LocalStorage giỏ hàng không hợp lệ:', error);
-            localStorage.removeItem('cart');
-        }
+                const saved = JSON.parse(
+                    localStorage.getItem('guest_cart') || '[]'
+                );
 
-            // Không đồng bộ nếu giỏ hàng trống
-            if (!Array.isArray(cart) || cart.length === 0) {
+                guestCart = Array.isArray(saved) ? saved : [];
+
+            } catch (error) {
+                console.error(
+                    'Dữ liệu giỏ hàng khách không hợp lệ:',
+                    error
+                );
                 return;
             }
 
-            try {
-                const response = await fetch('{{ route("cart.merge") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector(
-                            'meta[name="csrf-token"]'
-                        ).content
-                    },
-                    body: JSON.stringify({
-                        items: cart
-                    })
-                });
+            const totalQuantity = guestCart.reduce(function (total, item) {
 
-                const result = await response.json();
+                const quantity = Number(item.SoLuong) || 0;
 
-                if (response.ok && result.success) {
+                return total + Math.max(0, quantity);
 
-                    // Chỉ xóa Local Storage khi đồng bộ thành công
-                    localStorage.removeItem('cart');
+            }, 0);
 
-                    console.log('Đồng bộ giỏ hàng thành công!');
+            cartBadge.textContent = totalQuantity;
+        }
 
-                    // Reload để cập nhật số lượng giỏ hàng
-                    window.location.reload();
-
-                } else {
-                    console.error(
-                        'Đồng bộ giỏ hàng thất bại:',
-                        result.message
-                    );
-                }
-
-            } catch (error) {
-                console.error('Lỗi đồng bộ giỏ hàng:', error);
-            }
+        document.addEventListener('DOMContentLoaded', function () {
+            updateGuestCartBadge();
         });
     </script>
+
+
+    {{-- ========================================================
+        ĐỒNG BỘ GIỎ HÀNG SAU ĐĂNG NHẬP
+
+        Chỉ chạy khi:
+        - Người dùng đã đăng nhập
+        - Laravel session có merge_cart_pending
+        - LocalStorage có guest_cart
+
+        Không đồng bộ ở mọi lần tải trang.
+    ======================================================== --}}
+    @if(Auth::check() && session('merge_cart_pending'))
+        <script>
+            document.addEventListener('DOMContentLoaded', async function () {
+
+                const storageKey = 'guest_cart';
+                const guestSelectedKey = 'heritage_guest_selected_cart';
+                const mergeLockKey = 'heritage_cart_merging';
+
+                let guestCart = [];
+
+                try {
+
+                    const savedCart = JSON.parse(
+                        localStorage.getItem(storageKey) || '[]'
+                    );
+
+                    guestCart = Array.isArray(savedCart)
+                        ? savedCart
+                        : [];
+
+                } catch (error) {
+
+                    console.error(
+                        'Không thể đọc giỏ hàng khách:',
+                        error
+                    );
+
+                    return;
+                }
+
+                // Không có sản phẩm để đồng bộ
+                if (guestCart.length === 0) {
+                    return;
+                }
+
+                // Tránh gửi yêu cầu trùng trong cùng tab
+                if (sessionStorage.getItem(mergeLockKey) === '1') {
+                    return;
+                }
+
+                sessionStorage.setItem(mergeLockKey, '1');
+
+                try {
+
+                    const response = await fetch(
+                        "{{ route('cart.merge') }}",
+                        {
+                            method: 'POST',
+
+                            credentials: 'same-origin',
+
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+
+                                'X-CSRF-TOKEN': document.querySelector(
+                                    'meta[name="csrf-token"]'
+                                ).content
+                            },
+
+                            body: JSON.stringify({
+                                items: guestCart
+                            })
+                        }
+                    );
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+
+                        throw new Error(
+                            result.message ||
+                            'Không thể đồng bộ giỏ hàng.'
+                        );
+                    }
+
+                    // Server đã đồng bộ thành công
+                    // Mới xóa giỏ hàng khách ở trình duyệt
+                    localStorage.removeItem(storageKey);
+
+                    sessionStorage.removeItem(guestSelectedKey);
+
+                    console.log(
+                        'Đồng bộ giỏ hàng sau đăng nhập thành công.'
+                    );
+
+                    // Tải lại để cập nhật dữ liệu giỏ hàng từ MySQL
+                    window.location.reload();
+
+                } catch (error) {
+
+                    console.error(
+                        'Lỗi đồng bộ giỏ hàng:',
+                        error
+                    );
+
+                } finally {
+
+                    sessionStorage.removeItem(mergeLockKey);
+                }
+            });
+        </script>
     @endif
 
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        updateGuestCartBadge();
-    });
 
-    // Viết thành hàm riêng để dễ dàng gọi lại khi cần
-    function updateGuestCartBadge() {
-        // Kiểm tra xem có phải khách vãng lai không
-        const isGuest = {{ Auth::check() ? 'false' : 'true' }};
-        const cartBadge = document.getElementById('header-cart-count');
+    {{-- ========================================================
+        THÔNG BÁO THÀNH CÔNG
+    ======================================================== --}}
+    @if(session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
 
-        if (isGuest && cartBadge) {
-            let guestCart = JSON.parse(localStorage.getItem('guest_cart')) || [];
-            let totalQty = 0;
-            
-            // Tính tổng số lượng của tất cả sản phẩm trong giỏ
-            guestCart.forEach(item => {
-                totalQty += parseInt(item.SoLuong);
-            });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: @json(session('success')),
 
-            // Ghi đè con số lên giao diện
-            cartBadge.innerText = totalQty;
-        }
-    }
-</script>
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Kiểm tra xem người dùng đã đăng nhập chưa (dựa vào Auth của Laravel)
-        const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+                    confirmButtonText: 'Đóng',
+                    confirmButtonColor: '#991b1b',
 
-        if (isLoggedIn) {
-            // Lấy giỏ hàng từ localStorage của khách vãng lai
-            let guestCart = JSON.parse(localStorage.getItem('guest_cart')) || [];
-
-            if (guestCart.length > 0) {
-                // Chuẩn bị dữ liệu gửi lên API mergeCartAfterLogin của bạn
-                fetch("{{ route('cart.merge') }}", { // Đảm bảo bạn đã khai báo route này ở web.php
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                    },
-                    body: JSON.stringify({ items: guestCart })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Bước 5: Xóa giỏ hàng trong localStorage sau khi đồng bộ thành công
-                        localStorage.removeItem('guest_cart');
-                        
-                        // Cập nhật lại số lượng trên Header nếu cần
-                        if (typeof updateGuestCartBadge === 'function') {
-                            updateGuestCartBadge();
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error("Lỗi đồng bộ giỏ hàng:", error);
+                    timer: 3500,
+                    timerProgressBar: true
                 });
-            }
-        }
-    });
-</script>
-{{-- THÔNG BÁO THÀNH CÔNG / THẤT BẠI --}}
-@if(session()->has('order_success'))
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    Swal.fire({
-        icon: 'success',
-        title: 'Đặt hàng thành công!',
-        text: @json(session()->pull('success')),
-        confirmButtonText: 'Tiếp tục mua sắm',
-        confirmButtonColor: '#991b1b'
-    });
-});
-</script>
-@endif
+            });
+        </script>
+    @endif
 
-@if(session()->has('order_error'))
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    Swal.fire({
-        icon: 'error',
-        title: 'Đặt hàng thất bại!',
-        text: @json(session()->pull('error')),
-        confirmButtonText: 'Đóng',
-        confirmButtonColor: '#991b1b'
-    });
-});
-</script>
-@endif
+
+    {{-- ========================================================
+        THÔNG BÁO THẤT BẠI
+    ======================================================== --}}
+    @if(session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Thao tác thất bại!',
+                    text: @json(session('error')),
+
+                    confirmButtonText: 'Đóng',
+                    confirmButtonColor: '#991b1b'
+                });
+            });
+        </script>
+    @endif
+
 </body>
 </html>

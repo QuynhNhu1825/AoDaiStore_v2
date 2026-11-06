@@ -130,10 +130,13 @@ class CartController extends Controller
             }
         });
 
+        // Đánh dấu đã hoàn tất đồng bộ giỏ hàng
+        $request->session()->forget('merge_cart_pending');
+
         return response()->json([
             'success' => true,
             'message' => 'Đồng bộ giỏ hàng thành công!'
-        ]);
+     ]);
     }
 
     /**
