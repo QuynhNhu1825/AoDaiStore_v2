@@ -4,83 +4,207 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\ProductDetail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Exception;
 
 class AdminOrder extends Controller
 {
-    //
-    public function index(Request $request) 
-{
-    $query = Order::query();
-
-    // 1. Tìm kiếm theo Số điện thoại (nếu có nhập)
-    if ($request->filled('search_phone')) {
-        $query->where('SDTNguoiNhan', 'LIKE', '%' . $request->search_phone . '%');
-    }
-
-    // 2. Lọc theo Trạng thái (nếu có chọn)
-    if ($request->filled('status')) {
-        $query->where('TrangThai', $request->status);
-    }
-
-    // Lấy danh sách đơn hàng đã lọc và phân trang
-    // Dùng appends để khi chuyển trang (pagination) vẫn giữ được điều kiện lọc
-    $orders = $query->orderBy('NgayTao', 'desc')->paginate(10)->withQueryString();
-
-  
-
-    return view('admin.order.index', compact('orders'));
-}
-    public function updateStatus(Request $request, $id)
+    /**
+     * Danh sách đơn hàng Admin.
+     * Tìm kiếm, lọc trạng thái và phân trang.
+     */
+    public function index(Request $request)
     {
-        $order = Order::findOrFail($id);
-        $newStatus = $request->status;
-        $currentStatus = $order->TrangThai;
+        $query = Order::query();
 
-        // Định nghĩa quy tắc: Trạng thái hiện tại => Các trạng thái mới được phép
-        $rules = [
-            'ChoXacNhan' => ['DaXacNhan', 'DaHuy'],
-            'DaXacNhan'  => ['DangGiao', 'DaHuy'],
-            'DangGiao'   => ['DaGiao', 'DaHuy'],
-            'DaGiao'     => [], // Không được đi đâu hết
-            'DaHuy'      => [], // Không được đi đâu hết
+        // Tìm kiếm theo số điện thoại
+        if ($request->filled('search_phone')) {
+            $query->where(
+                'SDTNguoiNhan',
+                'LIKE',
+                '%' . $request->search_phone . '%'
+            );
+        }
+
+        // Lọc trạng thái
+        $validStatuses = [
+            'ChoXacNhan',
+            'DaXacNhan',
+            'DangGiao',
+            'DaGiao',
+            'DaHuy',
         ];
 
-        // Nếu trạng thái mới không nằm trong danh sách được cho phép của trạng thái cũ
-        if ($newStatus !== $currentStatus && !in_array($newStatus, $rules[$currentStatus] ?? [])) {
-            return back()->with('error', 'Chuyển đổi trạng thái không hợp lệ!');
+        if (
+            $request->filled('status') &&
+            in_array($request->status, $validStatuses, true)
+        ) {
+            $query->where('TrangThai', $request->status);
         }
 
-        $order->update(['TrangThai' => $newStatus]);
+        $orders = $query
+            ->orderByDesc('MaDonHang')
+            ->paginate(10)
+            ->withQueryString();
 
-        // Thêm logic phụ: Nếu là DaGiao thì cập nhật NgayThanhToan nếu chưa có
-        if ($newStatus === 'DaGiao' && !$order->NgayThanhToan) {
-            $order->update(['NgayThanhToan' => now()]);
-        }
-
-        return back()->with('success', 'Cập nhật trạng thái thành công.');
+        return view('admin.order.index', compact('orders'));
     }
+
+    /**
+     * Xem chi tiết đơn hàng.
+     */
     public function show($id)
-{
-    // Lấy thông tin hóa đơn
-    $order = Order::where('MaHoaDon', $id)->firstOrFail();
-    
-    // Lấy chi tiết các sản phẩm trong hóa đơn đó (kèm theo thông tin sản phẩm để lấy ảnh/tên)
-    $orderDetails = OrderDetail::where('MaHoaDon', $id)->with('product')->get();
+    {
+        $order = Order::where('MaDonHang', $id)
+            ->with([
+                'orderDetails.productDetail.product',
+                'orderDetails.productDetail.color',
+                'orderDetails.productDetail.size',
+            ])
+            ->firstOrFail();
 
-    return view('admin.order.show', compact('order', 'orderDetails'));
-}
- public function confirmstatus(Request $request, $id)
-{
-    $validStatuses = ['ChoXacNhan', 'DaXacNhan', 'DangGiao', 'DaGiao', 'DaHuy'];
-    
-    if (!in_array($request->status, $validStatuses)) {
-        return back()->with('error', 'Trạng thái không hợp lệ');
+        $orderDetails = $order->orderDetails;
+
+        return view('admin.order.show', compact(
+            'order',
+            'orderDetails'
+        ));
     }
 
-    Order::where('MaHoaDon', $id)->update(['TrangThai' => $request->status]);
+    /**
+     * Cập nhật trạng thái đơn hàng.
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => [
+                'required',
+                Rule::in([
+                    'ChoXacNhan',
+                    'DaXacNhan',
+                    'DangGiao',
+                    'DaGiao',
+                    'DaHuy',
+                ]),
+            ],
+        ], [
+            'status.required' => 'Vui lòng chọn trạng thái.',
+            'status.in' => 'Trạng thái không hợp lệ.',
+        ]);
 
-    return back()->with('success', 'Cập nhật trạng thái thành công!');
-}
+        try {
+            DB::transaction(function () use ($request, $id) {
+
+                $order = Order::where('MaDonHang', $id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $currentStatus = $order->TrangThai;
+                $newStatus = $request->status;
+
+                // Quy tắc chuyển trạng thái
+                $rules = [
+                    'ChoXacNhan' => ['DaXacNhan', 'DaHuy'],
+                    'DaXacNhan' => ['DangGiao', 'DaHuy'],
+                    'DangGiao' => ['DaGiao'],
+                    'DaGiao' => [],
+                    'DaHuy' => [],
+                ];
+
+                if ($newStatus === $currentStatus) {
+                    return;
+                }
+
+                if (!in_array(
+                    $newStatus,
+                    $rules[$currentStatus] ?? [],
+                    true
+                )) {
+                    throw new Exception(
+                        'Không thể chuyển từ trạng thái hiện tại sang trạng thái đã chọn.'
+                    );
+                }
+
+                // Admin hủy đơn hàng
+                if ($newStatus === 'DaHuy') {
+
+                    $orderDetails = OrderDetail::where(
+                        'MaDonHang',
+                        $order->MaDonHang
+                    )
+                        ->orderBy('MaChiTietSP')
+                        ->get();
+
+                    if ($orderDetails->isEmpty()) {
+                        throw new Exception(
+                            'Không tìm thấy chi tiết đơn hàng để hoàn kho.'
+                        );
+                    }
+
+                    // Hoàn lại tồn kho
+                    foreach ($orderDetails as $detail) {
+
+                        $productDetail = ProductDetail::where(
+                            'MaChiTietSP',
+                            $detail->MaChiTietSP
+                        )
+                            ->lockForUpdate()
+                            ->first();
+
+                        if (!$productDetail) {
+                            throw new Exception(
+                                'Không tìm thấy biến thể sản phẩm.'
+                            );
+                        }
+
+                        $productDetail->increment(
+                            'SoLuong',
+                            $detail->SoLuong
+                        );
+                    }
+                }
+
+                // Cập nhật trạng thái
+                $order->TrangThai = $newStatus;
+
+                // COD: chỉ đánh dấu thanh toán khi đã giao
+                // và được xác nhận theo quy trình của hệ thống.
+                if (
+                    $newStatus === 'DaGiao' &&
+                    $order->PhuongThucThanhToan === 'cod' &&
+                    !$order->NgayThanhToan
+                ) {
+                    $order->NgayThanhToan = now();
+                }
+
+                $order->save();
+            });
+
+            return back()->with(
+                'success',
+                'Cập nhật trạng thái đơn hàng thành công.'
+            );
+
+        } catch (\Throwable $e) {
+
+            report($e);
+
+            return back()->with(
+                'error',
+                $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Route cũ dùng để xác nhận trạng thái.
+     * Chuyển về cùng một logic để tránh bỏ qua quy tắc.
+     */
+    public function confirmstatus(Request $request, $id)
+    {
+        return $this->updateStatus($request, $id);
+    }
 }

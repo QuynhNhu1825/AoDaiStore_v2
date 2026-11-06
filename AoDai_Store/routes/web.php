@@ -160,10 +160,28 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
         ->name('admin.comments.hide');
     Route::post('/ratings/{id}/show', [AdminRatingController::class, 'show'])->name('admin.comments.show');
 });
-//order and rating
-Route::get('/san-pham-da-mua', 
-    [OrderController::class, 'purchasedProducts']
-)->name('orders.reviews');
+
+//order client
+Route::middleware('auth')->group(function () {
+    // Danh sách đơn hàng
+    Route::get('/order', [OrderController::class, 'index'])
+        ->name('order.history');
+    // Đặt hàng
+    Route::post('/order', [OrderController::class, 'store'])
+        ->name('order.store');
+    // Hủy đơn hàng
+    Route::patch('/orders/{id}/cancel', [OrderController::class, 'cancel'])
+        ->name('order.cancel');
+    // Xác nhận đã nhận hàng
+    Route::patch('/orders/{id}/submit', [OrderController::class, 'submit'])
+        ->name('order.submit');
+    // Chi tiết đơn hàng
+    Route::get('/order/{id}', [OrderController::class, 'show'])
+        ->name('order.show');
+    //Đặt lại đơn hàng
+    Route::post('/orders/{id}/reorder',[OrderController::class, 'reorder'])
+        ->name('order.reorder');
+});
 
 //gioithieu
 Route::view('/gioithieu', 'client.gioithieu')
