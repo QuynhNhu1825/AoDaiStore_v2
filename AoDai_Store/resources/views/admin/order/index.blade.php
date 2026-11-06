@@ -1,194 +1,402 @@
 @extends('layouts.admin')
 
-@section('title', 'Quản lý Đơn Hàng')
+@section('title', 'Quản lý đơn hàng')
 
 @section('content')
 <div class="space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 flex items-center">
-            <div class="p-3 bg-blue-50 rounded-xl text-blue-600 mr-4">
-                <i class="fas fa-file-invoice-dollar fa-lg"></i>
-            </div>
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Tổng đơn hàng</p>
-                <p class="text-xl font-bold text-gray-800">{{ $orders->total() }}</p>
-            </div>
+
+    {{-- TIÊU ĐỀ --}}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-stone-800">
+                Quản lý đơn hàng
+            </h2>
+            <p class="text-sm text-stone-500 mt-1">
+                Theo dõi và xử lý đơn hàng của cửa hàng.
+            </p>
         </div>
-      
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-50">
-    <form action="{{ route('orders.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {{-- Tìm kiếm theo SĐT --}}
-        <div class="relative">
-            <span class="absolute inset-y-0 left-3 flex items-center text-stone-400">
-                <i class="fas fa-phone text-xs"></i>
+    {{-- THÔNG BÁO --}}
+    @if(session('success'))
+        <div class="admin-order-alert flex items-start gap-3 p-4
+                    bg-green-50 border border-green-200
+                    text-green-700 rounded-xl"
+             role="alert">
+            <i class="fas fa-check-circle mt-0.5"></i>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="admin-order-alert flex items-start gap-3 p-4
+                    bg-red-50 border border-red-200
+                    text-red-700 rounded-xl"
+             role="alert">
+            <i class="fas fa-exclamation-circle mt-0.5"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
+    {{-- TÌM KIẾM VÀ BỘ LỌC --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
+        <form action="{{ route('orders.index') }}"
+              method="GET"
+              class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+
+            <div>
+                <label class="block text-xs font-bold text-stone-600 mb-2">
+                    Số điện thoại
+                </label>
+                <input
+                    type="text"
+                    name="search_phone"
+                    value="{{ request('search_phone') }}"
+                    placeholder="Nhập số điện thoại..."
+                    class="w-full px-4 py-3 rounded-xl border border-stone-200
+                           text-sm focus:border-red-800 focus:ring-red-800"
+                >
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-stone-600 mb-2">
+                    Trạng thái đơn hàng
+                </label>
+                <select name="status"
+                        class="w-full px-3 py-3 rounded-xl border border-stone-200 text-sm">
+                    <option value="">Tất cả trạng thái</option>
+                    @foreach([
+                        'ChoXacNhan' => 'Chờ xác nhận',
+                        'DaXacNhan' => 'Đã xác nhận',
+                        'DangGiao' => 'Đang giao',
+                        'DaGiao' => 'Đã giao',
+                        'DaHuy' => 'Đã hủy'
+                    ] as $value => $label)
+                        <option value="{{ $value }}"
+                            @selected(request('status') === $value)>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-stone-600 mb-2">
+                    Phương thức thanh toán
+                </label>
+                <select name="payment_method"
+                        class="w-full px-3 py-3 rounded-xl border border-stone-200 text-sm">
+                    <option value="">Tất cả phương thức</option>
+                    <option value="cod" @selected(request('payment_method') === 'cod')>
+                        COD
+                    </option>
+                    <option value="vietqr" @selected(request('payment_method') === 'vietqr')>
+                        VietQR
+                    </option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-stone-600 mb-2">
+                    Trạng thái thanh toán
+                </label>
+                <select name="payment_status"
+                        class="w-full px-3 py-3 rounded-xl border border-stone-200 text-sm">
+                    <option value="">Tất cả thanh toán</option>
+                    <option value="ChuaThanhToan"
+                        @selected(request('payment_status') === 'ChuaThanhToan')>
+                        Chưa thanh toán
+                    </option>
+                    <option value="ChoXacNhanThanhToan"
+                        @selected(request('payment_status') === 'ChoXacNhanThanhToan')>
+                        Chờ xác nhận thanh toán
+                    </option>
+                    <option value="DaThanhToan"
+                        @selected(request('payment_status') === 'DaThanhToan')>
+                        Đã thanh toán
+                    </option>
+                </select>
+            </div>
+
+            <div class="flex items-end gap-2">
+                <button type="submit"
+                        class="flex-1 px-4 py-3 bg-red-900 hover:bg-red-800
+                               text-white rounded-xl text-sm font-bold transition">
+                    <i class="fas fa-search mr-1"></i>
+                    Tìm kiếm
+                </button>
+
+                <a href="{{ route('orders.index') }}"
+                   title="Xóa bộ lọc"
+                   class="px-4 py-3 bg-stone-100 hover:bg-stone-200
+                          text-stone-600 rounded-xl transition">
+                    <i class="fas fa-rotate-left"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    {{-- DANH SÁCH ĐƠN HÀNG --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+
+        <div class="px-6 py-5 border-b border-stone-100 flex items-center justify-between">
+            <h3 class="font-bold text-stone-800">
+                Danh sách đơn hàng
+            </h3>
+
+            <span class="text-xs text-stone-500">
+                {{ $orders->total() }} đơn hàng
             </span>
-            <input type="text" name="search_phone" placeholder="Nhập số điện thoại..." value="{{ request('search_phone') }}"
-                class="w-full pl-10 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:ring-0 focus:border-red-800 transition-all">
         </div>
 
-        {{-- Lọc theo Trạng thái --}}
-        <select name="status" class="bg-stone-50 border border-stone-200 rounded-xl py-2 px-4 text-xs focus:ring-0 focus:border-red-800 transition-all">
-            <option value="">-- Tất cả trạng thái --</option>
-            <option value="ChoXacNhan" {{ request('status') == 'ChoXacNhan' ? 'selected' : '' }}>Chờ xác nhận</option>
-            <option value="DaXacNhan" {{ request('status') == 'DaXacNhan' ? 'selected' : '' }}>Đã xác nhận</option>
-            <option value="DangGiao" {{ request('status') == 'DangGiao' ? 'selected' : '' }}>Đang giao hàng</option>
-            <option value="DaGiao" {{ request('status') == 'DaGiao' ? 'selected' : '' }}>Đã giao hàng</option>
-            <option value="DaHuy" {{ request('status') == 'DaHuy' ? 'selected' : '' }}>Đã hủy</option>
-        </select>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-stone-50 text-stone-500 text-xs uppercase">
+                    <tr>
+                        <th class="px-5 py-4">Mã đơn</th>
+                        <th class="px-5 py-4">Khách hàng</th>
+                        <th class="px-5 py-4">Tổng tiền</th>
+                        <th class="px-5 py-4">Thanh toán</th>
+                        <th class="px-5 py-4">Ngày đặt</th>
+                        <th class="px-5 py-4">Trạng thái</th>
+                        <th class="px-5 py-4 text-right">Thao tác</th>
+                    </tr>
+                </thead>
 
-        {{-- Nút lọc --}}
-        <button type="submit" class="bg-stone-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-800 transition-all py-2">
-            Tìm kiếm
-        </button>
-    </form>
-</div>
-
-    <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden text-sm">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-stone-50 text-stone-500 text-[10px] uppercase tracking-[0.2em] font-bold">
-                    <th class="px-6 py-5 border-b border-stone-100">Mã Đơn</th>
-                    <th class="px-6 py-5 border-b border-stone-100">Khách Hàng</th>
-                    <th class="px-6 py-5 border-b border-stone-100">Giá Trị</th>
-                    <th class="px-6 py-5 border-b border-stone-100">Thanh Toán</th>
-                    <th class="px-6 py-5 border-b border-stone-100">Ngày Đặt</th>
-                    <th class="px-6 py-5 border-b border-stone-100 text-center">Trạng Thái</th>
-                    <th class="px-6 py-5 border-b border-stone-100 text-right">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-stone-50">
-                @forelse($orders as $order)
-                <tr class="hover:bg-stone-50/50 transition duration-150">
-                    <td class="px-6 py-5">
-                        <span class="font-mono font-bold text-stone-800">#HD-{{ $order->MaDonHang }}</span>
-                    </td>
-                    <td class="px-6 py-5">
-                        <p class="font-bold text-stone-800">{{ $order->TenNguoiNhan }}</p>
-                        <p class="text-[10px] text-stone-400 mt-0.5"><i class="fas fa-phone mr-1"></i> {{ $order->SDTNguoiNhan }}</p>
-                    </td>
-                    <td class="px-6 py-5">
-                        <p class="font-bold text-red-800">{{ number_format($order->TongTien, 0, ',', '.') }}đ</p>
-                        <p class="text-[10px] text-stone-400">Giảm: {{ number_format($order->GiamGia*1000, 0, ',', '.') }}đ</p>
-                    </td>
-                    <td class="px-6 py-5">
-                        <span class="text-[10px] uppercase font-bold tracking-tighter text-stone-600 block">{{ $order->PhuongThucThanhToan }}</span>
-                        @if($order->NgayThanhToan)
-                            <span class="text-[9px] text-green-600 italic">Đã thanh toán</span>
-                        @else
-                            <span class="text-[9px] text-amber-600 italic">Chưa thanh toán</span>
-                        @endif
-                    </td>
-                    <td class="px-6 py-5 text-xs text-stone-500">
-                        {{ date('d/m/Y H:i', strtotime($order->NgayTao)) }}
-                    </td>
-                    <td class="px-6 py-5 text-center">
+                <tbody class="divide-y divide-stone-100">
+                    @forelse($orders as $order)
                         @php
-                            $statusClasses = [
-                                'ChoXacNhan' => 'bg-amber-50 text-amber-700 border-amber-100',
-                                'DaXacNhan' => 'bg-blue-50 text-blue-700 border-blue-100',
-                                'DangGiao' => 'bg-indigo-50 text-indigo-700 border-indigo-100',
-                                'DaGiao' => 'bg-green-50 text-green-700 border-green-100',
-                                'DaHuy' => 'bg-red-50 text-red-700 border-red-100',
-                            ];
-                            $statusText = [
+                            $statusLabels = [
                                 'ChoXacNhan' => 'Chờ xác nhận',
                                 'DaXacNhan' => 'Đã xác nhận',
-                                'DangGiao' => 'Đang giao hàng',
-                                'DaGiao' => 'Đã giao hàng',
+                                'DangGiao' => 'Đang giao',
+                                'DaGiao' => 'Đã giao',
                                 'DaHuy' => 'Đã hủy',
                             ];
+
+                            $statusColors = [
+                                'ChoXacNhan' => 'bg-amber-50 text-amber-700',
+                                'DaXacNhan' => 'bg-blue-50 text-blue-700',
+                                'DangGiao' => 'bg-indigo-50 text-indigo-700',
+                                'DaGiao' => 'bg-green-50 text-green-700',
+                                'DaHuy' => 'bg-red-50 text-red-700',
+                            ];
+
+                            $paymentLabels = [
+                                'ChuaThanhToan' => 'Chưa thanh toán',
+                                'ChoXacNhanThanhToan' => 'Chờ xác nhận',
+                                'DaThanhToan' => 'Đã thanh toán',
+                            ];
+
+                            $paymentColors = [
+                                'ChuaThanhToan' => 'bg-amber-50 text-amber-700',
+                                'ChoXacNhanThanhToan' => 'bg-blue-50 text-blue-700',
+                                'DaThanhToan' => 'bg-green-50 text-green-700',
+                            ];
+
+                            $canConfirmPayment =
+                                $order->PhuongThucThanhToan === 'vietqr' &&
+                                $order->TrangThaiThanhToan === 'ChoXacNhanThanhToan' &&
+                                $order->TrangThai === 'ChoXacNhan';
+
+                            $canConfirmOrder =
+                                $order->TrangThai === 'ChoXacNhan' &&
+                                $order->PhuongThucThanhToan === 'cod';
+
+                            $canCancel =
+                                in_array($order->TrangThai, ['ChoXacNhan', 'DaXacNhan'], true) &&
+                                $order->TrangThaiThanhToan !== 'DaThanhToan';
+
+                            $total = (float) $order->TienHang
+                                   + (float) $order->PhiVanChuyen;
                         @endphp
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border {{ $statusClasses[$order->TrangThai] ?? 'bg-stone-50' }}">
-                            {{ $statusText[$order->TrangThai] ?? $order->TrangThai }}
-                        </span>
-                    </td>
-                    
-                    <td class="px-6 py-5">
-                    <div class="flex justify-end space-x-2">
 
-                        {{-- XEM --}}
-                        <a href="{{ route('orders.show', $order->MaDonHang) }}"
-                        class="w-8 h-8 flex items-center justify-center text-stone-500 hover:bg-stone-900 hover:text-white transition-all rounded-lg border border-stone-200">
-                            <i class="fas fa-eye text-xs"></i>
-                        </a>
+                        <tr class="hover:bg-stone-50/70 transition">
+                            <td class="px-5 py-5 whitespace-nowrap">
+                                <span class="font-bold text-red-900">
+                                    #{{ $order->MaDonHang }}
+                                </span>
+                            </td>
 
-                        {{-- CHỜ XÁC NHẬN --}}
-           <div class="flex items-center gap-2">
-    {{-- 1. TRẠNG THÁI: CHỜ XÁC NHẬN --}}
-    @if($order->TrangThai == 'ChoXacNhan')
-        {{-- Nút Xác nhận -> Sang DaXacNhan --}}
-        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}" method="POST">
-            @csrf
-            <input type="hidden" name="status" value="DaXacNhan">
-            <button type="submit" class="w-8 h-8 flex items-center justify-center text-green-600 hover:bg-green-600 hover:text-white transition-all rounded-lg border border-green-200" title="Xác nhận đơn">
-                <i class="fas fa-check text-xs"></i>
-            </button>
-        </form>
+                            <td class="px-5 py-5">
+                                <p class="font-semibold text-stone-800">
+                                    {{ $order->HoTenNguoiNhan }}
+                                </p>
+                                <p class="text-xs text-stone-500 mt-1">
+                                    {{ $order->SDTNguoiNhan }}
+                                </p>
+                            </td>
 
-        {{-- Nút Hủy -> Sang DaHuy --}}
-        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}" method="POST" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn này?')">
-            @csrf
-            <input type="hidden" name="status" value="DaHuy">
-            <button type="submit" class="w-8 h-8 flex items-center justify-center text-red-600 hover:bg-red-600 hover:text-white transition-all rounded-lg border border-red-200" title="Hủy đơn">
-                <i class="fas fa-times text-xs"></i>
-            </button>
-        </form>
-    @endif
+                            <td class="px-5 py-5 whitespace-nowrap font-bold text-stone-800">
+                                {{ number_format($total, 0, ',', '.') }}đ
+                            </td>
 
-    {{-- 2. TRẠNG THÁI: ĐÃ XÁC NHẬN --}}
-    @if($order->TrangThai == 'DaXacNhan')
-        {{-- Nút Giao hàng -> Sang DangGiao --}}
-        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}" method="POST">
-            @csrf
-            <input type="hidden" name="status" value="DangGiao">
-            <button type="submit" class="w-8 h-8 flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all rounded-lg border border-indigo-200" title="Giao hàng">
-                <i class="fas fa-truck text-xs"></i>
-            </button>
-        </form>
-    @endif
+                            <td class="px-5 py-5">
+                                <div class="space-y-2">
+                                    <p class="text-xs font-bold text-stone-700">
+                                        {{ $order->PhuongThucThanhToan === 'vietqr'
+                                            ? 'VietQR'
+                                            : 'COD' }}
+                                    </p>
 
-    {{-- 3. TRẠNG THÁI: ĐANG GIAO --}}
-    @if($order->TrangThai == 'DangGiao')
-        {{-- Nút Hoàn tất -> Sang DaGiao --}}
-        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}" method="POST">
-            @csrf
-            <input type="hidden" name="status" value="DaGiao">
-            <button type="submit" class="w-8 h-8 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-all rounded-lg border border-blue-200" title="Xác nhận đã giao">
-                <i class="fas fa-box-open text-xs"></i>
-            </button>
-        </form>
-    @endif
+                                    <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold
+                                        {{ $paymentColors[$order->TrangThaiThanhToan] ?? 'bg-stone-100 text-stone-600' }}">
+                                        {{ $paymentLabels[$order->TrangThaiThanhToan] ?? 'Không xác định' }}
+                                    </span>
+                                </div>
+                            </td>
 
-    {{-- 4 & 5. TRẠNG THÁI: ĐÃ GIAO HOẶC ĐÃ HỦY --}}
-    @if($order->TrangThai == 'DaGiao' || $order->TrangThai == 'DaHuy')
-        <span class="text-xs font-medium px-2 py-1 rounded {{ $order->TrangThai == 'DaGiao' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
-            {{ $order->TrangThai == 'DaGiao' ? 'Hoàn tất' : 'Đã đóng' }}
-        </span>
-    @endif
-</div>
-                    </div>
-                </td>
+                            <td class="px-5 py-5 text-xs text-stone-500 whitespace-nowrap">
+                                {{ $order->NgayDat
+                                    ? \Carbon\Carbon::parse($order->NgayDat)->format('d/m/Y H:i')
+                                    : '—' }}
+                            </td>
 
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="7" class="px-6 py-12 text-center text-stone-400 italic font-light">
-                        <i class="fas fa-box-open fa-3x mb-4 opacity-20"></i><br>
-                        Không có dữ liệu đơn hàng nào được tìm thấy.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+                            <td class="px-5 py-5">
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap
+                                    {{ $statusColors[$order->TrangThai] ?? 'bg-stone-100 text-stone-600' }}">
+                                    {{ $statusLabels[$order->TrangThai] ?? $order->TrangThai }}
+                                </span>
+                            </td>
+
+                            <td class="px-5 py-5">
+                                <div class="flex flex-wrap justify-end gap-2">
+
+                                    {{-- XEM CHI TIẾT --}}
+                                    <a href="{{ route('orders.show', $order->MaDonHang) }}"
+                                       title="Xem chi tiết"
+                                       class="inline-flex items-center justify-center
+                                              w-9 h-9 rounded-lg border border-stone-200
+                                              text-stone-600 hover:bg-stone-800
+                                              hover:text-white transition">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    {{-- VIETQR: XÁC NHẬN THANH TOÁN VÀ ĐƠN --}}
+                                    @if($canConfirmPayment)
+                                        <form action="{{ route('orders.confirmPayment', $order->MaDonHang) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Bạn đã kiểm tra giao dịch và muốn xác nhận thanh toán, đồng thời xác nhận đơn hàng #{{ $order->MaDonHang }}?')">
+                                            @csrf
+                                            @method('PATCH')
+
+                                            <button type="submit"
+                                                    title="Xác nhận thanh toán và đơn hàng"
+                                                    class="inline-flex items-center gap-2 px-3 h-9
+                                                           bg-green-700 hover:bg-green-800
+                                                           text-white rounded-lg text-xs font-bold transition">
+                                                <i class="fas fa-check-double"></i>
+                                                Xác nhận VietQR
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- COD: XÁC NHẬN ĐƠN --}}
+                                    @if($canConfirmOrder)
+                                        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}"
+                                              method="POST">
+                                            @csrf
+                                            <input type="hidden" name="status" value="DaXacNhan">
+
+                                            <button type="submit"
+                                                    title="Xác nhận đơn COD"
+                                                    class="w-9 h-9 rounded-lg bg-green-50
+                                                           text-green-700 hover:bg-green-700
+                                                           hover:text-white transition">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- CHUYỂN SANG ĐANG GIAO --}}
+                                    @if($order->TrangThai === 'DaXacNhan')
+                                        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}"
+                                              method="POST">
+                                            @csrf
+                                            <input type="hidden" name="status" value="DangGiao">
+
+                                            <button type="submit"
+                                                    title="Bắt đầu giao hàng"
+                                                    class="w-9 h-9 rounded-lg bg-indigo-50
+                                                           text-indigo-700 hover:bg-indigo-700
+                                                           hover:text-white transition">
+                                                <i class="fas fa-truck"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- XÁC NHẬN ĐÃ GIAO --}}
+                                    @if($order->TrangThai === 'DangGiao')
+                                        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Xác nhận đơn hàng đã được giao thành công?')">
+                                            @csrf
+                                            <input type="hidden" name="status" value="DaGiao">
+
+                                            <button type="submit"
+                                                    title="Xác nhận đã giao"
+                                                    class="w-9 h-9 rounded-lg bg-blue-50
+                                                           text-blue-700 hover:bg-blue-700
+                                                           hover:text-white transition">
+                                                <i class="fas fa-box-open"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- HỦY ĐƠN --}}
+                                    @if($canCancel)
+                                        <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng #{{ $order->MaDonHang }}? Số lượng sản phẩm sẽ được hoàn kho.')">
+                                            @csrf
+                                            <input type="hidden" name="status" value="DaHuy">
+
+                                            <button type="submit"
+                                                    title="Hủy đơn hàng"
+                                                    class="w-9 h-9 rounded-lg bg-red-50
+                                                           text-red-700 hover:bg-red-700
+                                                           hover:text-white transition">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+
+                    @empty
+                        <tr>
+                            <td colspan="7" class="py-16 text-center text-stone-400">
+                                <i class="fas fa-box-open text-3xl mb-3"></i>
+                                <p>Không tìm thấy đơn hàng phù hợp.</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        {{-- PHÂN TRANG --}}
+        @if($orders->hasPages())
+            <div class="px-6 py-4 border-t border-stone-100">
+                {{ $orders->links() }}
+            </div>
+        @endif
     </div>
-
-    <div class="mt-6">
-        {{ $orders->links() }}
-    </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.admin-order-alert').forEach(function(alert) {
+        setTimeout(function() {
+            alert.style.transition = 'opacity 0.5s ease';
+            alert.style.opacity = '0';
 
-
+            setTimeout(function() {
+                alert.remove();
+            }, 500);
+        }, 4000);
+    });
+});
+</script>
 @endsection

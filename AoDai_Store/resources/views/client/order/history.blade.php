@@ -69,35 +69,58 @@
             </a>
         </div>
 
-        {{-- ================= TAB TRẠNG THÁI ================= --}}
-        <div class="bg-white border border-stone-200
-                    rounded-lg shadow-sm mb-7 overflow-hidden">
+        
+{{-- THANH LỌC TRẠNG THÁI ĐƠN HÀNG --}}
+@php
+    $statusTabs = [
+        '' => 'Tất cả',
+        'ChoXacNhan' => 'Chờ xác nhận',
+        'DaXacNhan' => 'Đã xác nhận',
+        'DangGiao' => 'Đang giao',
+        'DaGiao' => 'Đã giao',
+        'DaHuy' => 'Đã hủy',
+    ];
 
-            <div class="flex overflow-x-auto">
+    $currentStatus = request('status', '');
+@endphp
 
-                @foreach($tabs as $key => $label)
+<div class="w-full bg-white rounded-xl border border-stone-200
+            shadow-sm overflow-hidden mb-8">
 
-                    <a href="{{ route('order.history', ['status' => $key]) }}"
-                       class="relative flex-shrink-0 px-5 py-5
-                              text-sm font-semibold text-center
-                              whitespace-nowrap transition
-                              {{ $currentStatus === $key
-                                  ? 'text-red-800 bg-red-50'
-                                  : 'text-stone-600 hover:text-red-800 hover:bg-stone-50' }}">
+    <div class="grid grid-cols-3 md:grid-cols-6">
 
-                        {{ $label }}
+        @foreach($statusTabs as $value => $label)
 
-                        @if($currentStatus === $key)
-                            <span class="absolute bottom-0 left-0 right-0
-                                         h-[3px] bg-red-800"></span>
-                        @endif
+            @php
+                $isActive = $currentStatus === $value;
+            @endphp
 
-                    </a>
+            <a href="{{ route('order.history', ['status' => $value]) }}"
+               class="relative min-h-[70px]
+                      flex items-center justify-center
+                      px-2 py-4 text-center
+                      text-xs sm:text-sm font-semibold
+                      transition-all duration-200
+                      {{ $isActive
+                          ? 'bg-red-50 text-red-900'
+                          : 'bg-white text-stone-600 hover:bg-stone-50 hover:text-red-900' }}">
 
-                @endforeach
+                <span class="leading-snug">
+                    {{ $label }}
+                </span>
 
-            </div>
-        </div>
+                @if($isActive)
+                    <span class="absolute bottom-0 left-0
+                                 w-full h-[3px] bg-red-800"></span>
+                @endif
+
+            </a>
+
+        @endforeach
+
+    </div>
+</div>
+
 
         {{-- ================= DANH SÁCH ĐƠN HÀNG ================= --}}
         <div class="space-y-6">
