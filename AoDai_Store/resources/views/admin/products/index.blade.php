@@ -3,29 +3,28 @@
 @section('title', 'Quản lý Sản phẩm Áo Dài')
 
 @section('content')
-<div class="space-y-6" id="full-container">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 flex items-center">
-            <div class="p-3 bg-stone-50 rounded-xl text-stone-600 mr-4">
-                <i class="fas fa-tshirt fa-lg"></i>
-            </div>
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Tổng sản phẩm</p>
-                <p class="text-xl font-bold text-gray-800">{{ $totalProducts }}</p>
-            </div>
+<div class="w-full max-w-full space-y-4" id="full-container">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-red-100 flex items-center">
+        <div class="p-3 bg-red-50 rounded-xl text-red-800 mr-4">
+            <i class="fas fa-tshirt fa-lg"></i>
         </div>
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 flex items-center">
-            <div class="p-3 bg-green-50 rounded-xl text-green-600 mr-4">
-                <i class="fas fa-check-circle fa-lg"></i>
-            </div>
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Đang hoạt động</p>
-                <p class="text-xl font-bold text-stone-800">
-                    {{ $activeProducts  }}
-                </p>
-            </div>
+        <div>
+            <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Tổng sản phẩm</p>
+            <p class="text-xl font-bold text-red-900">{{ $totalProducts }}</p>
         </div>
     </div>
+
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 flex items-center">
+        <div class="p-3 bg-green-50 rounded-xl text-green-600 mr-4">
+            <i class="fas fa-check-circle fa-lg"></i>
+        </div>
+        <div>
+            <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Đang hoạt động</p>
+            <p class="text-xl font-bold text-stone-800">{{ $activeProducts }}</p>
+        </div>
+    </div>
+</div>
     <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
     <form action="{{ route('admin.products.index') }}" method="GET" class="flex flex-col md:flex-row items-center gap-3">
         
@@ -36,20 +35,20 @@
             <input type="text" name="search" 
                 placeholder="Tìm kiếm..." 
                 value="{{ request('search') }}"
-                class="w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-[11px] focus:ring-0 focus:border-stone-800 transition-all">
+                class="w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-[11px] focus:ring-0 focus:border-red-700 transition-all">
         </div>
 
         <div class="flex flex-wrap md:flex-nowrap items-center gap-2 flex-grow">
-            <select name="category" class="bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-[11px] focus:ring-0 focus:border-stone-800 transition-all cursor-pointer min-w-[110px]">
+            <select name="category" class="bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-[11px] focus:ring-0 focus:border-red-700 transition-all cursor-pointer min-w-[110px]">
                 <option value="">-- Danh mục --</option>
                 @foreach($categories as $cat)
-                    <option value="{{ $cat->MaLoaiSP }}" {{ request('category') == $cat->MaLoaiSP ? 'selected' : '' }}>
-                        {{ $cat->TenLoaiSP }}
+                    <option value="{{ $cat->MaDanhMuc }}" {{ request('category') == $cat->MaDanhMuc ? 'selected' : '' }}>
+                        {{ $cat->TenDanhMuc }}
                     </option>
                 @endforeach
             </select>
 
-            <select name="material" class="bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-[11px] focus:ring-0 focus:border-stone-800 cursor-pointer min-w-[110px]">
+            <select name="material" class="bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-[11px] focus:ring-0 focus:border-red-700 cursor-pointer min-w-[110px]">
                 <option value="">-- Chất liệu --</option>
                 @foreach($materials as $m)
                     <option value="{{ $m->MaChatLieu }}" {{ request('material') == $m->MaChatLieu ? 'selected' : '' }}>
@@ -58,104 +57,173 @@
                 @endforeach
             </select>
 
-            <select name="color" class="bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-[11px] focus:ring-0 focus:border-stone-800 cursor-pointer min-w-[110px]">
+            <select name="color" class="bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-[11px] focus:ring-0 focus:border-red-700 cursor-pointer min-w-[110px]">
                 <option value="">-- Màu sắc --</option>
                 @foreach($colors as $c)
-                    <option value="{{ $c->MaLoaiMau }}" {{ request('color') == $c->MaLoaiMau ? 'selected' : '' }}>
-                        {{ $c->TenLoaiMau }}
+                    <option value="{{ $c->MaMau }}" {{ request('color') == $c->MaMau ? 'selected' : '' }}>
+                        {{ $c->TenMau }}
                     </option>
                 @endforeach
             </select>
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-            <button type="submit" class="bg-stone-900 text-white px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-800 transition-all shadow-sm whitespace-nowrap">
+            <button type="submit"
+                class="bg-red-800 text-white px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-900 transition-all shadow-sm whitespace-nowrap">
                 Lọc
             </button>
-
-            <a href="{{ route('admin.products.create') }}" class="inline-flex items-center justify-center bg-stone-100 text-stone-800 border border-stone-200 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-green-600 hover:text-white hover:border-green-600 transition-all shadow-sm whitespace-nowrap">
+            <a href="{{ route('admin.products.index') }}"
+                class="bg-stone-100 text-stone-600 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-stone-200 transition-all whitespace-nowrap">
+                <i class="fas fa-redo mr-1"></i>
+                Đặt lại
+            </a>
+            <a href="{{ route('admin.products.create') }}"
+                class="inline-flex items-center justify-center bg-red-50 text-red-900 border border-red-200 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-800 hover:text-white hover:border-red-800 transition-all shadow-sm whitespace-nowrap">
                 <i class="fas fa-plus mr-1.5"></i> Thêm Áo Dài
             </a>
         </div>
     </form>
 </div>
 
-    <div id="product-table-container" class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden text-sm">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-stone-50 text-stone-500 text-[10px] uppercase tracking-[0.2em] font-bold">
-                    <th class="px-6 py-5 border-b border-stone-100">Sản Phẩm</th>
-                    <th class="px-6 py-5 border-b border-stone-100 text-center">Màu Sắc</th> {{-- Mới --}}
-                    <th class="px-6 py-5 border-b border-stone-100 text-center">Trạng Thái</th>
-                    <th class="px-6 py-5 border-b border-stone-100 text-center">Giá Niêm Yết</th>
-                    <th class="px-6 py-5 border-b border-stone-100 text-center">Ngày Tạo</th> {{-- Đã có logic --}}
-                    <th class="px-6 py-5 border-b border-stone-100 text-right">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-stone-50">
-                @forelse($products as $product)
-                <tr class="hover:bg-stone-50/30 transition duration-150 group">
-                    <td class="px-6 py-5">
-                        <div class="flex items-center">
-                            <div class="flex flex-col">
-                                <p class="font-bold text-stone-800 group-hover:text-red-800 transition-colors uppercase tracking-tight text-sm">
-                                    {{ $product->TenSanPham }}
-                                </p>
-                                <p class="text-[10px] text-stone-400 font-mono mt-0.5">#{{ $product->MaSanPham }}</p>
-                            </div>
-                        </div>
+    
+
+<div id="product-table-container"
+     class="w-full max-w-full bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden">
+
+    <table class="w-full table-fixed text-left border-collapse text-xs">
+        <thead>
+            <tr class="bg-red-50 text-red-900 text-[10px] uppercase font-bold">
+                <th class="w-[16%] px-2 py-3">Tên sản phẩm</th>
+                <th class="w-[19%] px-2 py-3">Mô tả</th>
+                <th class="w-[11%] px-1 py-3 text-center">Màu sắc</th>
+                <th class="w-[8%] px-1 py-3 text-center">Size</th>
+                <th class="w-[7%] px-1 py-3 text-center">Số lượng</th>
+                <th class="w-[14%] px-1 py-3 text-center">Trạng thái</th>
+                <th class="w-[10%] px-1 py-3 text-center">Ngày tạo</th>
+                <th class="w-[15%] px-1 py-3 text-center">Thao tác</th>
+            </tr>
+        </thead>
+
+        <tbody class="divide-y divide-red-50">
+            @forelse($products as $product)
+
+                @php
+                    $colorsText = $product->chiTietSanPham
+                        ->map(fn($item) => $item->color?->TenMau)
+                        ->filter()
+                        ->unique()
+                        ->implode(', ');
+
+                    $sizesText = $product->chiTietSanPham
+                        ->map(fn($item) => $item->size?->TenSize)
+                        ->filter()
+                        ->unique()
+                        ->implode(', ');
+
+                    $totalQuantity = $product->chiTietSanPham->sum('SoLuong');
+                @endphp
+
+                <tr class="hover:bg-red-50/40 transition">
+
+                    {{-- Tên sản phẩm --}}
+                    <td class="px-2 py-3 align-middle">
+                        <p class="font-bold text-red-900 uppercase text-[11px] break-words">
+                            {{ $product->TenSanPham }}
+                        </p>
+                        <p class="text-[10px] text-stone-400 mt-1">
+                            #{{ $product->MaSanPham }}
+                        </p>
                     </td>
-                    <td class="px-6 py-5 text-center">
-                        <span class="text-xs text-stone-600">
-                            {{ $product->loaimau->TenLoaiMau ?? 'Chưa xác định' }}
+
+                    {{-- Mô tả --}}
+                    <td class="px-2 py-3 align-middle">
+                        <p class="text-[11px] text-stone-600 line-clamp-2 break-words"
+                           title="{{ $product->MoTa }}">
+                            {{ $product->MoTa ?: 'Chưa có mô tả' }}
+                        </p>
+                    </td>
+
+                    {{-- Màu sắc --}}
+                    <td class="px-1 py-3 text-center align-middle">
+                        <span class="text-[11px] text-stone-700 break-words">
+                            {{ $colorsText ?: 'Chưa xác định' }}
                         </span>
                     </td>
-                    
-                    <td class="px-6 py-5">
+
+                    {{-- Size --}}
+                    <td class="px-1 py-3 text-center align-middle">
+                        <span class="text-[11px] text-stone-700 break-words">
+                            {{ $sizesText ?: 'Chưa có size' }}
+                        </span>
+                    </td>
+
+                    {{-- Số lượng --}}
+                    <td class="px-1 py-3 text-center align-middle">
+                        <span class="font-semibold text-stone-700 text-xs">
+                            {{ $totalQuantity }}
+                        </span>
+                    </td>
+
+                    {{-- Trạng thái --}}
+                    <td class="px-1 py-3 text-center align-middle">
                         @if($product->TrangThai == 1)
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-green-50 text-green-700 border border-green-100">
-                                <span class="w-1 h-1 mr-1.5 rounded-full bg-green-600"></span> Đang hiện
+                            <span class="inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-full text-[9px] font-bold bg-green-50 text-green-700 border border-green-100">
+                                <span class="w-1.5 h-1.5 shrink-0 rounded-full bg-green-600"></span>
+                                <span>Đang kinh doanh</span>
                             </span>
                         @else
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-stone-100 text-stone-400 border border-stone-200">
-                                <span class="w-1 h-1 mr-1.5 rounded-full bg-stone-400"></span> Đang ẩn
+                            <span class="inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-full text-[9px] font-bold bg-stone-100 text-stone-500 border border-stone-200">
+                                <span class="w-1.5 h-1.5 shrink-0 rounded-full bg-stone-400"></span>
+                                <span>Ngừng kinh doanh</span>
                             </span>
                         @endif
                     </td>
-                    <td class="px-6 py-5 text-center font-bold text-stone-700">
-                        {{ number_format($product->GiaBan, 0, ',', '.') }}đ
+
+                    {{-- Ngày tạo --}}
+                    <td class="px-1 py-3 text-center align-middle">
+                        <span class="text-[10px] text-stone-500 whitespace-nowrap">
+                            {{ $product->NgayTao ? date('d/m/Y', strtotime($product->NgayTao)) : '---' }}
+                        </span>
                     </td>
-                    <td class="px-6 py-5 text-center text-[11px] text-stone-500">
-                        {{ $product->CreatedDate ? date('d/m/Y', strtotime($product->CreatedDate)) : '---' }}
-                    </td>
-                    <td class="px-6 py-5">
-                        <div class="flex justify-end space-x-2">
-                           <button onclick="toggleStatus('{{ $product->MaSanPham }}', {{ $product->TrangThai }})"
+
+                    {{-- Thao tác --}}
+                    <td class="px-1 py-3 align-middle">
+                        <div class="flex justify-center items-center gap-1">
+
+                            <button onclick="toggleStatus('{{ $product->MaSanPham }}', {{ $product->TrangThai }})"
                                 title="{{ $product->TrangThai == 1 ? 'Tạm dừng bán' : 'Kích hoạt bán' }}"
-                                class="flex items-center px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest {{ $product->TrangThai == 1 ? 'text-amber-600 border-amber-100 hover:bg-amber-600' : 'text-green-600 border-green-100 hover:bg-green-600' }} hover:text-white transition-all rounded-lg border">
-                                <i class="fas {{ $product->TrangThai == 1 ? 'fa-eye-slash' : 'fa-eye' }} mr-1.5"></i>
-                                {{ $product->TrangThai == 1 ? 'Ẩn' : 'Hiện' }}
+                                class="w-7 h-7 flex items-center justify-center rounded-md border border-red-200 text-red-700 hover:bg-red-800 hover:text-white transition">
+                                <i class="fas {{ $product->TrangThai == 1 ? 'fa-eye-slash' : 'fa-eye' }} text-[10px]"></i>
                             </button>
+
                             <a href="{{ route('admin.products.edit', $product->MaSanPham) }}"
-                                class="flex items-center px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:bg-blue-600 hover:text-white transition-all rounded-lg border border-blue-100">
-                                <i class="fas fa-edit mr-1.5"></i> Sửa
+                                title="Sửa sản phẩm"
+                                class="w-7 h-7 flex items-center justify-center rounded-md border border-red-200 text-red-800 hover:bg-red-800 hover:text-white transition">
+                                <i class="fas fa-edit text-[10px]"></i>
                             </a>
 
-                            <button onclick="confirmDeleteProduct('{{ $product->MaSanPham }}', '{{ $product->TenSanPham }}')"
-                                class="flex items-center px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-red-600 hover:bg-red-700 hover:text-white transition-all rounded-lg border border-red-100">
-                                <i class="fas fa-trash-alt mr-1.5"></i> Xóa
+                            <button onclick="confirmDeleteProduct('{{ $product->MaSanPham }}', '{{ addslashes($product->TenSanPham) }}')"
+                                title="Xóa sản phẩm"
+                                class="w-7 h-7 flex items-center justify-center rounded-md border border-red-200 text-red-600 hover:bg-red-700 hover:text-white transition">
+                                <i class="fas fa-trash-alt text-[10px]"></i>
                             </button>
+
                         </div>
                     </td>
                 </tr>
-                @empty
+
+            @empty
                 <tr>
-                    <td colspan="4" class="px-6 py-10 text-center text-stone-400 italic">Không tìm thấy sản phẩm nào.</td>
+                    <td colspan="8" class="px-4 py-8 text-center text-stone-400 italic">
+                        Không tìm thấy sản phẩm nào.
+                    </td>
                 </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+
     <div class="p-4 border-t border-stone-100">
         {{ $products->links('pagination::tailwind') }}
     </div>
@@ -182,7 +250,7 @@
             title: '<span class="serif text-2xl text-red-800">Thông báo lỗi</span>',
             text: "{{ session('error') }}",
             confirmButtonText: 'Đóng',
-            confirmButtonColor: '#1c1917',
+            confirmButtonColor: '#991b1b',
             buttonsStyling: false,
             customClass: {
                 popup: 'glass-popup',
@@ -202,7 +270,7 @@
                 showCancelButton: true,
                 confirmButtonText: 'Xác nhận',
                 cancelButtonText: 'Hủy',
-                confirmButtonColor: '#1c1917',
+                confirmButtonColor: '#991b1b',
                 customClass: { popup: 'glass-popup', confirmButton: 'btn-delete-confirm', cancelButton: 'btn-delete-cancel' },
                 buttonsStyling: false,
                 reverseButtons: true
@@ -309,10 +377,15 @@
         box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
     }
     .btn-delete-confirm {
-        background-color: #1c1917 !important; color: white !important;
-        padding: 10px 25px !important; border-radius: 12px !important;
-        font-weight: 600 !important; font-size: 11px !important;
-        text-transform: uppercase; letter-spacing: 0.1em; margin-left: 10px;
+    background-color: #991b1b !important;
+    color: white !important;
+    padding: 10px 25px !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-left: 10px;
     }
     .btn-delete-cancel {
         background-color: #f3f4f6 !important; color: #4b5563 !important;

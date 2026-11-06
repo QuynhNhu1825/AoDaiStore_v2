@@ -8,8 +8,7 @@ use App\Models\Account;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\Supplier;
-use App\Models\Promotion;
+
 
 class AdminDashboardController extends Controller
 {
@@ -30,9 +29,8 @@ class AdminDashboardController extends Controller
             'totalAccounts',
             'totalOrders',
             'totalProducts',
-            'totalCategories',
-            'totalSuppliers',
-            'totalPromotions'
+            'totalCategories'
+            
         ));
     }
 }

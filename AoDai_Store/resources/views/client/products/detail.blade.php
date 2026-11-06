@@ -4,8 +4,8 @@
 
 @section('content')
 
-<div class="max-w-7xl mx-auto px-4 py-12">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+<div id="product-detail-page">
+    <div class="product-main-layout grid grid-cols-2 gap-12">
 
         {{-- =========================
              CỘT 1: HÌNH ẢNH SẢN PHẨM
@@ -71,10 +71,19 @@
         <div class="space-y-6">
 
             @php
-                $details = $product->chiTietSanPham;
-                $selectedColorId = $details->first()?->MaMau;
-                $availableColorIds = $details->pluck('MaMau')->unique();
-            @endphp
+    $details = $product->chiTietSanPham
+        ->where('IsDeleted', 0)
+        ->values();
+
+    // Lấy tất cả mã màu không trùng nhau
+    $availableColors = $details
+        ->filter(fn($detail) => $detail->color !== null)
+        ->unique('MaMau')
+        ->values();
+
+    // Chọn màu đầu tiên làm mặc định
+    $selectedColorId = $details->first()?->MaMau;
+@endphp
 
             {{-- Đã thêm id="formAddToCart" vào thẻ form --}}
             <form id="formAddToCart" action="{{ route('cart.add', $product->MaSanPham) }}" method="POST">
@@ -191,27 +200,42 @@
                     </div>
 
                     <div class="flex flex-wrap gap-3">
-                        @foreach($details->pluck('color')->filter()->unique('MaMau') as $color)
+                        @forelse($availableColors as $colorItem)
+                            @php
+                                $color = $colorItem->color;
+                            @endphp
+
                             <label class="cursor-pointer">
                                 <input
                                     type="radio"
                                     name="MaMau"
-                                    value="{{ $color->MaMau }}"
+                                    value="{{ $colorItem->MaMau }}"
                                     class="color-radio peer hidden"
-                                    {{ $color->MaMau == $selectedColorId ? 'checked' : '' }}
+                                    {{ (int)$colorItem->MaMau === (int)$selectedColorId ? 'checked' : '' }}
                                     required
                                 >
-                                <span class="inline-flex items-center gap-2 border px-3 py-2 text-sm text-stone-700 peer-checked:border-stone-900 peer-checked:bg-stone-900 peer-checked:text-white hover:border-stone-800 transition">
+
+                                <span class="inline-flex items-center gap-2 border px-3 py-2 text-sm text-stone-700
+                                    peer-checked:border-stone-900
+                                    peer-checked:bg-stone-900
+                                    peer-checked:text-white
+                                    hover:border-stone-800 transition">
+
                                     @if(!empty($color->MaHex))
                                         <span
                                             class="inline-block w-4 h-4 rounded-full border border-stone-300"
-                                            style="background-color: {{ $color->MaHex }}"
-                                        ></span>
+                                            style="background-color: {{ $color->MaHex }}">
+                                        </span>
                                     @endif
+
                                     {{ $color->TenMau }}
                                 </span>
                             </label>
-                        @endforeach
+                        @empty
+                            <p class="text-sm text-red-600">
+                                Sản phẩm chưa có màu sắc.
+                            </p>
+                        @endforelse
                     </div>
                 </div>
 
@@ -315,7 +339,6 @@
             </form>
         </div>
     </div>
-</div>
 
 {{-- THÔNG BÁO THÊM GIỎ HÀNG THÀNH CÔNG --}}
 @if(session('success'))
@@ -363,7 +386,7 @@
 @endphp
 
 
-<div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+<div class="mt-12 grid grid-cols-2 gap-6 items-stretch">
 
     {{-- CỘT 1: CHI TIẾT SẢN PHẨM --}}
     <section class="min-w-0 h-full bg-white border border-stone-200 rounded-sm overflow-hidden">
@@ -418,10 +441,11 @@
             {{-- Màu sắc --}}
             <div class="grid grid-cols-[110px_1fr] md:grid-cols-[120px_1fr] gap-3">
                 <span class="text-stone-400">Màu sắc</span>
+
                 <div class="flex flex-wrap gap-2">
-                    @forelse($colors as $color)
+                    @forelse($availableColors as $colorItem)
                         <span class="inline-block border border-stone-200 px-3 py-1 text-stone-700">
-                            {{ $color->TenMau ?? $color->TenMauSac ?? $color->MaMau }}
+                            {{ $colorItem->color->TenMau }}
                         </span>
                     @empty
                         <span class="text-stone-400">Đang cập nhật</span>
@@ -513,7 +537,7 @@
 {{-- =========================
      ĐÁNH GIÁ SẢN PHẨM
 ========================== --}}
-<div class="max-w-7xl mx-auto px-4 py-10 border-t mt-12">
+<div class="w-full px-4 py-10 border-t mt-12">
     <h2 class="text-2xl font-bold mb-6">Đánh giá sản phẩm</h2>
 
     {{-- DANH SÁCH ĐÁNH GIÁ --}}
@@ -582,7 +606,7 @@
 {{-- =========================
      SẢN PHẨM LIÊN QUAN
 ========================== --}}
-<div class="max-w-7xl mx-auto px-4 py-14 border-t mt-12">
+<div class="w-full px-4 py-14 border-t mt-12">
     <h2 class="serif text-2xl font-bold uppercase tracking-wide text-stone-800 mb-6">
         Sản phẩm liên quan
     </h2>
@@ -1101,5 +1125,27 @@ Swal.fire({
         }
     }
 </style>
+<style>
+    html {
+        overflow-x: auto;
+    }
 
+    #product-detail-page {
+        width: 1200px;
+        min-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    @media (max-width: 1200px) {
+        #product-detail-page {
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+
+    #product-detail-page * {
+        box-sizing: border-box;
+    }
+</style>
 @endsection

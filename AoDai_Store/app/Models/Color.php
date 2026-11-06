@@ -34,13 +34,11 @@ class Color extends Model
         'IsDeleted' => 'boolean',
     ];
 
-    /**
-     * Một màu sắc có thể được sử dụng trong nhiều chi tiết sản phẩm.
-     */
+    // Một màu có thể được sử dụng trong nhiều chi tiết sản phẩm
     public function productDetail()
     {
         return $this->hasMany(
-           ProductDetail::class,
+            ProductDetail::class,
             'MaMau',
             'MaMau'
         );

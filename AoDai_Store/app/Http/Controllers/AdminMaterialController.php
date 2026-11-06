@@ -7,19 +7,27 @@ use Illuminate\Http\Request;
 
 class AdminMaterialController extends Controller
 {
-    // Danh sách + tìm kiếm
+    /**
+     * Danh sách chất liệu
+     */
     public function index(Request $request)
     {
-        $search = $request->search;
+        $search = $request->input('search');
 
-        $materials = Material::when($search, function ($q) use ($search) {
-                $q->where('TenChatLieu', 'like', "%$search%")
-                  ->orWhere('Xuatxu', 'like', "%$search%");
-            })
+        $query = Material::where('IsDeleted', 0);
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('TenChatLieu', 'like', "%{$search}%")
+                  ->orWhere('XuatXu', 'like', "%{$search}%");
+            });
+        }
+
+        $materials = $query
             ->orderBy('MaChatLieu', 'asc')
             ->get();
 
-        $totalMaterials = Material::count();
+        $totalMaterials = Material::where('IsDeleted', 0)->count();
 
         return view('admin.materials.index', compact(
             'materials',
@@ -28,69 +36,86 @@ class AdminMaterialController extends Controller
         ));
     }
 
-    // Form thêm
+    /**
+     * Form thêm chất liệu
+     */
     public function create()
     {
         return view('admin.materials.create');
     }
 
-    // Lưu thêm mới
+    /**
+     * Lưu chất liệu
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'TenChatLieu'       => 'required|string|max:255',
-            'Xuatxu'            => 'nullable|string|max:255',
-            'HuongDanBaoQuan'   => 'nullable|string',
-            'TrangThai'         => 'required'
+        $validated = $request->validate([
+            'TenChatLieu' => 'required|string|max:100',
+            'XuatXu' => 'nullable|string|max:100',
+            'HuongDanBaoQuan' => 'nullable|string|max:500',
+            'MoTa' => 'nullable|string|max:500',
         ]);
 
-        Material::create([
-            'TenChatLieu'     => $request->TenChatLieu,
-            'Xuatxu'          => $request->Xuatxu,
-            'HuongDanBaoQuan' => $request->HuongDanBaoQuan,
-            'TrangThai'       => $request->TrangThai,
-        ]);
+        $validated['IsDeleted'] = 0;
+        $validated['NgayTao'] = now();
+
+        if (auth()->check()) {
+            $validated['NguoiTao'] = auth()->id();
+        }
+
+        Material::create($validated);
 
         return redirect()
             ->route('admin.materials.index')
             ->with('success', 'Thêm chất liệu thành công!');
     }
 
-    // Form sửa
+    /**
+     * Form sửa chất liệu
+     */
     public function edit($id)
     {
-        $material = Material::findOrFail($id);
+        $material = Material::where('IsDeleted', 0)
+            ->findOrFail($id);
+
         return view('admin.materials.edit', compact('material'));
     }
 
-    // Cập nhật
+    /**
+     * Cập nhật chất liệu
+     */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'TenChatLieu'       => 'required|string|max:255',
-            'Xuatxu'            => 'nullable|string|max:255',
-            'HuongDanBaoQuan'   => 'nullable|string',
-            'TrangThai'         => 'required'
+        $validated = $request->validate([
+            'TenChatLieu' => 'required|string|max:100',
+            'XuatXu' => 'nullable|string|max:100',
+            'HuongDanBaoQuan' => 'nullable|string|max:500',
+            'MoTa' => 'nullable|string|max:500',
         ]);
 
-        $material = Material::findOrFail($id);
+        $material = Material::where('IsDeleted', 0)
+            ->findOrFail($id);
 
-        $material->update([
-            'TenChatLieu'     => $request->TenChatLieu,
-            'Xuatxu'          => $request->Xuatxu,
-            'HuongDanBaoQuan' => $request->HuongDanBaoQuan,
-            'TrangThai'       => $request->TrangThai,
-        ]);
+        $validated['NguoiCapNhat'] = auth()->check()
+            ? auth()->id()
+            : null;
+
+        $validated['NgayCapNhat'] = now();
+
+        $material->update($validated);
 
         return redirect()
             ->route('admin.materials.index')
             ->with('success', 'Cập nhật chất liệu thành công!');
     }
 
-    // Xóa
+    /**
+     * Xóa mềm chất liệu
+     */
     public function destroy($id)
     {
-        $material = Material::findOrFail($id);
+        $material = Material::where('IsDeleted', 0)
+            ->findOrFail($id);
 
         if ($material->products()->exists()) {
             return redirect()
@@ -98,11 +123,14 @@ class AdminMaterialController extends Controller
                 ->with('error', 'Không thể xóa chất liệu vì vẫn còn sản phẩm đang sử dụng!');
         }
 
-        $material->delete();
+        $material->update([
+            'IsDeleted' => 1,
+            'NguoiXoa' => auth()->check() ? auth()->id() : null,
+            'NgayXoa' => now(),
+        ]);
 
         return redirect()
             ->route('admin.materials.index')
             ->with('success', 'Xóa chất liệu thành công!');
     }
-
 }

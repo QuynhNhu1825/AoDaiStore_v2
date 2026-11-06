@@ -19,15 +19,22 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with([
-            'chatlieu',
-            'danhMucs',
-            'hinhanhsanpham',
-            'chiTietSanPham.color',
-            'chiTietSanPham.size',
+        
+$query = Product::with([
+    'chatlieu',
+    'danhMucs',
+    'hinhanhsanpham',
+
+    // Chỉ lấy biến thể chưa bị xóa
+    'chiTietSanPham' => function ($q) {
+        $q->where('IsDeleted', 0)
+          ->orderBy('Gia', 'asc')
+          ->with(['color', 'size']);
+        },
         ])
         ->where('TrangThai', 1)
         ->where('IsDeleted', 0);
+
 
         // Tìm kiếm theo tên sản phẩm
         if ($request->filled('search')) {
@@ -63,20 +70,32 @@ class ProductController extends Controller
             $q->where('IsDeleted', 0);
         });
 
-        // Sắp xếp theo giá của chi tiết sản phẩm
+        
+        // Sắp xếp theo giá thấp nhất của các biến thể còn hoạt động
         if ($request->sort === 'price_asc') {
+
             $query->withMin(
-                'chiTietSanPham as gia_thap_nhat',
+                ['chiTietSanPham as gia_thap_nhat' => function ($q) {
+                    $q->where('IsDeleted', 0);
+                }],
                 'Gia'
             )->orderBy('gia_thap_nhat', 'asc');
+
         } elseif ($request->sort === 'price_desc') {
+
             $query->withMax(
-                'chiTietSanPham as gia_cao_nhat',
+                ['chiTietSanPham as gia_cao_nhat' => function ($q) {
+                    $q->where('IsDeleted', 0);
+                }],
                 'Gia'
             )->orderBy('gia_cao_nhat', 'desc');
+
         } else {
+
             $query->orderBy('NgayTao', 'desc');
+
         }
+
 
         $data['product'] = $query->paginate(8)->withQueryString();
 
@@ -87,12 +106,17 @@ class ProductController extends Controller
         $data['colors'] = Color::where('IsDeleted', 0)->get();
 
         // Sản phẩm mới nhất
+        
         $data['newProducts'] = Product::with([
             'chatlieu',
             'danhMucs',
             'hinhanhsanpham',
-            'chiTietSanPham.color',
-            'chiTietSanPham.size',
+
+            'chiTietSanPham' => function ($q) {
+                $q->where('IsDeleted', 0)
+                ->orderBy('Gia', 'asc')
+                ->with(['color', 'size']);
+            },
         ])
         ->where('TrangThai', 1)
         ->where('IsDeleted', 0)
@@ -116,12 +140,15 @@ class ProductController extends Controller
     public function detail($id)
     {
         $product = Product::with([
-            'chatlieu',
-            'danhMucs',
-            'hinhanhsanpham',
-            'chiTietSanPham.color',
-            'chiTietSanPham.size',
-        ])
+    'chatlieu',
+    'danhMucs',
+    'hinhanhsanpham',
+
+    'chiTietSanPham' => function ($query) {
+        $query->where('IsDeleted', 0)
+              ->with(['color', 'size']);
+    },
+])
         ->where('MaSanPham', $id)
         ->where('TrangThai', 1)
         ->where('IsDeleted', 0)
@@ -134,7 +161,13 @@ class ProductController extends Controller
                 ->where('IsDeleted', 0)
                 ->values()
         );
-
+        // Lấy danh sách màu sắc không trùng nhau
+    $availableColors = $product->chiTietSanPham
+    ->filter(function ($variant) {
+        return $variant->color !== null;
+    })
+    ->unique('MaMau')
+    ->values();
         // Danh sách size chưa bị xóa
         $allSizes = Size::where('IsDeleted', 0)->get();
 
@@ -266,9 +299,10 @@ class ProductController extends Controller
         ->take(8)
         ->get();
 
-        return view('client.products.detail', compact(
+       return view('client.products.detail', compact(
             'product',
             'allSizes',
+            'availableColors',
             'avgRating',
             'dsDanhGia',
             'daMua',
