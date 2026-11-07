@@ -1,71 +1,228 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Thêm Chất Liệu Mới')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
-    {{-- Nút quay lại danh sách --}}
-    <div class="mb-4">
-        <a href="{{ route('admin.materials.index') }}" class="text-blue-600 hover:underline flex items-center">
-            <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách
+
+<div class="w-full max-w-4xl mx-auto space-y-4">
+
+    {{-- TIÊU ĐỀ + QUAY LẠI --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+        <div>
+            <h2 class="text-xl font-bold text-red-900">
+                <i class="fas fa-layer-group mr-2"></i>
+                Thêm chất liệu mới
+            </h2>
+
+            <p class="text-xs text-stone-500 mt-1">
+                Nhập thông tin để thêm chất liệu vào hệ thống.
+            </p>
+        </div>
+
+        <a href="{{ route('admin.materials.index') }}"
+           class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white border border-red-200 text-red-800 text-xs font-bold hover:bg-red-50 transition">
+
+            <i class="fas fa-arrow-left"></i>
+            Quay lại danh sách
+
         </a>
+
     </div>
 
-    {{-- Thẻ nội dung chính --}}
-    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-        <form action="{{ route('admin.materials.store') }}" method="POST">
+    {{-- THÔNG BÁO LỖI --}}
+    @if($errors->any())
+
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs">
+
+            <div class="font-bold mb-2">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                Vui lòng kiểm tra lại thông tin:
+            </div>
+
+            <ul class="list-disc pl-5 space-y-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+
+        </div>
+
+    @endif
+
+    {{-- FORM THÊM CHẤT LIỆU --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
+
+        {{-- HEADER FORM --}}
+        <div class="px-6 py-4 bg-red-50 border-b border-red-100">
+
+            <h3 class="text-sm font-bold text-red-900 uppercase tracking-wider">
+                <i class="fas fa-info-circle mr-2"></i>
+                Thông tin chất liệu
+            </h3>
+
+            <p class="text-[11px] text-stone-500 mt-1">
+                Các trường có dấu (*) là thông tin bắt buộc.
+            </p>
+
+        </div>
+
+        <form action="{{ route('admin.materials.store') }}"
+              method="POST"
+              class="p-6">
+
             @csrf
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                {{-- Tên chất liệu --}}
-                <div class="col-span-2">
-                    <label class="block font-semibold mb-2 text-gray-700">Tên chất liệu</label>
-                    <input type="text" name="TenChatLieu" value="{{ old('TenChatLieu') }}" required
-                        class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none
-                        @error('TenChatLieu') border-red-500 @enderror"
-                        placeholder="Ví dụ: Lụa tơ tằm, Gấm, Ren...">
+                {{-- TÊN CHẤT LIỆU --}}
+                <div class="md:col-span-2">
+
+                    <label for="TenChatLieu"
+                           class="block text-xs font-bold text-stone-700 mb-2">
+
+                        Tên chất liệu
+                        <span class="text-red-600">*</span>
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="TenChatLieu"
+                        name="TenChatLieu"
+                        value="{{ old('TenChatLieu') }}"
+                        required
+                        maxlength="100"
+                        placeholder="Ví dụ: Lụa tơ tằm, Gấm, Ren..."
+                        class="w-full px-4 py-3 rounded-xl bg-stone-50 border border-stone-200 text-sm text-stone-700 outline-none transition focus:bg-white focus:border-red-700 focus:ring-2 focus:ring-red-100 @error('TenChatLieu') border-red-500 @enderror"
+                    >
 
                     @error('TenChatLieu')
-                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                        <p class="text-red-600 text-[11px] mt-1">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
                     @enderror
+
                 </div>
 
-                {{-- Xuất xứ --}}
+                {{-- XUẤT XỨ --}}
                 <div>
-                    <label class="block font-semibold mb-2 text-gray-700">Xuất xứ</label>
-                    <input type="text" name="Xuatxu" value="{{ old('Xuatu') }}"
-                        class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="Ví dụ: Việt Nam, Nhật Bản...">
+
+                    <label for="XuatXu"
+                           class="block text-xs font-bold text-stone-700 mb-2">
+
+                        Xuất xứ
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="XuatXu"
+                        name="XuatXu"
+                        value="{{ old('XuatXu') }}"
+                        maxlength="100"
+                        placeholder="Ví dụ: Việt Nam, Nhật Bản..."
+                        class="w-full px-4 py-3 rounded-xl bg-stone-50 border border-stone-200 text-sm text-stone-700 outline-none transition focus:bg-white focus:border-red-700 focus:ring-2 focus:ring-red-100 @error('XuatXu') border-red-500 @enderror"
+                    >
+
+                    @error('XuatXu')
+                        <p class="text-red-600 text-[11px] mt-1">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+
                 </div>
 
-                {{-- Trạng thái --}}
-                <div>
-                    <label class="block font-semibold mb-2 text-gray-700">Trạng thái</label>
-                    <select name="TrangThai"
-                        class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
-                        <option value="1" {{ old('TrangThai') == 1 ? 'selected' : '' }}>Đang sử dụng</option>
-                        <option value="0" {{ old('TrangThai') == 0 ? 'selected' : '' }}>Ngưng sử dụng</option>
-                    </select>
+                {{-- HƯỚNG DẪN BẢO QUẢN --}}
+                <div class="md:col-span-2">
+
+                    <label for="HuongDanBaoQuan"
+                           class="block text-xs font-bold text-stone-700 mb-2">
+
+                        Hướng dẫn bảo quản
+
+                    </label>
+
+                    <textarea
+                        id="HuongDanBaoQuan"
+                        name="HuongDanBaoQuan"
+                        rows="5"
+                        maxlength="500"
+                        placeholder="Ví dụ: Giặt tay, tránh ánh nắng trực tiếp, không sử dụng chất tẩy mạnh..."
+                        class="w-full px-4 py-3 rounded-xl bg-stone-50 border border-stone-200 text-sm text-stone-700 outline-none resize-y transition focus:bg-white focus:border-red-700 focus:ring-2 focus:ring-red-100 @error('HuongDanBaoQuan') border-red-500 @enderror"
+                    >{{ old('HuongDanBaoQuan') }}</textarea>
+
+                    @error('HuongDanBaoQuan')
+                        <p class="text-red-600 text-[11px] mt-1">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+
+                    <p class="text-[10px] text-stone-400 mt-1">
+                        Tối đa 500 ký tự.
+                    </p>
+
                 </div>
 
-                {{-- Hướng dẫn bảo quản --}}
-                <div class="col-span-2">
-                    <label class="block font-semibold mb-2 text-gray-700">Hướng dẫn bảo quản</label>
-                    <textarea name="HuongDanBaoQuan" rows="5"
-                        class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="Ví dụ: Giặt tay, tránh ánh nắng trực tiếp...">{{ old('HuongDanBaoQuan') }}</textarea>
+                {{-- MÔ TẢ --}}
+                <div class="md:col-span-2">
+
+                    <label for="MoTa"
+                           class="block text-xs font-bold text-stone-700 mb-2">
+
+                        Mô tả chất liệu
+
+                    </label>
+
+                    <textarea
+                        id="MoTa"
+                        name="MoTa"
+                        rows="4"
+                        maxlength="500"
+                        placeholder="Nhập mô tả về đặc điểm, tính chất và ứng dụng của chất liệu..."
+                        class="w-full px-4 py-3 rounded-xl bg-stone-50 border border-stone-200 text-sm text-stone-700 outline-none resize-y transition focus:bg-white focus:border-red-700 focus:ring-2 focus:ring-red-100 @error('MoTa') border-red-500 @enderror"
+                    >{{ old('MoTa') }}</textarea>
+
+                    @error('MoTa')
+                        <p class="text-red-600 text-[11px] mt-1">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+
                 </div>
 
             </div>
 
-            <div class="mt-8 border-t pt-6">
+            {{-- NÚT CHỨC NĂNG --}}
+            <div class="mt-7 pt-5 border-t border-red-100 flex flex-col-reverse sm:flex-row justify-end gap-3">
+
+                <a href="{{ route('admin.materials.index') }}"
+                   class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold hover:bg-stone-200 transition">
+
+                    <i class="fas fa-times mr-2"></i>
+                    Hủy bỏ
+
+                </a>
+
                 <button type="submit"
-                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg transition-all flex justify-center items-center uppercase tracking-widest">
-                    <i class="fas fa-save mr-2"></i> Lưu chất liệu
+                        class="inline-flex items-center justify-center px-7 py-3 rounded-xl bg-red-800 text-white text-xs font-bold uppercase tracking-widest hover:bg-red-900 shadow-sm transition">
+
+                    <i class="fas fa-save mr-2"></i>
+                    Lưu chất liệu
+
                 </button>
+
             </div>
+
         </form>
+
     </div>
+
 </div>
+
 @endsection

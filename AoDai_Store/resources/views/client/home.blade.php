@@ -152,25 +152,27 @@
                 <div class="group bg-white overflow-hidden shadow-sm hover:shadow-xl transition duration-300 border border-stone-100 flex flex-col h-full">
 
                     {{-- Hình ảnh sản phẩm --}}
-                    <div class="relative h-96 overflow-hidden bg-stone-100">
-                    @php
-                        $anh = $s->hinhanhsanpham->first();
-                        $tenAnh = $anh->LinkAnh ?? $s->HinhAnh ?? null;
-                    @endphp
+<div class="relative h-96 overflow-hidden bg-stone-100">
 
-                    @if ($tenAnh)
-                        <img
-                            src="{{ asset('img/products/' . basename($tenAnh)) }}"
-                            alt="{{ $s->TenSanPham }}"
-                            class="w-full h-full object-cover group-hover:scale-105 transition duration-700"
-                            loading="lazy"
-                        >
-                    @else
-                        <div class="flex h-full items-center justify-center text-stone-400">
-                            Chưa có hình ảnh sản phẩm
-                        </div>
-                    @endif
-                </div>
+    @php
+        $anhDaiDien = $s->HinhAnh;
+    @endphp
+
+    @if($anhDaiDien)
+        <img
+            src="{{ asset('img/products/' . basename($anhDaiDien)) }}"
+            alt="{{ $s->TenSanPham }}"
+            class="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+            loading="lazy"
+            onerror="this.onerror=null; this.src='https://placehold.co/400x600?text=No+Image';"
+        >
+    @else
+        <div class="flex h-full items-center justify-center text-stone-400">
+            Chưa có hình ảnh sản phẩm
+        </div>
+    @endif
+
+</div>
 
                     {{-- Thông tin sản phẩm --}}
                     <div class="p-6 text-center flex-grow flex flex-col justify-between">
@@ -186,9 +188,19 @@
                         </div>
 
                         <div>
-                            <p class="text-red-800 font-bold text-lg mb-4">
-                                {{ number_format((float) ($s->chiTietSanPham->first()?->Gia ?? 0), 0, ',', '.') }}đ
-                            </p>
+                            
+                    @php
+                        $giaSanPham = $s->chiTietSanPham->min('Gia');
+                    @endphp
+
+                    <p class="text-red-800 font-bold text-lg mb-4">
+                        @if($giaSanPham !== null)
+                            {{ number_format((float) $giaSanPham, 0, ',', '.') }}đ
+                        @else
+                            Liên hệ
+                        @endif
+                    </p>
+
 
                             <div class="pt-4 border-t border-stone-50">
                                 <a

@@ -153,6 +153,8 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::patch('/comments/{id}/hide', [AdminRatingController::class, 'hide'])
         ->name('admin.comments.hide');
     Route::post('/ratings/{id}/show', [AdminRatingController::class, 'show'])->name('admin.comments.show');
+    Route::patch('/comments/{id}/reply', [AdminRatingController::class, 'reply'])
+    ->name('admin.comments.reply');
 });
 
 //order client

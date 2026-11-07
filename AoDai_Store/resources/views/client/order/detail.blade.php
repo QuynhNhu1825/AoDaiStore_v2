@@ -30,7 +30,7 @@
     $statusClass = $statusColors[$status]
         ?? 'bg-stone-100 text-stone-700 border-stone-200';
 
-    $details = $order->orderDetails;
+    $details = $orderDetails;
 
     $totalQuantity = $details->sum('SoLuong');
 
@@ -57,15 +57,13 @@
                 Áo Dài Heritage
             </p>
 
-            <h1 class="text-3xl md:text-4xl font-bold uppercase
-                       tracking-widest text-stone-900"
-                style="font-family: Georgia, serif;">
+            <h2 class="serif text-3xl font-bold text-stone-800 uppercase tracking-widest">
                 CHI TIẾT ĐƠN HÀNG
-            </h1>
+            </h2>
 
             <div class="w-20 h-1 bg-red-800 mx-auto mt-4"></div>
 
-            <p class="text-stone-500 text-sm mt-4">
+            <p class="text-sm text-stone-500 mt-3">
                 Xem thông tin và theo dõi đơn hàng của bạn
             </p>
 
@@ -196,12 +194,12 @@
 
                                 Thanh toán khi nhận hàng (COD)
 
-                            @elseif($paymentMethod === 'vietqr')
+                            @elseif($paymentMethod === 'vnpay')
 
                                 <i class="fas fa-credit-card
                                           text-blue-700 mr-2"></i>
 
-                                Thanh toán qua VietQR (Chuyển khoản)
+                                Thanh toán qua VNPay
 
                             @else
 
@@ -264,7 +262,9 @@
             </div>
 
             <div class="divide-y divide-stone-100">
-
+                @php
+                    $displayedReviewProductIds = [];
+                @endphp
                 @forelse($details as $detail)
 
                     @php
@@ -281,34 +281,26 @@
                             ?? 'Không xác định';
 
                         // Lấy ảnh sản phẩm
-                        $imagePath = $product?->HinhAnh ?? null;
-
-                        if (
-                            !$imagePath &&
-                            $product &&
-                            method_exists($product, 'hinhanhsanpham')
-                        ) {
-                            $imagePath = $product->hinhanhsanpham
-                                ->first()?->LinkAnh;
-                        }
+                        $imagePath = $product?->HinhAnh;
 
                         if ($imagePath) {
 
                             if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
+
                                 $imageUrl = $imagePath;
-                            } elseif (
-                                str_starts_with($imagePath, 'storage/') ||
-                                str_starts_with($imagePath, 'img/')
-                            ) {
-                                $imageUrl = asset($imagePath);
+
                             } else {
-                                $imageUrl = asset(
-                                    'storage/' . ltrim($imagePath, '/')
-                                );
+
+                                // Loại bỏ tiền tố nếu database đã lưu kèm đường dẫn
+                                $fileName = basename($imagePath);
+
+                                $imageUrl = asset('img/products/' . $fileName);
                             }
 
                         } else {
+
                             $imageUrl = asset('img/no-image.png');
+
                         }
 
                         $lineTotal =
@@ -316,95 +308,303 @@
                             (int) $detail->SoLuong;
                     @endphp
 
-                    <div class="p-6 md:p-8
-                                flex flex-col sm:flex-row gap-5">
+                    <div class="flex flex-col sm:flex-row gap-5 p-5 sm:p-6">
 
-                        {{-- ẢNH --}}
-                        <div class="w-28 h-36 flex-shrink-0
-                                    bg-stone-100 rounded-lg
-                                    overflow-hidden border border-stone-100">
+                    {{-- ẢNH SẢN PHẨM --}}
+                    <div class="w-28 h-36 flex-shrink-0
+                                bg-stone-100 rounded-md
+                                overflow-hidden border border-stone-100">
 
-                            <img src="{{ $imageUrl }}"
-                                 alt="{{ $productName }}"
-                                 class="w-full h-full object-cover"
-                                 onerror="this.onerror=null;this.src='{{ asset('img/no-image.png') }}'">
+                        <img src="{{ $imageUrl }}"
+                            alt="{{ $productName }}"
+                            class="w-full h-full object-cover"
+                            onerror="this.onerror=null;this.src='{{ asset('img/no-image.png') }}'">
+                    </div>
+
+                    {{-- THÔNG TIN SẢN PHẨM --}}
+                    <div class="flex-1 min-w-0">
+
+                        <h4 class="font-bold text-stone-800 text-base uppercase leading-relaxed">
+                            {{ $productName }}
+                        </h4>
+
+                        <div class="flex flex-wrap gap-x-8 gap-y-2
+                                    text-sm text-stone-500 mt-3">
+
+                            <span>
+                                Màu sắc:
+                                <strong class="text-stone-700">{{ $colorName }}</strong>
+                            </span>
+
+                            <span>
+                                Kích cỡ:
+                                <strong class="text-stone-700">{{ $sizeName }}</strong>
+                            </span>
 
                         </div>
 
-                        {{-- THÔNG TIN --}}
-                        <div class="flex-1 min-w-0">
+                        <div class="mt-3 text-sm text-stone-500">
+                            Số lượng:
+                            <strong class="text-stone-800">{{ $detail->SoLuong }}</strong>
+                        </div>
 
-                            <h4 class="font-bold text-stone-800
-                                       text-base uppercase leading-relaxed"
-                                style="font-family: Georgia, serif;">
+                        <div class="flex flex-wrap justify-between items-end
+                                    gap-3 mt-5">
 
-                                {{ $productName }}
-
-                            </h4>
-
-                            <div class="flex flex-wrap gap-3 mt-3">
-
-                                <span class="px-3 py-1 bg-stone-100
-                                             text-stone-600 text-xs rounded">
-
-                                    Màu: {{ $colorName }}
-
-                                </span>
-
-                                <span class="px-3 py-1 bg-stone-100
-                                             text-stone-600 text-xs rounded">
-
-                                    Size: {{ $sizeName }}
-
-                                </span>
-
+                            <div class="text-sm text-stone-500">
+                                Đơn giá:
+                                {{ number_format((float) $detail->DonGia, 0, ',', '.') }}đ
                             </div>
 
-                            <p class="text-sm text-stone-500 mt-4">
-                                Số lượng:
-                                <strong class="text-stone-800">
-                                    x{{ $detail->SoLuong }}
-                                </strong>
-                            </p>
+                            <div class="text-right">
+                                <p class="text-xs text-stone-500 mb-1">
+                                    Thành tiền
+                                </p>
 
-                            <div class="flex flex-wrap
-                                        justify-between items-end gap-4 mt-5">
-
-                                <div>
-
-                                    <p class="text-xs text-stone-500 mb-1">
-                                        Đơn giá
-                                    </p>
-
-                                    <p class="text-sm font-semibold text-stone-700">
-                                        {{ number_format(
-                                            (float) $detail->DonGia,
-                                            0, ',', '.'
-                                        ) }}đ
-                                    </p>
-
-                                </div>
-
-                                <div class="text-right">
-
-                                    <p class="text-xs text-stone-500 mb-1">
-                                        Thành tiền
-                                    </p>
-
-                                    <p class="text-lg font-bold text-red-800">
-                                        {{ number_format(
-                                            $lineTotal,
-                                            0, ',', '.'
-                                        ) }}đ
-                                    </p>
-
-                                </div>
-
+                                <span class="font-bold text-red-800 text-lg">
+                                    {{ number_format($lineTotal, 0, ',', '.') }}đ
+                                </span>
                             </div>
 
                         </div>
 
                     </div>
+
+                </div>
+
+                    {{-- ================= ĐÁNH GIÁ SẢN PHẨM ================= --}}
+                    @if($status === 'DaGiao' && $product)
+
+                        @php
+                            $productId = $product->MaSanPham;
+
+                            $hasReviewed = in_array(
+                                (int) $productId,
+                                array_map('intval', $reviewedProductIds ?? []),
+                                true
+                            );
+
+                            $isFirstProductVariant = !in_array(
+                                (int) $productId,
+                                array_map('intval', $displayedReviewProductIds),
+                                true
+                            );
+
+                            if ($isFirstProductVariant) {
+                                $displayedReviewProductIds[] = $productId;
+                            }
+                        @endphp
+
+                    @if($isFirstProductVariant)
+
+                        <div class="px-6 md:px-8 pb-6">
+
+                            <div class="border-t border-dashed border-stone-200 pt-5">
+
+                                @if($hasReviewed)
+
+                                    <div class="flex items-center gap-2 text-green-700 text-sm font-semibold">
+                                        <i class="fas fa-check-circle"></i>
+                                        Bạn đã đánh giá sản phẩm này
+                                    </div>
+
+                                @else
+
+                                    <div class="w-full flex justify-end mt-4">
+                                    <button type="button"
+                                            onclick="openReviewModal('review-modal-{{ $productId }}')"
+                                            class="px-5 py-2.5 bg-red-800 text-white
+                                                hover:bg-red-900 rounded text-xs
+                                                font-bold uppercase tracking-wide transition">
+
+                                        <i class="fas fa-star mr-2"></i>
+                                        Đánh giá sản phẩm
+
+                                    </button>
+                                </div>
+
+                                    {{-- POPUP ĐÁNH GIÁ --}}
+                                    <div id="review-modal-{{ $productId }}"
+                                        class="fixed inset-0 z-[9999] hidden
+                                                items-center justify-center
+                                                bg-black/50 px-4 py-6">
+
+                                       <div class="bg-white w-full max-w-md
+                                        rounded-xl shadow-2xl overflow-hidden
+                                        max-h-[90vh] overflow-y-auto">
+
+                                            {{-- HEADER --}}
+                                            <div class="bg-gradient-to-r from-red-950 to-red-800
+                                                        px-5 py-4 flex items-center
+                                                        justify-between text-white">
+
+                                                <div>
+                                                    <h3 class="text-lg font-bold"
+                                                        style="font-family: Georgia, serif;">
+                                                        ĐÁNH GIÁ SẢN PHẨM
+                                                    </h3>
+
+                                                    <p class="text-red-100 text-xs mt-1">
+                                                        Chia sẻ trải nghiệm của bạn
+                                                    </p>
+                                                </div>
+
+                                                <button type="button"
+                                                        onclick="closeReviewModal('review-modal-{{ $productId }}')"
+                                                        class="text-white hover:text-red-200 text-2xl">
+                                                    &times;
+                                                </button>
+
+                                            </div>
+
+                                            {{-- FORM --}}
+                                            <form action="{{ route('rating.store', $productId) }}"
+                                            method="POST"
+                                            enctype="multipart/form-data"
+                                            class="p-5 space-y-4">
+
+                                                @csrf
+
+                                                <input type="hidden"
+                                                    name="MaDonHang"
+                                                    value="{{ $order->MaDonHang }}">
+
+                                                <div>
+                                                    <p class="text-sm font-semibold text-stone-800 mb-3">
+                                                        {{ $productName }}
+                                                    </p>
+
+                                                    <label class="block text-sm font-medium text-stone-700 mb-3">
+                                                        Mức độ hài lòng của bạn
+                                                    </label>
+
+                                                    {{-- CHỌN SAO --}}
+                                                    <div class="flex items-center gap-2"
+                                                        data-star-container>
+
+                                                        <input type="hidden"
+                                                            name="SoSao"
+                                                            value=""
+                                                            data-rating-input
+                                                            required>
+
+                                                        @for($star = 1; $star <= 5; $star++)
+
+                                                            <button type="button"
+                                                                    data-rating-star
+                                                                    data-value="{{ $star }}"
+                                                                    aria-label="{{ $star }} sao"
+                                                                    class="text-4xl text-stone-300
+                                                                    hover:text-amber-400
+                                                                    transition-colors duration-150">
+
+                                                                ★
+
+                                                            </button>
+
+                                                        @endfor
+
+                                                    </div>
+
+                                                    <p class="text-xs text-stone-500 mt-2"
+                                                    data-rating-label>
+                                                        Vui lòng chọn số sao
+                                                    </p>
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-sm font-medium
+                                                                text-stone-700 mb-2">
+                                                        Nội dung đánh giá
+                                                    </label>
+
+                                                    <textarea name="NoiDung"
+                                                            rows="3"
+                                                            maxlength="1000"
+                                                            placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..."
+                                                            class="w-full border border-stone-300
+                                                                    rounded-lg p-3 text-sm
+                                                                    focus:outline-none
+                                                                    focus:border-red-800
+                                                                    focus:ring-1 focus:ring-red-800
+                                                                    resize-none"></textarea>
+
+                                                    <p class="text-xs text-stone-400 mt-1">
+                                                        Tối đa 1000 ký tự.
+                                                    </p>
+                                                </div>
+                                                {{-- CHỌN ẢNH ĐÁNH GIÁ --}}
+                                                <div>
+                                                    <label class="block text-sm font-medium text-stone-700 mb-2">
+                                                        Hình ảnh đánh giá (không bắt buộc)
+                                                    </label>
+
+                                                    <input
+                                                        type="file"
+                                                        name="HinhAnh"
+                                                        accept="image/*"
+                                                        data-review-image-input
+                                                        data-preview="#review-image-preview-{{ $productId }}"
+                                                        class="w-full border border-stone-300 rounded-lg p-2
+                                                            text-sm file:mr-3 file:px-4 file:py-2
+                                                            file:border-0 file:rounded file:bg-red-50
+                                                            file:text-red-800 hover:file:bg-red-100"
+                                                    >
+
+                                                    {{-- ẢNH XEM TRƯỚC --}}
+                                                    <img
+                                                        id="review-image-preview-{{ $productId }}"
+                                                        src=""
+                                                        alt="Ảnh xem trước"
+                                                        class="hidden w-28 h-28 object-cover rounded-lg
+                                                            border border-stone-200 mt-3"
+                                                    >
+
+                                                    <p class="text-xs text-stone-400 mt-2">
+                                                        Chỉ chọn ảnh JPG, PNG hoặc WEBP. Dung lượng tối đa 2MB.
+                                                    </p>
+                                                </div>
+                                                {{-- BUTTON --}}
+                                                <div class="flex justify-end gap-3 pt-2">
+
+                                                    <button type="button"
+                                                            onclick="closeReviewModal('review-modal-{{ $productId }}')"
+                                                            class="px-5 py-2.5 border border-stone-300
+                                                                text-stone-600 hover:bg-stone-100
+                                                                text-xs font-bold uppercase rounded">
+
+                                                        Hủy
+
+                                                    </button>
+
+                                                    <button type="submit"
+                                                            class="px-6 py-2.5 bg-red-800
+                                                                text-white hover:bg-red-900
+                                                                text-xs font-bold uppercase
+                                                                rounded transition">
+
+                                                        <i class="fas fa-paper-plane mr-2"></i>
+                                                        Gửi đánh giá
+
+                                                    </button>
+
+                                                </div>
+
+                                            </form>
+
+                                        </div>
+
+                                    </div>
+
+                                @endif
+
+                            </div>
+
+                        </div>
+
+                    @endif
+
+                @endif
 
                 @empty
 
@@ -593,29 +793,7 @@
 
                     @endif
 
-                    {{-- ĐÁNH GIÁ --}}
-                    @if(in_array($status, ['DaGiao'], true))
-
-                        <form action="{{ route('order.show', $order->MaDonHang) }}"
-                              method="POST"
-                              class="show-form">
-
-                            @csrf
-
-                            <button type="submit"
-                                    class="px-6 py-3 bg-red-800
-                                           text-white hover:bg-red-900
-                                           text-xs font-bold uppercase
-                                           tracking-wide transition">
-
-                                <i class="fas fa-shopping-bag mr-2"></i>
-                                Đánh giá
-
-                            </button>
-
-                        </form>
-
-                    @endif
+                    
 
                 </div>
 
@@ -703,6 +881,140 @@ document.addEventListener('DOMContentLoaded', function () {
         'Sản phẩm sẽ được thêm vào giỏ hàng và chuyển đến trang xác nhận đơn hàng. Giá và tồn kho được tính theo thời điểm hiện tại.',
         'Mua lại'
     );
+
+});
+// ================= POPUP ĐÁNH GIÁ =================
+
+function openReviewModal(id) {
+    const modal = document.getElementById(id);
+
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeReviewModal(id) {
+    const modal = document.getElementById(id);
+
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+}
+
+// Đóng popup khi nhấn ra ngoài
+document.querySelectorAll('[id^="review-modal-"]').forEach(function(modal) {
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            closeReviewModal(modal.id);
+        }
+    });
+});
+
+// Đóng popup bằng phím ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        document.querySelectorAll('[id^="review-modal-"]').forEach(function(modal) {
+            if (!modal.classList.contains('hidden')) {
+                closeReviewModal(modal.id);
+            }
+        });
+    }
+});
+
+// ================= CHỌN SỐ SAO =================
+
+document.querySelectorAll('[data-star-container]').forEach(function(container) {
+
+    const stars = container.querySelectorAll('[data-rating-star]');
+    const input = container.querySelector('[data-rating-input]');
+    const label = container.parentElement.querySelector('[data-rating-label]');
+
+    if (!input || stars.length === 0) return;
+
+    const ratingTexts = {
+        1: 'Rất không hài lòng',
+        2: 'Không hài lòng',
+        3: 'Bình thường',
+        4: 'Hài lòng',
+        5: 'Rất hài lòng'
+    };
+
+    function updateStars(value) {
+
+        stars.forEach(function(star) {
+            const starValue = Number(star.dataset.value);
+
+            if (starValue <= value) {
+                star.classList.remove('text-stone-300');
+                star.classList.add('text-amber-400');
+            } else {
+                star.classList.remove('text-amber-400');
+                star.classList.add('text-stone-300');
+            }
+        });
+
+        input.value = value;
+
+        if (label) {
+            label.textContent = ratingTexts[value] || '';
+            label.classList.add('text-amber-600');
+        }
+    }
+
+    stars.forEach(function(star) {
+        star.addEventListener('click', function() {
+            updateStars(Number(this.dataset.value));
+        });
+    });
+
+});
+
+// ================= XEM TRƯỚC ẢNH ĐÁNH GIÁ =================
+
+document.querySelectorAll('[data-review-image-input]').forEach(function(input) {
+
+    input.addEventListener('change', function() {
+
+        const preview = document.querySelector(
+            this.dataset.preview
+        );
+
+        if (!preview) return;
+
+        const file = this.files[0];
+
+        if (!file) {
+            preview.src = '';
+            preview.classList.add('hidden');
+            return;
+        }
+
+        // Kiểm tra định dạng ảnh
+        if (!file.type.startsWith('image/')) {
+            alert('Vui lòng chọn file hình ảnh hợp lệ!');
+            this.value = '';
+            preview.src = '';
+            preview.classList.add('hidden');
+            return;
+        }
+
+        // Kiểm tra dung lượng tối đa 2MB
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ảnh không được vượt quá 2MB!');
+            this.value = '';
+            preview.src = '';
+            preview.classList.add('hidden');
+            return;
+        }
+
+        preview.src = URL.createObjectURL(file);
+        preview.classList.remove('hidden');
+
+    });
 
 });
 </script>

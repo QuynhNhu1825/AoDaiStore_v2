@@ -3,28 +3,27 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Models\InfoWeb;
+use Illuminate\Support\Facades\View;
+use App\Models\Category;
+
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         try {
-            view()->share('categories', \App\Models\Category::where('TrangThai', 1)->get());
+            View::share(
+                'categories',
+                Category::where('IsDeleted', 0)
+                    ->orderBy('MaDanhMuc', 'asc')
+                    ->get()
+            );
         } catch (\Exception $e) {
-            // Khi chưa kết nối DB thì bỏ qua
-            view()->share('categories', collect());
+            View::share('categories', collect());
         }
     }
-
 }

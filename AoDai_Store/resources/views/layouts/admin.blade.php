@@ -40,19 +40,19 @@
                     </a>
                     <a href="{{ route('admin.accounts.index') }}" class="flex items-center py-3 px-6 text-slate-300 hover:bg-slate-800 hover:text-white transition">
                         <i class="fas fa-user mr-3"></i> Quản lý tài khoản
+                    </a>
                     <a href="{{ route('orders.index') }}" class="flex items-center py-3 px-6 text-slate-300 hover:bg-slate-800 hover:text-white transition">
                         <i class="fas fa-shopping-cart mr-3"></i> Đơn hàng
+                    </a>
+                    <a href="{{ route('admin.comments.index') }}"
+                    class="flex items-center py-3 px-6 text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                        <i class="fas fa-comments mr-3"></i>
+                    Quản lý đánh giá
                     </a>
                     <a href="{{ route('statistics.index') }}"
                     class="flex items-center py-3 px-6 text-slate-300 hover:bg-slate-800 hover:text-white transition">
                     <i class="fas fa-chart-line mr-3"></i> Thống kê
                     </a>
-                    <a href="{{ route('admin.comments.index') }}"
-                    class="flex items-center py-3 px-6 text-slate-300 hover:bg-slate-800 hover:text-white transition">
-                        <i class="fas fa-comments mr-3"></i>
-                    Quản lý bình luận
-                    </a>
-
                 </nav>
             </aside>
 

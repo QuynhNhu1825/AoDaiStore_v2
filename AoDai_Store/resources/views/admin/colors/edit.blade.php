@@ -1,119 +1,184 @@
 @extends('layouts.admin')
 
-@section('title', 'Chỉnh sửa loại màu: ' . $color->TenLoaiMau)
+@section('title', 'Chỉnh sửa màu sắc')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
-    {{-- Nút quay lại --}}
-    <div class="mb-4">
+<div class="w-full max-w-4xl mx-auto space-y-4">
+
+    {{-- Quay lại --}}
+    <div>
         <a href="{{ route('admin.colors.index') }}"
-           class="text-indigo-600 hover:underline flex items-center transition">
-            <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách loại màu
+           class="inline-flex items-center gap-2 text-xs font-semibold text-red-800 hover:text-red-600 transition">
+            <i class="fas fa-arrow-left"></i>
+            Quay lại danh sách màu sắc
         </a>
     </div>
 
-    {{-- Thẻ nội dung --}}
-    <div class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-indigo-600">
-        <div class="mb-6 border-b pb-4">
-            <h2 class="text-xl font-bold text-gray-800 uppercase tracking-wide">
-                Cập nhật thông tin loại màu
+    {{-- Form chỉnh sửa --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
+
+        <div class="px-6 py-5 border-b border-red-100 bg-red-50/50">
+            <h2 class="text-sm font-bold text-red-900 uppercase tracking-wide">
+                Cập nhật màu sắc
             </h2>
-            <p class="text-xs text-gray-500 mt-1 italic">
-                Mã loại màu: #{{ $color->MaLoaiMau }}
+
+            <p class="text-[11px] text-stone-500 mt-1">
+                Mã màu: #{{ $color->MaMau }}
             </p>
         </div>
 
-        <form action="{{ route('admin.colors.update', $color->MaLoaiMau) }}"
-              method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.colors.update', $color->MaMau) }}"
+              method="POST"
+              class="p-6">
             @csrf
             @method('PUT')
 
-            <div class="grid grid-cols-1 gap-6">
+            <div class="space-y-5">
 
-                {{-- Tên loại màu --}}
+                {{-- Tên màu --}}
                 <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Tên loại màu
+                    <label class="block text-xs font-bold text-stone-700 mb-2">
+                        Tên màu <span class="text-red-600">*</span>
                     </label>
-                    <input type="text" name="TenLoaiMau"
-                           value="{{ old('TenLoaiMau', $color->TenLoaiMau) }}" required
-                           class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition
-                           @error('TenLoaiMau') border-red-500 @enderror"
-                           placeholder="Ví dụ: Đỏ đô, Xanh ngọc...">
 
-                    @error('TenLoaiMau')
-                        <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                    <input type="text"
+                           name="TenMau"
+                           value="{{ old('TenMau', $color->TenMau) }}"
+                           required
+                           maxlength="255"
+                           placeholder="Nhập tên màu sắc..."
+                           class="w-full px-4 py-3 text-xs rounded-xl border border-stone-200 bg-stone-50 outline-none transition focus:border-red-700 focus:ring-2 focus:ring-red-100 @error('TenMau') border-red-500 @enderror">
+
+                    @error('TenMau')
+                        <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
-                {{-- Hình ảnh màu --}}
+                {{-- Mã HEX --}}
                 <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Hình ảnh màu
+                    <label class="block text-xs font-bold text-stone-700 mb-2">
+                        Mã màu HEX
                     </label>
 
-                    @if($color->HinhAnhMau)
-                        <div class="mb-3">
-                            <img src="{{ asset('storage/' . $color->HinhAnhMau) }}"
-                                 class="h-20 rounded-lg border">
+                    <div class="flex items-center gap-3">
+                        <input type="color"
+                               id="colorPicker"
+                               value="{{ old('MaHex', $color->MaHex ?: '#800000') }}"
+                               class="w-12 h-11 rounded-lg border border-stone-200 cursor-pointer p-1 bg-white">
+
+                        <input type="text"
+                               name="MaHex"
+                               id="MaHex"
+                               value="{{ old('MaHex', $color->MaHex) }}"
+                               maxlength="7"
+                               placeholder="#800000"
+                               class="flex-1 px-4 py-3 text-xs rounded-xl border border-stone-200 bg-stone-50 outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100 @error('MaHex') border-red-500 @enderror">
+                    </div>
+
+                    @error('MaHex')
+                        <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+                    @enderror
+
+                    <p class="text-[10px] text-stone-400 mt-2">
+                        Nhập mã HEX gồm dấu # và 6 ký tự, ví dụ #800000.
+                    </p>
+                </div>
+
+                {{-- Xem trước --}}
+                <div class="p-4 rounded-xl border border-red-100 bg-red-50/40">
+                    <p class="text-[10px] font-bold uppercase text-red-900 mb-3">
+                        Xem trước màu sắc
+                    </p>
+
+                    <div class="flex items-center gap-3">
+                        <div id="colorPreview"
+                             class="w-12 h-12 rounded-xl border border-stone-200 shadow-sm"
+                             style="background-color: {{ $color->MaHex ?: '#800000' }}">
                         </div>
-                    @endif
 
-                    <input type="file" name="HinhAnhMau"
-                           accept="image/*"
-                           class="w-full border rounded-lg p-2.5">
+                        <div>
+                            <p class="text-xs font-semibold text-stone-700">Màu hiện tại</p>
+                            <p id="hexPreview" class="text-[11px] text-stone-500 mt-1">
+                                {{ $color->MaHex ?: '#800000' }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Mô tả --}}
-                <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Mô tả
-                    </label>
-                    <textarea name="MoTa" rows="5"
-                              class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition shadow-sm"
-                              placeholder="Mô tả chi tiết về màu sắc...">{{ old('MoTa', $color->MoTa) }}</textarea>
+                {{-- Thông tin --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="p-3 rounded-xl bg-stone-50 border border-stone-100">
+                        <p class="text-[10px] text-stone-400 mb-1">Mã màu</p>
+                        <p class="text-xs font-bold text-stone-700">
+                            #{{ $color->MaMau }}
+                        </p>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-stone-50 border border-stone-100">
+                        <p class="text-[10px] text-stone-400 mb-1">Ngày tạo</p>
+                        <p class="text-xs font-bold text-stone-700">
+                            {{ $color->NgayTao ? \Carbon\Carbon::parse($color->NgayTao)->format('d/m/Y H:i') : '---' }}
+                        </p>
+                    </div>
                 </div>
 
-                {{-- Trạng thái --}}
-                <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Trạng thái
-                    </label>
-                    <select name="TrangThai"
-                            class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                        <option value="1" {{ old('TrangThai', $color->TrangThai) == 1 ? 'selected' : '' }}>
-                            Hoạt động
-                        </option>
-                        <option value="0" {{ old('TrangThai', $color->TrangThai) == 0 ? 'selected' : '' }}>
-                            Ẩn
-                        </option>
-                    </select>
-                </div>
             </div>
 
             {{-- Nút --}}
-            <div class="mt-8 flex flex-col sm:flex-row gap-4 border-t pt-6">
+            <div class="mt-8 pt-5 border-t border-stone-100 flex flex-col sm:flex-row gap-3">
+
                 <button type="submit"
-                        class="flex-1 bg-indigo-600 text-white py-3.5 rounded-lg font-bold
-                               hover:bg-indigo-700 shadow-lg hover:shadow-indigo-200 transition-all
-                               flex justify-center items-center uppercase tracking-widest">
-                    <i class="fas fa-sync-alt mr-2"></i> Lưu thay đổi
+                        class="flex-1 inline-flex justify-center items-center gap-2 px-5 py-3 rounded-xl bg-red-800 text-white text-xs font-bold hover:bg-red-900 transition shadow-sm">
+                    <i class="fas fa-save"></i>
+                    Lưu thay đổi
                 </button>
 
                 <a href="{{ route('admin.colors.index') }}"
-                   class="px-10 py-3.5 border border-gray-300 text-gray-500 rounded-lg
-                          hover:bg-gray-50 transition font-bold text-center">
+                   class="inline-flex justify-center items-center gap-2 px-6 py-3 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold hover:bg-stone-200 transition">
+                    <i class="fas fa-times"></i>
                     Hủy
                 </a>
+
             </div>
         </form>
     </div>
 
-    <div class="mt-6 bg-indigo-50 p-4 rounded-lg flex items-center text-indigo-700 border border-indigo-100">
-        <i class="fas fa-info-circle mr-3"></i>
-        <p class="text-xs italic">
-            Lưu ý: Thay đổi loại màu có thể ảnh hưởng đến các sản phẩm đang sử dụng màu này.
+    {{-- Ghi chú --}}
+    <div class="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100">
+        <i class="fas fa-info-circle text-red-800 mt-0.5"></i>
+        <p class="text-[11px] text-red-900">
+            Lưu ý: Màu sắc có thể đang được sử dụng trong các chi tiết sản phẩm. Việc cập nhật màu sẽ ảnh hưởng đến những sản phẩm đang sử dụng màu này.
         </p>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const picker = document.getElementById('colorPicker');
+    const hexInput = document.getElementById('MaHex');
+    const preview = document.getElementById('colorPreview');
+    const hexPreview = document.getElementById('hexPreview');
+
+    function updatePreview(value) {
+        if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+            preview.style.backgroundColor = value;
+            hexPreview.textContent = value;
+        }
+    }
+
+    picker.addEventListener('input', function () {
+        hexInput.value = this.value.toUpperCase();
+        updatePreview(this.value);
+    });
+
+    hexInput.addEventListener('input', function () {
+        const value = this.value.trim();
+
+        if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+            picker.value = value;
+            updatePreview(value);
+        }
+    });
+});
+</script>
 @endsection

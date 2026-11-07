@@ -3,104 +3,159 @@
 namespace App\Http\Controllers;
 
 use App\Models\Size;
-use Illuminate\Support\Facades\DB;
+use App\Models\ProductDetail;
 use Illuminate\Http\Request;
 
 class AdminSizeController extends Controller
 {
+    /**
+     * Danh sách kích cỡ
+     */
     public function index(Request $request)
     {
-        $query = Size::query();
+        $search = $request->input('search');
 
-        if ($request->filled('search')) {
-            $query->where('TenSize', 'like', '%' . $request->search . '%');
+        $query = Size::where('IsDeleted', 0);
+
+        // Tìm kiếm theo tên size
+        if (!empty($search)) {
+            $query->where('TenSize', 'like', "%{$search}%");
         }
 
         $sizes = $query->orderBy('MaSize', 'desc')->get();
-        $totalSizeCount = Size::count();
-        $activeSizeCount = Size::where('TrangThai', 1)->count();
-        return view('admin.sizes.index', compact('sizes', 'totalSizeCount', 'activeSizeCount'));
+
+        // Tổng số kích cỡ chưa bị xóa
+        $totalSizeCount = Size::where('IsDeleted', 0)->count();
+
+        // Không có TrangThai riêng nên số đang áp dụng
+        // chính là số kích cỡ chưa bị xóa
+        $activeSizeCount = $totalSizeCount;
+
+        return view('admin.sizes.index', compact(
+            'sizes',
+            'totalSizeCount',
+            'activeSizeCount',
+            'search'
+        ));
     }
+
+    /**
+     * Form thêm kích cỡ
+     */
     public function create()
     {
         return view('admin.sizes.create');
     }
+
+    /**
+     * Thêm kích cỡ
+     */
     public function store(Request $request)
     {
-
-        $request->validate([
-            'TenSize' => 'required|string|max:255|unique:size,TenSize',
-            'MoTa' => 'required|string',
+        $validated = $request->validate([
+            'TenSize' => [
+                'required',
+                'string',
+                'max:20',
+                'unique:size,TenSize',
+            ],
         ], [
-            'TenSize.unique' => 'Kích cỡ này đã tồn tại trong hệ thống.',
             'TenSize.required' => 'Vui lòng nhập tên kích cỡ.',
-            'MoTa.required' => 'Vui lòng nhập mô tả chi tiết.',
+            'TenSize.max' => 'Tên kích cỡ không được vượt quá 20 ký tự.',
+            'TenSize.unique' => 'Kích cỡ này đã tồn tại trong hệ thống.',
         ]);
 
-        $data = $request->only(['TenSize', 'MoTa']);
-        $data['TrangThai'] = $request->TrangThai ?? 1;
+        $validated['IsDeleted'] = 0;
+        $validated['NgayTao'] = now();
+        $validated['NguoiTao'] = auth()->check()
+            ? auth()->id()
+            : null;
 
-        Size::create($data);
+        Size::create($validated);
 
-        return redirect()->route('admin.sizes.index')
-            ->with('success', 'Thêm kích cỡ mới thành công');
+        return redirect()
+            ->route('admin.sizes.index')
+            ->with('success', 'Thêm kích cỡ mới thành công!');
     }
+
+    /**
+     * Form chỉnh sửa kích cỡ
+     */
     public function edit($MaSize)
     {
-
-        $size = Size::findOrFail($MaSize);
+        $size = Size::where('IsDeleted', 0)
+            ->findOrFail($MaSize);
 
         return view('admin.sizes.edit', compact('size'));
     }
 
+    /**
+     * Cập nhật kích cỡ
+     */
     public function update(Request $request, $MaSize)
     {
-        $size = Size::findOrFail($MaSize);
+        $size = Size::where('IsDeleted', 0)
+            ->findOrFail($MaSize);
 
-        $request->validate([
-            'TenSize' => 'required|string|max:255|unique:size,TenSize,' . $MaSize . ',MaSize',
-            'MoTa' => 'required|string',
+        $validated = $request->validate([
+            'TenSize' => [
+                'required',
+                'string',
+                'max:20',
+                'unique:size,TenSize,' . $MaSize . ',MaSize',
+            ],
         ], [
-            'TenSize.unique' => 'Kích cỡ này đã tồn tại trong hệ thống, vui lòng nhập tên khác.',
             'TenSize.required' => 'Tên kích cỡ không được để trống.',
+            'TenSize.max' => 'Tên kích cỡ không được vượt quá 20 ký tự.',
+            'TenSize.unique' => 'Kích cỡ này đã tồn tại trong hệ thống.',
         ]);
 
-        $data = $request->only(['TenSize', 'MoTa']);
-        $data['TrangThai'] = $request->TrangThai ?? 1;
+        $validated['NguoiCapNhat'] = auth()->check()
+            ? auth()->id()
+            : null;
 
-        $size->update($data);
+        $validated['NgayCapNhat'] = now();
 
-        return redirect()->route('admin.sizes.index')
-            ->with('success', 'Cập nhật kích cỡ thành công');
+        $size->update($validated);
+
+        return redirect()
+            ->route('admin.sizes.index')
+            ->with('success', 'Cập nhật kích cỡ thành công!');
     }
+
+    /**
+     * Xóa mềm kích cỡ
+     */
     public function destroy($MaSize)
     {
-        $size = Size::findOrFail($MaSize);
-        $productCount = DB::table('sanpham_size')->where('MaSize', $MaSize)->count();
+        $size = Size::where('IsDeleted', 0)
+            ->findOrFail($MaSize);
+
+        // Kiểm tra size có đang được sử dụng
+        // trong chi tiết sản phẩm chưa bị xóa hay không
+        $productCount = ProductDetail::where('MaSize', $MaSize)
+            ->where('IsDeleted', 0)
+            ->count();
 
         if ($productCount > 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Không thể xóa! Size tồn tại sản phẩm'
-            ]);
+                'message' => 'Không thể xóa kích cỡ này vì đang được sử dụng trong chi tiết sản phẩm!'
+            ], 422);
         }
 
-        $size->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Xóa thành công!'
+        // Xóa mềm
+        $size->update([
+            'IsDeleted' => 1,
+            'NguoiXoa' => auth()->check()
+                ? auth()->id()
+                : null,
+            'NgayXoa' => now(),
         ]);
-    }
-    public function toggleStatus($MaSize) 
-    {
-        $size = Size::findOrFail($MaSize);
-        $size->TrangThai = $size->TrangThai == 1 ? 0 : 1;
-        $size->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Đã cập nhật trạng thái size thành công.'
+            'message' => 'Xóa kích cỡ thành công!'
         ]);
     }
 }

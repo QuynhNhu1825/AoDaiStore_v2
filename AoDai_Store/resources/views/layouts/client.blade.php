@@ -21,17 +21,49 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     {{-- ==================== GOOGLE FONTS ==================== --}}
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display&family=Roboto:wght@300;400;700&display=swap');
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-        body {
-            font-family: 'Roboto', sans-serif;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet">
 
-        .serif {
-            font-family: 'Playfair Display', serif;
-        }
-    </style>
+{{-- ==================== FONT GLOBAL ==================== --}}
+<style>
+    /* Font mặc định toàn bộ trang khách hàng */
+    body {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 400;
+    }
+
+    /* Tiêu đề chính */
+    h1, h2, h3 {
+        font-family: 'Playfair Display', serif;
+    }
+
+    /* Tiêu đề phụ */
+    h4, h5, h6 {
+        font-family: 'Roboto', sans-serif;
+    }
+
+    /* Nút bấm và biểu mẫu */
+    button,
+    input,
+    textarea,
+    select {
+        font-family: 'Roboto', sans-serif;
+    }
+
+    /* Class dùng riêng cho tiêu đề */
+    .serif,
+    .font-display {
+        font-family: 'Playfair Display', serif !important;
+    }
+
+    /* Class dùng riêng cho nội dung */
+    .font-body {
+        font-family: 'Roboto', sans-serif !important;
+    }
+</style>
 </head>
 
 <body class="bg-slate-50 text-stone-800">

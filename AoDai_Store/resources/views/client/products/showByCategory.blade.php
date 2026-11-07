@@ -1,12 +1,12 @@
 @extends('layouts.client')
 
-@section('title', 'Danh mục: ' . $category->TenLoaiSP)
+@section('title', 'Danh mục: ' . $category->TenDanhMuc)
 
 @section('content')
     <section class="bg-stone-100 py-12 border-b border-stone-200">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <h1 class="serif text-4xl font-bold text-stone-800 uppercase tracking-widest">
-                {{ $category->TenLoaiSP }}
+                {{ $category->TenDanhMuc }}
             </h1>
             <p class="text-stone-500 mt-2 italic">{{ $category->MoTa }}</p>
         </div>
@@ -24,7 +24,13 @@
                     </div>
                     <div class="p-6 text-center flex-grow">
                         <h3 class="serif text-md font-semibold text-stone-700 uppercase truncate">{{ $s->TenSanPham }}</h3>
-                        <p class="text-red-800 font-bold mt-2">{{ number_format($s->GiaBan, 0, ',', '.') }}đ</p>
+                        @php
+                            $giaThapNhat = $s->chiTietSanPham->min('Gia');
+                        @endphp
+
+                        <p class="text-red-800 font-bold mt-2">
+                            {{ number_format($giaThapNhat ?? 0, 0, ',', '.') }}đ
+                        </p>
                         <a href="{{ route('product.detail', $s->MaSanPham) }}" 
                            class="inline-block mt-4 border-b border-stone-800 text-[10px] uppercase font-bold pb-1">
                             Xem chi tiết

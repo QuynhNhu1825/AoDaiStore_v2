@@ -36,9 +36,6 @@ class Material extends Model
         'IsDeleted' => 'boolean',
     ];
 
-    /**
-     * Một chất liệu có nhiều sản phẩm.
-     */
     public function products()
     {
         return $this->hasMany(

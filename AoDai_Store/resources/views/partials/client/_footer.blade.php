@@ -59,9 +59,9 @@
                     </li>
 
                     <li>
-                        <a href="{{ url('/products') }}"
+                        <a href="{{ url('/gioi-thieu') }}"
                            class="hover:text-white transition">
-                            Áo dài truyền thống và cách tân
+                            Giới thiệu
                         </a>
                     </li>
                 </ul>
