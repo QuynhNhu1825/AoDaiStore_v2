@@ -30,6 +30,8 @@ class Order extends Model
         'GhiChu',
         'NgayDat',
         'NgayCapNhat',
+        'TrangThaiThanhToan',
+        'NgayThanhToan',
     ];
 
     protected $casts = [
@@ -37,6 +39,7 @@ class Order extends Model
         'PhiVanChuyen' => 'decimal:2',
         'NgayDat' => 'datetime',
         'NgayCapNhat' => 'datetime',
+        'NgayThanhToan'=> 'datetime',
     ];
 
     /**
@@ -50,6 +53,9 @@ class Order extends Model
             'DangGiao' => 'Đang giao',
             'DaGiao' => 'Đã giao',
             'DaHuy' => 'Đã hủy',
+            'ChuaThanhToan' => 'Chưa thanh toán',
+            'ChoXacNhanThanhToan' => 'Chờ xác nhận thanh toán',
+            'DaThanhToan' => 'Đã thanh toán',
             default => $this->TrangThai,
         };
     }

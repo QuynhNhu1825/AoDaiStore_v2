@@ -196,12 +196,12 @@
 
                                 Thanh toán khi nhận hàng (COD)
 
-                            @elseif($paymentMethod === 'vnpay')
+                            @elseif($paymentMethod === 'vietqr')
 
                                 <i class="fas fa-credit-card
                                           text-blue-700 mr-2"></i>
 
-                                Thanh toán qua VNPay
+                                Thanh toán qua VietQR (Chuyển khoản)
 
                             @else
 
