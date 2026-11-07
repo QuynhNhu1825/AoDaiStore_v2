@@ -190,18 +190,14 @@
                     <td class="px-1 py-3 align-middle">
                         <div class="flex justify-center items-center gap-1">
 
-                            <button onclick="toggleStatus('{{ $product->MaSanPham }}', {{ $product->TrangThai }})"
-                                title="{{ $product->TrangThai == 1 ? 'Tạm dừng bán' : 'Kích hoạt bán' }}"
-                                class="w-7 h-7 flex items-center justify-center rounded-md border border-red-200 text-red-700 hover:bg-red-800 hover:text-white transition">
-                                <i class="fas {{ $product->TrangThai == 1 ? 'fa-eye-slash' : 'fa-eye' }} text-[10px]"></i>
-                            </button>
-
+                            {{-- Sửa sản phẩm --}}
                             <a href="{{ route('admin.products.edit', $product->MaSanPham) }}"
                                 title="Sửa sản phẩm"
                                 class="w-7 h-7 flex items-center justify-center rounded-md border border-red-200 text-red-800 hover:bg-red-800 hover:text-white transition">
                                 <i class="fas fa-edit text-[10px]"></i>
                             </a>
 
+                            {{-- Xóa sản phẩm --}}
                             <button onclick="confirmDeleteProduct('{{ $product->MaSanPham }}', '{{ addslashes($product->TenSanPham) }}')"
                                 title="Xóa sản phẩm"
                                 class="w-7 h-7 flex items-center justify-center rounded-md border border-red-200 text-red-600 hover:bg-red-700 hover:text-white transition">
@@ -258,51 +254,7 @@
             }
         });
     @endif
-    function toggleStatus(id, currentStatus) {
-            const newStatus = currentStatus === 1 ? 0 : 1;
-            const actionText = newStatus === 1 ? 'hiển thị và bán lại' : 'tạm ẩn';
-            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            Swal.fire({
-                title: '<span class="serif">Cập nhật trạng thái</span>',
-                html: `<div class="text-stone-500 text-sm">Bạn muốn ${actionText} sản phẩm này?</div>`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Xác nhận',
-                cancelButtonText: 'Hủy',
-                confirmButtonColor: '#991b1b',
-                customClass: { popup: 'glass-popup', confirmButton: 'btn-delete-confirm', cancelButton: 'btn-delete-cancel' },
-                buttonsStyling: false,
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(`/admin/products/toggle-status/${id}`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': token,
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ status: newStatus })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({ 
-                                icon: 'success', 
-                                title: 'Đã cập nhật', 
-                                timer: 1000, 
-                                showConfirmButton: false, 
-                                customClass: { popup: 'glass-popup' } 
-                            });
-                            refreshTable();;
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-                }
-            });
-        }
-
+    
     function refreshTable() {
         const container = document.getElementById('full-container'); 
         fetch(window.location.href)

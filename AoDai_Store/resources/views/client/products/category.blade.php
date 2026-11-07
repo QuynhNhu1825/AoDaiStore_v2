@@ -7,7 +7,9 @@
     <div class="max-w-7xl mx-auto px-4">
         
         <div class="text-center mb-12">
-            <h1 class="serif text-4xl font-bold text-stone-800 italic">Danh mục sản phẩm</h1>
+            <h1 class="serif text-3xl font-bold text-stone-800 uppercase tracking-widest">
+                Danh mục sản phẩm
+            </h1>
             <p class="text-stone-500 uppercase tracking-widest text-xs mt-2">Tinh hoa di sản Việt</p>
         </div>
 
@@ -17,9 +19,9 @@
                Tất cả
             </a>
             @foreach($categories as $cat)
-                <a href="{{ route('products.category', ['category' => $cat->MaLoaiSP]) }}" 
-                   class="px-6 py-2 rounded-full border {{ request('category') == $cat->MaLoaiSP ? 'bg-red-900 text-white border-red-900' : 'border-stone-200 text-stone-600' }} hover:border-red-900 transition text-sm font-bold uppercase tracking-wider">
-                    {{ $cat->TenLoaiSP }}
+                <a href="{{ route('products.category', ['category' => $cat->MaDanhMuc]) }}" 
+                   class="px-6 py-2 rounded-full border {{ request('category') == $cat->MaDanhMuc ? 'bg-red-900 text-white border-red-900' : 'border-stone-200 text-stone-600' }} hover:border-red-900 transition text-sm font-bold uppercase tracking-wider">
+                    {{ $cat->MaDanhMuc }}
                 </a>
             @endforeach
         </div>
@@ -38,7 +40,13 @@
                         <p class="text-[10px] text-stone-400 uppercase tracking-[0.1em] mb-3 italic">
                                 {{ $s->chatlieu->TenChatLieu ?? 'Vải lụa truyền thống' }}
                             </p>
-                        <p class="text-red-800 font-bold text-lg mb-4">{{ number_format($s->GiaBan, 0, ',', '.') }}đ</p>
+                        @php
+                            $giaThapNhat = $s->chiTietSanPham->min('Gia');
+                        @endphp
+
+                        <p class="text-red-800 font-bold mt-2">
+                            {{ number_format($giaThapNhat ?? 0, 0, ',', '.') }}đ
+                        </p>
                         <a href="{{ route('product.detail', $s->MaSanPham) }}" class="inline-block border-b border-stone-800 text-[10px] uppercase font-bold tracking-widest pb-1 hover:text-red-700 hover:border-red-700 transition">
                             Xem chi tiết
                         </a>

@@ -34,8 +34,7 @@
         {{-- ================= TIÊU ĐỀ ================= --}}
         <div class="text-center mb-10">
 
-            <h1 class="text-3xl font-bold uppercase tracking-widest text-stone-900"
-                style="font-family: Georgia, serif;">
+            <h1 class="serif text-3xl font-bold text-stone-800 uppercase tracking-widest">
                 ĐƠN HÀNG CỦA TÔI
             </h1>
 
@@ -69,58 +68,35 @@
             </a>
         </div>
 
-        
-{{-- THANH LỌC TRẠNG THÁI ĐƠN HÀNG --}}
-@php
-    $statusTabs = [
-        '' => 'Tất cả',
-        'ChoXacNhan' => 'Chờ xác nhận',
-        'DaXacNhan' => 'Đã xác nhận',
-        'DangGiao' => 'Đang giao',
-        'DaGiao' => 'Đã giao',
-        'DaHuy' => 'Đã hủy',
-    ];
+        {{-- ================= TAB TRẠNG THÁI ================= --}}
+        <div class="bg-white border border-stone-200
+                    rounded-lg shadow-sm mb-7 overflow-hidden">
 
-    $currentStatus = request('status', '');
-@endphp
+            <div class="flex overflow-x-auto">
 
-<div class="w-full bg-white rounded-xl border border-stone-200
-            shadow-sm overflow-hidden mb-8">
+                @foreach($tabs as $key => $label)
 
-    <div class="grid grid-cols-3 md:grid-cols-6">
+                    <a href="{{ route('order.history', ['status' => $key]) }}"
+                       class="relative flex-shrink-0 px-5 py-5
+                              text-sm font-semibold text-center
+                              whitespace-nowrap transition
+                              {{ $currentStatus === $key
+                                  ? 'text-red-800 bg-red-50'
+                                  : 'text-stone-600 hover:text-red-800 hover:bg-stone-50' }}">
 
-        @foreach($statusTabs as $value => $label)
+                        {{ $label }}
 
-            @php
-                $isActive = $currentStatus === $value;
-            @endphp
+                        @if($currentStatus === $key)
+                            <span class="absolute bottom-0 left-0 right-0
+                                         h-[3px] bg-red-800"></span>
+                        @endif
 
-            <a href="{{ route('order.history', ['status' => $value]) }}"
-               class="relative min-h-[70px]
-                      flex items-center justify-center
-                      px-2 py-4 text-center
-                      text-xs sm:text-sm font-semibold
-                      transition-all duration-200
-                      {{ $isActive
-                          ? 'bg-red-50 text-red-900'
-                          : 'bg-white text-stone-600 hover:bg-stone-50 hover:text-red-900' }}">
+                    </a>
 
-                <span class="leading-snug">
-                    {{ $label }}
-                </span>
+                @endforeach
 
-                @if($isActive)
-                    <span class="absolute bottom-0 left-0
-                                 w-full h-[3px] bg-red-800"></span>
-                @endif
-
-            </a>
-
-        @endforeach
-
-    </div>
-</div>
-
+            </div>
+        </div>
 
         {{-- ================= DANH SÁCH ĐƠN HÀNG ================= --}}
         <div class="space-y-6">
@@ -205,38 +181,30 @@
                                 $sizeName = $variant?->size?->TenSize
                                     ?? 'Không xác định';
 
-                                // Ảnh sản phẩm
-                                $imagePath = $product?->HinhAnh ?? null;
-
-                                // Nếu có quan hệ ảnh thì ưu tiên ảnh chính
-                                if (
-                                    !$imagePath &&
-                                    $product &&
-                                    method_exists($product, 'hinhanhsanpham')
-                                ) {
-                                    $image = $product->hinhanhsanpham
-                                        ->first();
-
-                                    $imagePath = $image?->LinkAnh;
-                                }
+                                // Lấy tên ảnh từ cột HinhAnh
+                                $imagePath = $product?->HinhAnh;
 
                                 // Chuẩn hóa đường dẫn ảnh
-                                if ($imagePath) {
+                                if (!empty($imagePath)) {
 
+                                    // Nếu là đường dẫn ảnh bên ngoài
                                     if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
+
                                         $imageUrl = $imagePath;
-                                    } elseif (str_starts_with($imagePath, 'storage/')) {
-                                        $imageUrl = asset($imagePath);
-                                    } elseif (str_starts_with($imagePath, 'img/')) {
-                                        $imageUrl = asset($imagePath);
+
                                     } else {
-                                        $imageUrl = asset(
-                                            'storage/' . ltrim($imagePath, '/')
-                                        );
+
+                                        // Chỉ lấy tên file ảnh
+                                        $fileName = basename($imagePath);
+
+                                        // Ảnh nằm trong public/img/products/
+                                        $imageUrl = asset('img/products/' . $fileName);
                                     }
 
                                 } else {
+
                                     $imageUrl = asset('img/no-image.png');
+
                                 }
 
                                 $lineTotal =
@@ -262,12 +230,8 @@
                                 {{-- THÔNG TIN SẢN PHẨM --}}
                                 <div class="flex-1 min-w-0">
 
-                                    <h4 class="font-bold text-stone-800
-                                               text-base uppercase leading-relaxed"
-                                        style="font-family: Georgia, serif;">
-
+                                    <h4 class="font-bold text-stone-800 text-base uppercase leading-relaxed">
                                         {{ $productName }}
-
                                     </h4>
 
                                     <div class="flex flex-wrap

@@ -9,7 +9,7 @@
 
         {{-- TIÊU ĐỀ --}}
         <div class="text-center mb-12">
-            <h1 class="serif text-4xl font-bold text-stone-800 italic">
+            <h1 class="serif text-3xl font-bold text-stone-800 uppercase tracking-widest">
                 Danh sách sản phẩm
             </h1>
 

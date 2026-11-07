@@ -40,9 +40,9 @@
                 <div class="absolute hidden group-hover:block left-1/2 -translate-x-1/2 top-full w-64 pt-2 z-50">
                     <div class="bg-white shadow-xl border border-stone-100 py-2 rounded-lg transition-all">
                         @foreach($categories as $cat)
-                            <a href="{{ route('category.show', $cat->MaLoaiSP) }}" 
+                            <a href="{{ route('category.show', $cat->MaDanhMuc) }}" 
                                class="block px-4 py-3 text-sm text-stone-600 hover:bg-red-50 hover:text-red-800 transition-colors border-b border-stone-50 last:border-0">
-                                {{ $cat->TenLoaiSP }}
+                                {{ $cat->TenDanhMuc }}
                             </a>
                         @endforeach
                     </div>

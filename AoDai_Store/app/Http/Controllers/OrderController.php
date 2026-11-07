@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\ProductDetail;
 use App\Models\Cart;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -61,21 +62,33 @@ public function index(Request $request)
      * Xem chi tiết đơn hàng.
      */
     public function show($id)
-    {
-        $order = Order::where('MaDonHang', $id)
-            ->where('MaTaiKhoan', Auth::id())
-            ->firstOrFail();
+{
+    $order = Order::where('MaDonHang', $id)
+        ->where('MaTaiKhoan', Auth::id())
+        ->firstOrFail();
 
-        $orderDetails = OrderDetail::where(
-            'MaDonHang',
-            $order->MaDonHang
-        )->get();
+    $orderDetails = OrderDetail::with([
+        'productDetail.product',
+        'productDetail.color',
+        'productDetail.size',
+        'productDetail.product.hinhanhsanpham'
+    ])
+        ->where('MaDonHang', $order->MaDonHang)
+        ->get();
 
-        return view('client.order.detail', compact(
-            'order',
-            'orderDetails'
-        ));
-    }
+    $reviewedProductIds = Review::where('MaTaiKhoan', Auth::id())
+        ->where('MaDonHang', $order->MaDonHang)
+        ->pluck('MaSanPham')
+        ->unique()
+        ->values()
+        ->toArray();
+
+    return view('client.order.detail', compact(
+        'order',
+        'orderDetails',
+        'reviewedProductIds'
+    ));
+}
 
     /**
      * Đặt hàng từ những sản phẩm được chọn trong giỏ.
@@ -189,7 +202,6 @@ public function index(Request $request)
                     'PhuongThucThanhToan' =>
                         $validated['PhuongThucThanhToan'],
                     'TrangThai' => 'ChoXacNhan',
-                    'TrangThaiThanhToan' => 'ChuaThanhToan',
                     'GhiChu' => $validated['GhiChu'] ?? null,
                 ]);
 
@@ -216,52 +228,29 @@ public function index(Request $request)
                 return $order;
             });
 
+            session()->forget('selected_cart_ids');
+            // Nếu chọn VietQR thì chuyển đến trang thanh toán QR
+            if ($order->PhuongThucThanhToan === 'vietqr') {
+                return redirect()->route('vietqr.show', $order->MaDonHang);
+            }
+            return redirect()
+                ->route('order.history')
+                ->with(
+                    'success',
+                    'Đặt hàng thành công! Mã đơn hàng #' .
+                    $order->MaDonHang
+                );
+
         } catch (\Throwable $e) {
+
             report($e);
 
             return back()
                 ->withInput()
-                ->with('error', 'Không thể tạo đơn hàng: ' . $e->getMessage());
+                ->with('error', $e->getMessage());
         }
-
-        // Điều hướng nằm ngoài try/catch: tránh báo lỗi đặt hàng
-        // khi đơn đã được lưu thành công nhưng route gặp vấn đề.
-        session()->forget('selected_cart_ids');
-
-        if ($order->PhuongThucThanhToan === 'vietqr') {
-            return redirect()->route('vietqr.show', $order->MaDonHang);
-        }
-
-        return redirect()
-            ->route('order.history', $order->MaDonHang)
-            ->with('success', 'Đặt hàng thành công! Mã đơn hàng #' . $order->MaDonHang);
-    }
-    public function confirmTransfer($id)
-{
-    $updated = Order::where('MaDonHang', $id)
-        ->where('MaTaiKhoan', Auth::id())
-        ->where('PhuongThucThanhToan', 'vietqr')
-        ->where('TrangThai', 'ChoXacNhan')
-        ->where('TrangThaiThanhToan', 'ChuaThanhToan')
-        ->update([
-            'TrangThaiThanhToan' => 'ChoXacNhanThanhToan',
-        ]);
-
-    if (!$updated) {
-        return back()->with(
-            'error',
-            'Không thể xác nhận chuyển khoản.'
-        );
     }
 
-    return redirect()
-        ->route('vietqr.show', $id)
-        ->with(
-            'success',
-            'Đã ghi nhận chuyển khoản. '
-            . 'Vui lòng chờ Admin xác nhận.'
-        );
-}
     /**
      * Hủy đơn hàng đang chờ xác nhận.
      * Hoàn lại tồn kho.
@@ -285,12 +274,6 @@ public function index(Request $request)
                 if ($order->TrangThai !== 'ChoXacNhan') {
                     throw new Exception(
                         'Chỉ có thể hủy đơn đang chờ xác nhận.'
-                    );
-                }
-
-                if ($order->TrangThaiThanhToan === 'DaThanhToan') {
-                    throw new Exception(
-                        'Đơn hàng đã ghi nhận thanh toán. Vui lòng liên hệ cửa hàng để được hỗ trợ hủy.'
                     );
                 }
 
@@ -489,6 +472,34 @@ public function reorder($id)
             'Có lỗi xảy ra khi mua lại đơn hàng. Vui lòng thử lại.'
         );
     }
+}
+/**
+ * Khách hàng xác nhận đã chuyển khoản VietQR.
+ */
+public function confirmTransfer($id)
+{
+    $order = Order::where('MaDonHang', $id)
+        ->where('MaTaiKhoan', Auth::id())
+        ->where('PhuongThucThanhToan', 'vietqr')
+        ->firstOrFail();
+
+    // Nếu đơn đã được xác nhận thanh toán
+    if ($order->TrangThaiThanhToan === 'DaThanhToan') {
+        return back()->with(
+            'success',
+            'Đơn hàng này đã được xác nhận thanh toán.'
+        );
+    }
+
+    // Chuyển sang trạng thái chờ Admin xác nhận
+    $order->update([
+        'TrangThaiThanhToan' => 'ChoXacNhanThanhToan'
+    ]);
+
+    return back()->with(
+        'success',
+        'Đã gửi yêu cầu xác nhận chuyển khoản. Vui lòng chờ cửa hàng kiểm tra.'
+    );
 }
 
 }

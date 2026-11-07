@@ -10,10 +10,11 @@ class RatingController extends Controller
 {
     public function store(Request $request, $MaSanPham)
     {
-        $request->validate([
+            $request->validate([
+            'MaDonHang' => 'required|integer',
             'SoSao' => 'required|integer|min:1|max:5',
-            'NoiDung' => 'nullable|string',
-            'HinhAnh' => 'nullable|image|max:2048'
+            'NoiDung' => 'nullable|string|max:1000',
+            'HinhAnh' => 'nullable|image|max:2048',
         ]);
 
         $fileName = null;
@@ -24,6 +25,7 @@ class RatingController extends Controller
         }
 
         DB::table('danhgia')->insert([
+            'MaDonHang' => $request->MaDonHang,
             'SoSao'       => $request->SoSao,
             'NoiDung'     => $request->NoiDung,
             'HinhAnh'     => $fileName,

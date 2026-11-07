@@ -537,71 +537,200 @@
 {{-- =========================
      ĐÁNH GIÁ SẢN PHẨM
 ========================== --}}
-<div class="w-full px-4 py-10 border-t mt-12">
-    <h2 class="text-2xl font-bold mb-6">Đánh giá sản phẩm</h2>
+<details class="w-full mt-12 border-t border-stone-200 group">
 
-    {{-- DANH SÁCH ĐÁNH GIÁ --}}
-    @forelse($dsDanhGia as $dg)
-        <div class="border-b py-4">
-            <p class="font-semibold">
-                {{ $dg->TenDangNhap ?? 'Khách hàng' }}
-                <span class="text-yellow-500 ml-2">
-                    @for($i = 1; $i <= 5; $i++)
-                        {{ $i <= $dg->SoSao ? '★' : '☆' }}
-                    @endfor
+    {{-- TIÊU ĐỀ CÓ THỂ BẤM --}}
+    <summary class="list-none cursor-pointer py-6 flex items-center justify-between
+                    hover:bg-stone-50 transition duration-200">
+
+        <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-amber-700 mb-1">
+                Cảm nhận khách hàng
+            </p>
+
+            <div class="flex items-center gap-3">
+                <h2 class="serif text-2xl font-bold text-stone-900">
+                    Đánh giá sản phẩm
+                </h2>
+
+                <span class="text-sm text-stone-500">
+                    ({{ $dsDanhGia->count() }} đánh giá)
                 </span>
-            </p>
-            <p class="text-gray-700 mt-1">{{ $dg->NoiDung }}</p>
-            <p class="text-xs text-gray-400 mt-1">
-                {{ \Carbon\Carbon::parse($dg->NgayDanhGia)->format('d/m/Y') }}
-            </p>
+            </div>
         </div>
-    @empty
-        <p class="text-gray-500 italic">Chưa có đánh giá nào.</p>
-    @endforelse
 
-    {{-- FORM ĐÁNH GIÁ --}}
-    @if(auth()->check() && $daMua)
-        <form
-            action="{{ route('rating.store', $product->MaSanPham) }}"
-            method="POST"
-            enctype="multipart/form-data"
-            class="mt-8 bg-stone-50 p-6 rounded"
-        >
-            @csrf
-            <label class="block font-semibold mb-2">Chọn số sao:</label>
-            <select name="SoSao" required class="border p-2 rounded mb-4">
-                <option value="">-- Chọn --</option>
-                @for($i = 5; $i >= 1; $i--)
-                    <option value="{{ $i }}">{{ $i }} sao</option>
-                @endfor
-            </select>
+        {{-- ICON MŨI TÊN --}}
+        <svg
+            class="w-6 h-6 text-stone-600 transition-transform duration-300
+                   group-open:rotate-180"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.8">
 
-            <label class="block font-semibold mb-2">Nhận xét:</label>
-            <textarea
-                name="NoiDung"
-                rows="4"
-                class="w-full border rounded p-2 mb-4"
-                required
-            ></textarea>
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m19 9-7 7-7-7"/>
+        </svg>
 
-            <label class="block font-semibold mb-2">Ảnh (nếu có):</label>
-            <input type="file" name="HinhAnh" class="mb-4">
+    </summary>
 
-            <button
-                type="submit"
-                class="bg-stone-900 text-white px-6 py-2 rounded hover:bg-black"
-            >
-                Gửi đánh giá
-            </button>
-        </form>
-    @else
-        <p class="text-sm italic text-gray-500 mt-6">
-            * Chỉ khách hàng đã mua sản phẩm mới được đánh giá
-        </p>
-    @endif
-</div>
 
+    {{-- NỘI DUNG ĐÁNH GIÁ --}}
+    <div class="pb-8 pt-2">
+
+        <div class="space-y-2 max-w-5xl">
+
+            @forelse($dsDanhGia as $dg)
+
+                <div class="bg-white border border-stone-200 rounded-lg px-4 py-2.5
+                            transition duration-300
+                            hover:border-amber-300 hover:shadow-md">
+
+                    <div class="flex items-start gap-4">
+
+                        {{-- AVATAR --}}
+                        <div class="w-10 h-10 shrink-0 rounded-full
+                                    bg-[#F5E9E3] border border-[#E8D3C8]
+                                    flex items-center justify-center">
+
+                            <span class="text-lg font-bold text-[#A71920] uppercase">
+                                {{ mb_substr($dg->TenDangNhap ?? 'K', 0, 1, 'UTF-8') }}
+                            </span>
+
+                        </div>
+
+                        {{-- THÔNG TIN ĐÁNH GIÁ --}}
+                        <div class="flex-1 min-w-0">
+
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+
+                                <div>
+                                    <h3 class="font-bold text-stone-900 text-base">
+                                        {{ $dg->TenDangNhap ?? 'Khách hàng' }}
+                                    </h3>
+
+                                    <p class="text-xs text-stone-400 mt-0.5">
+                                        {{ \Carbon\Carbon::parse($dg->NgayDanhGia)->format('d/m/Y') }}
+                                    </p>
+                                </div>
+
+                                {{-- SỐ SAO --}}
+                                <div class="flex items-center gap-0.5">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <span class="text-xl {{ $i <= $dg->SoSao ? 'text-amber-500' : 'text-stone-300' }}">
+                                            ★
+                                        </span>
+                                    @endfor
+                                </div>
+
+                            </div>
+
+                            {{-- NỘI DUNG --}}
+                            @if(!empty($dg->NoiDung))
+                                <p class="text-stone-600 text-sm leading-5 mt-1.5
+                                          whitespace-pre-line break-words">
+                                    {{ $dg->NoiDung }}
+                                </p>
+                            @else
+                                <p class="text-stone-400 text-sm italic mt-3">
+                                    Khách hàng không để lại nội dung đánh giá.
+                                </p>
+                            @endif
+                            {{-- HÌNH ẢNH ĐÁNH GIÁ --}}
+                            @if(!empty($dg->HinhAnh))
+                                <div class="mt-3 flex flex-wrap gap-3">
+                                    <img
+                                        src="{{ asset('img/ratings/' . $dg->HinhAnh) }}"
+                                        alt="Ảnh đánh giá sản phẩm"
+                                        onclick="openReviewImage(this.src)"
+                                        class="w-24 h-24 object-cover rounded-lg
+                                            border border-stone-200
+                                            hover:scale-105 hover:shadow-md
+                                            transition duration-300 cursor-zoom-in"
+                                        onerror="this.style.display='none'"
+                                    >
+                                </div>
+                            @endif
+                        {{-- PHẢN HỒI CỦA ADMIN --}}
+                        @if(!empty($dg->PhanHoi))
+                            <div class="mt-2 ml-2 sm:ml-4 border-l-[3px] border-[#A71920] bg-[#FAF5F3] rounded-r-lg px-3 py-2">
+
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="w-6 h-6 rounded-full bg-[#F5E9E3] flex items-center justify-center">
+                                        <i class="fas fa-store text-[#A71920] text-[10px]"></i>
+                                    </span>
+
+                                    <span class="text-sm font-bold text-[#A71920]">
+                                        Áo Dài Heritage
+                                    </span>
+
+                                    <span class="text-[10px] text-stone-400">
+                                        · Phản hồi từ cửa hàng
+                                    </span>
+                                </div>
+
+                                <p class="text-sm text-stone-600 leading-5 whitespace-pre-line break-words">
+                                    {{ $dg->PhanHoi }}
+                                </p>
+
+                            </div>
+                        @endif
+                        </div>
+                    </div>
+
+                </div>
+
+            @empty
+
+                <div class="bg-[#FAF8F5] border border-dashed border-stone-300
+                            rounded-lg py-10 px-5 text-center">
+
+                    <p class="text-3xl text-amber-500 mb-3">☆</p>
+
+                    <h3 class="font-semibold text-stone-800 mb-2">
+                        Chưa có đánh giá nào
+                    </h3>
+
+                    <p class="text-sm text-stone-500">
+                        Hãy là người đầu tiên chia sẻ cảm nhận về sản phẩm này nhé!
+                    </p>
+
+                </div>
+
+            @endforelse
+
+        </div>
+
+    </div>
+
+</details>
+                {{-- POPUP XEM ẢNH ĐÁNH GIÁ --}}
+                <div id="reviewImageModal"
+                    class="fixed inset-0 z-[99999] hidden
+                            items-center justify-center
+                            bg-black/80 p-4
+                            backdrop-blur-sm"
+                    onclick="closeReviewImage()">
+
+                    {{-- Nút đóng --}}
+                    <button type="button"
+                            onclick="closeReviewImage()"
+                            class="absolute top-5 right-7 text-white
+                                text-4xl font-light hover:text-amber-400
+                                transition">
+                        &times;
+                    </button>
+
+                    {{-- Ảnh phóng to --}}
+                    <img id="reviewImagePreview"
+                        src=""
+                        alt="Ảnh đánh giá phóng to"
+                        onclick="event.stopPropagation()"
+                        class="max-w-full max-h-[85vh] object-contain
+                                rounded-lg shadow-2xl cursor-default">
+                </div>
 
 {{-- =========================
      SẢN PHẨM LIÊN QUAN
@@ -1067,7 +1196,40 @@ Swal.fire({
             // Nếu ĐÃ ĐĂNG NHẬP, form sẽ tự động gửi đi như bình thường do không vào if
         });
     }
+// ===============================
+// POPUP XEM ẢNH ĐÁNH GIÁ
+// ===============================
 
+function openReviewImage(src) {
+    const modal = document.getElementById('reviewImageModal');
+    const preview = document.getElementById('reviewImagePreview');
+
+    preview.src = src;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    document.body.style.overflow = 'hidden';
+}
+
+function closeReviewImage() {
+    const modal = document.getElementById('reviewImageModal');
+    const preview = document.getElementById('reviewImagePreview');
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+
+    preview.src = '';
+
+    document.body.style.overflow = '';
+}
+
+// Nhấn ESC để đóng ảnh
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeReviewImage();
+    }
+});
 </script>
 
 {{-- =========================
