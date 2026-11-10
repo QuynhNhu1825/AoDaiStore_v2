@@ -4,67 +4,141 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
 class StatisticsController extends Controller
 {
-        public function index(Request $request)
+    public function index(Request $request)
     {
-        // Lấy ngày lọc từ request
-        $tuNgay  = $request->tu_ngay;
-        $denNgay = $request->den_ngay;
+        $request->validate([
+            'tu_ngay' => ['nullable', 'date'],
+            'den_ngay' => [
+                'nullable',
+                'date',
+                'after_or_equal:tu_ngay'
+            ],
+        ]);
 
-        // Query gốc: chỉ lấy đơn đã giao
-        $baseQuery = DB::table('hoadon')
-            ->where('TrangThai', 'DaGiao');
+        // 1. Khoảng thời gian thống kê
+        $tuNgay = $request->input(
+            'tu_ngay',
+            now()->startOfMonth()->toDateString()
+        );
 
-        // Áp dụng lọc theo khoảng ngày nếu có
-        if ($tuNgay && $denNgay) {
-            $baseQuery->whereBetween('NgayTao', [
-                $tuNgay . ' 00:00:00',
-                $denNgay . ' 23:59:59'
-            ]);
-        }
+        $denNgay = $request->input(
+            'den_ngay',
+            now()->toDateString()
+        );
 
-        // Tổng doanh thu
-        $tongDoanhThu = (clone $baseQuery)->sum('TongTien');
+        $from = Carbon::parse($tuNgay)->startOfDay();
+        $to = Carbon::parse($denNgay)->endOfDay();
 
-        // Số lượt mua (số đơn)
-        $soLuotMua = (clone $baseQuery)->count();
-        // lượt mua theo tháng
-        // LƯỢT MUA THEO SẢN PHẨM THEO THÁNG
-        $luotMuaTheoThang = DB::table('chitiethoadon')
-            ->join('hoadon', 'hoadon.MaHoaDon', '=', 'chitiethoadon.MaHoaDon')
-            ->join('sanpham', 'sanpham.MaSanPham', '=', 'chitiethoadon.MaSanPham')
-            ->where('hoadon.TrangThai', 'DaGiao')
-            ->whereYear('hoadon.NgayTao', date('Y'))
-            ->selectRaw('
-                MONTH(hoadon.NgayTao) as thang,
-                sanpham.TenSanPham,
-                SUM(chitiethoadon.SoLuong) as so_luot_mua
-            ')
-            ->groupBy('thang', 'sanpham.TenSanPham')
-            ->orderBy('thang')
-            ->orderByDesc('so_luot_mua')
-            ->get();
+        // 2. Truy vấn đơn hàng
+        $orders = DB::table('donhang')
+            ->whereBetween('NgayDat', [$from, $to]);
 
+        // 3. Tổng số đơn hàng
+        $tongDonHang = (clone $orders)->count();
 
-        // Doanh thu theo tháng (năm hiện tại)
-        $doanhThuTheoThang = DB::table('hoadon')
-            ->selectRaw('MONTH(NgayTao) as thang, SUM(TongTien) as tong_tien')
+        // 4. Đơn hàng đã giao
+        $donDaGiao = (clone $orders)
             ->where('TrangThai', 'DaGiao')
-            ->whereYear('NgayTao', date('Y'))
-            ->groupBy('thang')
-            ->orderBy('thang')
+            ->count();
+
+        // 5. Chi tiết các đơn đã giao
+        $soldDetails = DB::table('chitietdonhang as ct')
+            ->join(
+                'donhang as dh',
+                'dh.MaDonHang',
+                '=',
+                'ct.MaDonHang'
+            )
+            ->whereBetween('dh.NgayDat', [$from, $to])
+            ->where('dh.TrangThai', 'DaGiao');
+
+        // 6. Tổng doanh thu
+        $tongDoanhThu = (clone $soldDetails)
+            ->sum('ct.ThanhTien');
+
+        // 7. Tổng số lượng sản phẩm đã bán
+        $soSanPhamDaBan = (clone $soldDetails)
+            ->sum('ct.SoLuong');
+
+        // 8. Đơn hàng theo trạng thái
+        $statusLabels = [
+            'ChoXacNhan' => 'Chờ xác nhận',
+            'DaXacNhan' => 'Đã xác nhận',
+            'DangGiao' => 'Đang giao',
+            'DaGiao' => 'Đã giao',
+            'DaHuy' => 'Đã hủy',
+        ];
+
+        $statusCounts = (clone $orders)
+            ->select('TrangThai')
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('TrangThai')
+            ->pluck('total', 'TrangThai');
+
+        $donTheoTrangThai = collect($statusLabels)
+            ->map(function ($label, $code) use ($statusCounts) {
+                return [
+                    'label' => $label,
+                    'count' => (int) ($statusCounts[$code] ?? 0),
+                ];
+            })
+            ->values()
+            ->all();
+
+        // 9. Doanh thu theo ngày
+        $doanhThuTheoNgay = (clone $soldDetails)
+            ->selectRaw(
+                'DATE(dh.NgayDat) as ngay,
+                 SUM(ct.ThanhTien) as tong_tien'
+            )
+            ->groupByRaw('DATE(dh.NgayDat)')
+            ->orderBy('ngay')
             ->get();
-        // LƯỢT MUA THEO SẢN PHẨM
+
+        // 10. Top 5 sản phẩm bán chạy
+        // Lấy tên sản phẩm thông qua quan hệ biến thể
+        $sanPhamBanChay = (clone $soldDetails)
+            ->join(
+                'chitietsanpham as ctsp',
+                'ctsp.MaChiTietSP',
+                '=',
+                'ct.MaChiTietSP'
+            )
+            ->join(
+                'sanpham as sp',
+                'sp.MaSanPham',
+                '=',
+                'ctsp.MaSanPham'
+            )
+            ->select(
+                'sp.MaSanPham',
+                'sp.TenSanPham'
+            )
+            ->selectRaw(
+                'SUM(ct.SoLuong) as so_luong_ban'
+            )
+            ->groupBy(
+                'sp.MaSanPham',
+                'sp.TenSanPham'
+            )
+            ->orderByDesc('so_luong_ban')
+            ->limit(5)
+            ->get();
+
         return view('admin.statistics.index', compact(
-  'tongDoanhThu',
- 'soLuotMua',
-            'doanhThuTheoThang',
-            'luotMuaTheoThang',
             'tuNgay',
-            'denNgay'
-            ));
+            'denNgay',
+            'tongDoanhThu',
+            'tongDonHang',
+            'donDaGiao',
+            'soSanPhamDaBan',
+            'donTheoTrangThai',
+            'doanhThuTheoNgay',
+            'sanPhamBanChay'
+        ));
     }
 }
-
-

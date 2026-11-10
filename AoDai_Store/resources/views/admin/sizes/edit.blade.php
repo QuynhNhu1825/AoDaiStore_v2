@@ -1,154 +1,138 @@
-
 @extends('layouts.admin')
 
-@section('title', 'Chỉnh sửa Kích cỡ: ' . $size->TenSize)
+@section('title', 'Chỉnh sửa kích cỡ: ' . $size->TenSize)
 
 @section('content')
 <div class="w-full max-w-4xl mx-auto space-y-4">
-
-    {{-- QUAY LẠI --}}
-    <div>
+    {{-- TIÊU ĐỀ + QUAY LẠI --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <h2 class="text-xl font-bold text-red-900">
+                <i class="fas fa-edit mr-2"></i>Chỉnh sửa kích cỡ
+            </h2>
+            <p class="text-xs text-stone-500 mt-1">Cập nhật thông tin kích cỡ trong hệ thống.</p>
+        </div>
         <a href="{{ route('admin.sizes.index') }}"
-           class="text-stone-500 hover:text-red-800 flex items-center transition-colors font-bold uppercase text-[10px] tracking-widest">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Quay lại danh sách kích cỡ
+           class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white border border-red-200 text-red-800 text-xs font-bold hover:bg-red-50 transition">
+            <i class="fas fa-arrow-left"></i>Quay lại danh sách
         </a>
     </div>
 
+    {{-- THÔNG BÁO LỖI --}}
+    @if($errors->any())
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs">
+            <div class="font-bold mb-2"><i class="fas fa-exclamation-circle mr-1"></i>Vui lòng kiểm tra lại thông tin:</div>
+            <ul class="list-disc pl-5 space-y-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- FORM CHỈNH SỬA --}}
     <div class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
-
-        {{-- TIÊU ĐỀ --}}
-        <div class="bg-red-50 px-6 py-5 border-b border-red-100">
-            <div class="flex items-center gap-3">
-
-                <div class="p-3 bg-white rounded-xl text-red-800 shadow-sm border border-red-100">
-                    <i class="fas fa-edit fa-lg"></i>
-                </div>
-
-                <div>
-                    <h2 class="serif text-xl font-bold text-red-900">
-                        Chỉnh sửa kích cỡ
-                    </h2>
-
-                    <p class="text-[10px] text-stone-500 mt-1">
-                        Cập nhật thông tin kích cỡ #{{ $size->MaSize }}
-                    </p>
-                </div>
-
-            </div>
+        <div class="px-6 py-4 bg-red-50 border-b border-red-100">
+            <h3 class="text-sm font-bold text-red-900 uppercase tracking-wider">
+                <i class="fas fa-info-circle mr-2"></i>Thông tin kích cỡ
+            </h3>
+            <p class="text-[11px] text-stone-500 mt-1">Mã kích cỡ: <span class="font-bold text-red-800">#{{ $size->MaSize }}</span></p>
         </div>
 
-        {{-- NỘI DUNG FORM --}}
-        <form action="{{ route('admin.sizes.update', $size->MaSize) }}"
-              method="POST"
-              class="p-6">
-
+        <form id="update-form" action="{{ route('admin.sizes.update', $size->MaSize) }}" method="POST" class="p-6">
             @csrf
             @method('PUT')
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                {{-- MÃ SIZE --}}
-                <div>
-                    <label class="block text-[10px] uppercase tracking-widest font-bold mb-2 text-stone-500">
-                        Mã định danh hệ thống
-                    </label>
-
-                    <input
-                        type="text"
-                        value="#{{ $size->MaSize }}"
-                        disabled
-                        class="w-full bg-stone-100 border border-stone-200 rounded-xl px-4 py-3 text-sm font-mono text-stone-400 cursor-not-allowed"
-                    >
-                </div>
-
-                {{-- NGÀY TẠO --}}
-                <div>
-                    <label class="block text-[10px] uppercase tracking-widest font-bold mb-2 text-stone-500">
-                        Ngày tạo
-                    </label>
-
-                    <input
-                        type="text"
-                        value="{{ $size->NgayTao ? date('d/m/Y H:i', strtotime($size->NgayTao)) : '---' }}"
-                        disabled
-                        class="w-full bg-stone-100 border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-400 cursor-not-allowed"
-                    >
-                </div>
-
-                {{-- TÊN SIZE --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="md:col-span-2">
-
-                    <label for="TenSize"
-                           class="block text-[10px] uppercase tracking-widest font-bold mb-2 text-stone-500">
-                        Tên kích cỡ
-                        <span class="text-red-600">*</span>
+                    <label for="TenSize" class="block text-xs font-bold text-stone-700 mb-2">
+                        Tên kích cỡ <span class="text-red-600">*</span>
                     </label>
-
-                    <input
-                        type="text"
-                        id="TenSize"
-                        name="TenSize"
-                        value="{{ old('TenSize', $size->TenSize) }}"
-                        maxlength="20"
-                        required
-                        autofocus
-                        placeholder="Ví dụ: S, M, L, XL, XXL..."
-                        class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-700 font-medium outline-none transition-all focus:border-red-700 focus:ring-0 @error('TenSize') border-red-500 @enderror"
-                    >
-
+                    <input type="text" id="TenSize" name="TenSize"
+                           value="{{ old('TenSize', $size->TenSize) }}"
+                           maxlength="20" required autofocus
+                           placeholder="Ví dụ: S, M, L, XL, XXL..."
+                           class="w-full px-4 py-3 rounded-xl bg-stone-50 border border-stone-200 text-sm text-stone-700 outline-none transition focus:bg-white focus:border-red-700 focus:ring-2 focus:ring-red-100 @error('TenSize') border-red-500 @enderror">
                     @error('TenSize')
-                        <p class="text-red-500 text-[10px] mt-2 font-bold">
-                            <i class="fas fa-exclamation-circle mr-1"></i>
-                            {{ $message }}
-                        </p>
+                        <p class="text-red-600 text-[11px] mt-1"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
                     @enderror
-
-                    <p class="text-[10px] text-stone-400 mt-2">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Tên kích cỡ không được vượt quá 20 ký tự.
-                    </p>
-
+                    <p class="text-[11px] text-stone-400 mt-2">Tên kích cỡ không được vượt quá 20 ký tự.</p>
                 </div>
 
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 mb-2">Mã định danh hệ thống</label>
+                    <input type="text" value="#{{ $size->MaSize }}" disabled
+                           class="w-full px-4 py-3 rounded-xl bg-stone-100 border border-stone-200 text-sm text-stone-500 cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-700 mb-2">Ngày tạo</label>
+                    <input type="text" value="{{ $size->NgayTao ? \Carbon\Carbon::parse($size->NgayTao)->format('d/m/Y H:i') : '---' }}" disabled
+                           class="w-full px-4 py-3 rounded-xl bg-stone-100 border border-stone-200 text-sm text-stone-500 cursor-not-allowed">
+                </div>
             </div>
 
-            {{-- NÚT THAO TÁC --}}
-            <div class="mt-8 pt-5 border-t border-stone-100 flex flex-col sm:flex-row justify-end gap-2">
+            <div class="mt-6 bg-red-50 p-4 rounded-xl flex items-start text-red-800 border border-red-100">
+                <i class="fas fa-info-circle mr-3 mt-0.5"></i>
+                <p class="text-[11px] leading-relaxed">Lưu ý: Thay đổi tên kích cỡ có thể ảnh hưởng đến cách khách hàng lựa chọn size của sản phẩm. Việc cập nhật không thay đổi mã kích cỡ.</p>
+            </div>
 
+            <div class="mt-7 pt-5 border-t border-red-100 flex flex-col-reverse sm:flex-row justify-end gap-3">
                 <a href="{{ route('admin.sizes.index') }}"
-                   class="inline-flex items-center justify-center px-5 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-stone-100 text-stone-600 hover:bg-stone-200 transition-all">
-                    <i class="fas fa-times mr-2"></i>
-                    Hủy bỏ
+                   class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold hover:bg-stone-200 transition">
+                    <i class="fas fa-times mr-2"></i>Hủy bỏ
                 </a>
-
-                <button type="submit"
-                        class="inline-flex items-center justify-center px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-red-800 text-white hover:bg-red-900 shadow-sm transition-all">
-                    <i class="fas fa-save mr-2"></i>
-                    Lưu cập nhật
+                <button type="submit" id="save-button"
+                        class="inline-flex items-center justify-center px-7 py-3 rounded-xl bg-red-800 text-white text-xs font-bold uppercase tracking-widest hover:bg-red-900 shadow-sm transition">
+                    <i class="fas fa-save mr-2"></i>Lưu thay đổi
                 </button>
-
             </div>
-
         </form>
     </div>
-
-    {{-- GHI CHÚ --}}
-    <div class="flex items-center text-stone-400 px-4">
-        <i class="fas fa-info-circle mr-3 text-xs"></i>
-
-        <p class="text-[10px] italic tracking-wide">
-            Lưu ý: Thay đổi kích cỡ có thể ảnh hưởng đến việc lựa chọn size
-            của khách hàng khi mua sản phẩm.
-        </p>
-    </div>
-
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('update-form');
+    let confirmed = false;
+
+    form.addEventListener('submit', function (event) {
+        if (confirmed || !form.checkValidity()) return;
+        event.preventDefault();
+
+        if (typeof Swal === 'undefined') {
+            if (window.confirm('Bạn có chắc chắn muốn lưu thay đổi kích cỡ không?')) {
+                confirmed = true;
+                form.requestSubmit();
+            }
+            return;
+        }
+
+        Swal.fire({
+            title: 'Xác nhận cập nhật',
+            text: 'Bạn có chắc chắn muốn lưu thay đổi cho kích cỡ này không?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Lưu thay đổi',
+            cancelButtonText: 'Hủy bỏ',
+            confirmButtonColor: '#991b1b',
+            cancelButtonColor: '#78716c',
+            reverseButtons: true,
+            customClass: { popup: 'size-edit-popup' }
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                confirmed = true;
+                form.requestSubmit();
+            }
+        });
+    });
+});
+</script>
 <style>
-    .serif {
-        font-family: 'Playfair Display', serif;
-    }
+.size-edit-popup {
+    background: rgba(255,255,255,.96) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,.1) !important;
+}
 </style>
 @endsection

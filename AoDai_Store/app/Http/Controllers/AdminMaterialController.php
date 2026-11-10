@@ -27,11 +27,8 @@ class AdminMaterialController extends Controller
             ->orderBy('MaChatLieu', 'asc')
             ->get();
 
-        $totalMaterials = Material::where('IsDeleted', 0)->count();
-
         return view('admin.materials.index', compact(
             'materials',
-            'totalMaterials',
             'search'
         ));
     }

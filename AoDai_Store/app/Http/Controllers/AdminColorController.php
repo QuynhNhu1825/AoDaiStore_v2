@@ -26,11 +26,8 @@ class AdminColorController extends Controller
 
         $colors = $query->orderBy('MaMau', 'desc')->get();
 
-        $totalColors = Color::where('IsDeleted', 0)->count();
-
         return view('admin.colors.index', compact(
             'colors',
-            'totalColors',
             'search'
         ));
     }

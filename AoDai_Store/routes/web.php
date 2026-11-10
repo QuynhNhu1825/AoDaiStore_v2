@@ -63,7 +63,7 @@ Route::get('/category/{id}', [ProductController::class, 'showByCategory'])->name
 Route::get('/products/category', [ProductController::class, 'category']) ->name('products.category');
 Route::post('/cart/merge', [CartController::class, 'mergeCartAfterLogin'])
     ->name('cart.merge');
-// Quản lý áo dài (sản phẩm)
+// product admin
 Route::get('/admin/products', [AdminProductController::class, 'index'])->name('admin.products.index');
 Route::get('/admin/products/create', [AdminProductController::class, 'create'])->name('admin.products.create');
 Route::post('/admin/products/store', [AdminProductController::class, 'store'])->name('admin.products.store');

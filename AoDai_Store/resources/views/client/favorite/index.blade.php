@@ -70,17 +70,16 @@
 
                             {{-- NÚT XÓA --}}
                             <form action="{{ route('favorite.destroy', $favorite->MaYeuThich) }}"
-                                  method="POST"
-                                  class="mt-3"
-                                  onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này khỏi danh sách yêu thích?')">
-                                @csrf
-                                @method('DELETE')
+                            method="POST"
+                            class="mt-3 favorite-delete-form">
+                            @csrf
+                            @method('DELETE')
 
-                                <button type="submit"
-                                        class="w-full border border-red-300 text-red-600 text-xs py-2 rounded hover:bg-red-50 transition">
-                                    Xóa yêu thích
-                                </button>
-                            </form>
+                            <button type="submit"
+                                    class="w-full border border-red-300 text-red-600 text-xs py-2 rounded hover:bg-red-50 transition">
+                                Xóa yêu thích
+                            </button>
+                        </form>
 
                         </div>
                     </div>
@@ -98,4 +97,63 @@
     @endif
 
 </div>
+{{-- SWEETALERT2 --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // XÁC NHẬN XÓA YÊU THÍCH
+    document.querySelectorAll('.favorite-delete-form').forEach(form => {
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const currentForm = this;
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Xóa sản phẩm yêu thích?',
+                text: 'Bạn có chắc muốn xóa sản phẩm này khỏi danh sách yêu thích?',
+                showCancelButton: true,
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#A71920',
+                cancelButtonColor: '#78716c',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    currentForm.submit();
+                }
+            });
+
+        });
+
+    });
+
+    // THÔNG BÁO XÓA THÀNH CÔNG
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Đã xóa yêu thích!',
+            text: @json(session('success')),
+            timer: 1500,
+            timerProgressBar: true,
+            showConfirmButton: false
+        });
+    @endif
+
+    // THÔNG BÁO XÓA THẤT BẠI
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Không thể xóa!',
+            text: @json(session('error')),
+            confirmButtonText: 'Đã hiểu',
+            confirmButtonColor: '#A71920'
+        });
+    @endif
+
+});
+</script>
 @endsection

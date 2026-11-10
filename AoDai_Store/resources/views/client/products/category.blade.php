@@ -21,7 +21,7 @@
             @foreach($categories as $cat)
                 <a href="{{ route('products.category', ['category' => $cat->MaDanhMuc]) }}" 
                    class="px-6 py-2 rounded-full border {{ request('category') == $cat->MaDanhMuc ? 'bg-red-900 text-white border-red-900' : 'border-stone-200 text-stone-600' }} hover:border-red-900 transition text-sm font-bold uppercase tracking-wider">
-                    {{ $cat->MaDanhMuc }}
+                    {{ $cat->TenDanhMuc }}
                 </a>
             @endforeach
         </div>

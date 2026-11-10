@@ -822,57 +822,110 @@
     // ===============================
     const productDetails = @json($variantData);
 
-    // ===============================
-    // XỬ LÝ ẢNH VÀ ZOOM
-    // ===============================
-    const mainImage = document.getElementById('mainImage');
-    const zoomImage = document.getElementById('zoomImage');
-    const zoomContainer = document.getElementById('zoomContainer');
-    const zoomLens = document.getElementById('zoomLens');
-    const zoom = 1.2;
 
-    function changeImage(src) {
-        mainImage.src = src;
-        zoomImage.src = src;
+// ===============================
+// XỬ LÝ ẢNH VÀ ZOOM SẢN PHẨM
+// ===============================
+
+const mainImage = document.getElementById('mainImage');
+const zoomImage = document.getElementById('zoomImage');
+const zoomContainer = document.getElementById('zoomContainer');
+const zoomLens = document.getElementById('zoomLens');
+const zoomResult = document.getElementById('zoomResult');
+
+const ZOOM_LEVEL = 2;
+
+function canZoom() {
+    return window.innerWidth >= 1200;
+}
+
+// Đổi ảnh chính và ảnh zoom
+function changeImage(src) {
+    mainImage.src = src;
+    zoomImage.src = src;
+
+    // Ẩn zoom trong lúc đổi ảnh
+    zoomLens.style.display = 'none';
+    zoomResult.style.display = 'none';
+}
+
+// Cập nhật kích thước và vị trí ảnh zoom
+function updateZoom(e) {
+    if (!canZoom()) return;
+
+    const rect = zoomContainer.getBoundingClientRect();
+
+    const lensWidth = zoomLens.offsetWidth;
+    const lensHeight = zoomLens.offsetHeight;
+
+    const resultWidth = zoomResult.clientWidth;
+    const resultHeight = zoomResult.clientHeight;
+
+    if (!lensWidth || !lensHeight || !resultWidth || !resultHeight) {
+        return;
     }
 
-    zoomContainer.addEventListener('mousemove', function (e) {
-        const rect = zoomContainer.getBoundingClientRect();
-        
-        // SỬA LỖI MẤT DẤU TRỪ VÀ DẤU NHÂN Ở ĐOẠN NÀY
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+    // Tọa độ chuột trong ảnh
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
 
-        const lensWidth = zoomLens.offsetWidth;
-        const lensHeight = zoomLens.offsetHeight;
+    // Giới hạn tọa độ chuột
+    x = Math.max(lensWidth / 2, Math.min(x, rect.width - lensWidth / 2));
+    y = Math.max(lensHeight / 2, Math.min(y, rect.height - lensHeight / 2));
 
-        let lensX = x - (lensWidth / 2);
-        let lensY = y - (lensHeight / 2);
+    // Vị trí kính lúp
+    const lensX = x - lensWidth / 2;
+    const lensY = y - lensHeight / 2;
 
-        lensX = Math.max(0, Math.min(lensX, rect.width - lensWidth));
-        lensY = Math.max(0, Math.min(lensY, rect.height - lensHeight));
+    zoomLens.style.left = `${lensX}px`;
+    zoomLens.style.top = `${lensY}px`;
 
-        zoomLens.style.left = lensX + 'px';
-        zoomLens.style.top = lensY + 'px';
+    // Tính tỷ lệ phóng to theo kích thước thực tế
+    const scaleX = resultWidth / lensWidth * ZOOM_LEVEL;
+    const scaleY = resultHeight / lensHeight * ZOOM_LEVEL;
 
-        const scaleX = (zoomContainer.offsetWidth / lensWidth) * zoom;
-        const scaleY = (zoomContainer.offsetHeight / lensHeight) * zoom;
+    // Kích thước ảnh phóng to
+    zoomImage.style.width = `${rect.width * scaleX}px`;
+    zoomImage.style.height = `${rect.height * scaleY}px`;
 
-        zoomImage.style.width = (zoomContainer.offsetWidth * scaleX) + 'px';
-        zoomImage.style.height = (zoomContainer.offsetHeight * scaleY) + 'px';
+    // Di chuyển ảnh tương ứng với kính lúp
+    zoomImage.style.left = `${-lensX * scaleX}px`;
+    zoomImage.style.top = `${-lensY * scaleY}px`;
+}
 
-        zoomImage.style.left = (-lensX * scaleX) + 'px';
-        zoomImage.style.top = (-lensY * scaleY) + 'px';
-    });
+// Khi đưa chuột vào ảnh
+zoomContainer.addEventListener('mouseenter', function () {
+    if (!canZoom()) return;
 
-    zoomContainer.addEventListener('mouseleave', function () {
-        zoomLens.style.display = 'none';
-    });
+    zoomLens.style.display = 'block';
+    zoomResult.style.display = 'block';
+});
 
-    zoomContainer.addEventListener('mouseenter', function () {
+// Khi di chuyển chuột
+zoomContainer.addEventListener('mousemove', function (e) {
+    if (!canZoom()) return;
+
+    if (zoomLens.style.display !== 'block') {
         zoomLens.style.display = 'block';
-    });
+        zoomResult.style.display = 'block';
+    }
 
+    updateZoom(e);
+});
+
+// Khi rời chuột
+zoomContainer.addEventListener('mouseleave', function () {
+    zoomLens.style.display = 'none';
+    zoomResult.style.display = 'none';
+});
+
+// Khi thay đổi kích thước màn hình
+window.addEventListener('resize', function () {
+    if (!canZoom()) {
+        zoomLens.style.display = 'none';
+        zoomResult.style.display = 'none';
+    }
+});
 
     // ===============================
     // CHỌN MÀU VÀ KÍCH CỠ
@@ -1341,58 +1394,7 @@ document.addEventListener('keydown', function(e) {
 {{-- =========================
      CSS ZOOM ẢNH
 ========================== --}}
-<style>
-    #zoomLens {
-        position: absolute;
-        display: none;
-        width: 35%;
-        height: 38%;
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        background: rgba(255, 255, 255, 0.25);
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
-        pointer-events: none;
-        z-index: 10;
-    }
-    #zoomResult {
-        display: none;
-        position: absolute;
-        top: 0;
-        left: calc(100% + 12px);
-        width: 70%;
-        height: 70%;
-        overflow: hidden;
-        background: white;
-        border: 1px solid #e5e5e5;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
-        z-index: 100;
-        pointer-events: none;
-    }
-    #zoomImage {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        max-width: none;
-        object-fit: fill;
-        pointer-events: none;
-    }
-    @media (min-width: 768px) {
-        #zoomContainer:hover #zoomLens {
-            display: block;
-        }
-        #zoomContainer:hover ~ #zoomResult {
-            display: block;
-        }
-    }
-    @media (max-width: 767px) {
-        #zoomLens,
-        #zoomResult {
-            display: none !important;
-        }
-        #zoomContainer {
-            cursor: default;
-        }
-    }
-</style>
+
 <style>
     /* =====================================
        RESPONSIVE TOÀN BỘ TRANG CHI TIẾT
@@ -1424,54 +1426,15 @@ document.addEventListener('keydown', function(e) {
        ZOOM ẢNH - DESKTOP
     ===================================== */
 
-    #zoomLens {
-        position: absolute;
-        display: none;
-        width: 35%;
-        height: 38%;
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        background: rgba(255, 255, 255, 0.25);
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
-        pointer-events: none;
-        z-index: 10;
-    }
+    
 
-    #zoomResult {
-        display: none;
-        position: absolute;
-        top: 0;
-        left: calc(100% + 12px);
-        width: 70%;
-        height: 70%;
-        overflow: hidden;
-        background: white;
-        border: 1px solid #e5e5e5;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
-        z-index: 100;
-        pointer-events: none;
-    }
+   
 
-    #zoomImage {
-        position: absolute;
-        max-width: none;
-        object-fit: fill;
-        pointer-events: none;
-    }
 
     /* Chỉ bật zoom khi màn hình đủ rộng */
-    @media (min-width: 1200px) {
-        #zoomContainer {
-            cursor: crosshair;
-        }
+    
 
-        #zoomContainer:hover #zoomLens {
-            display: block;
-        }
-
-        #zoomContainer:hover ~ #zoomResult {
-            display: block;
-        }
-    }
+      
 
     /* =====================================
        MÁY TÍNH BẢNG
@@ -1482,10 +1445,7 @@ document.addEventListener('keydown', function(e) {
             padding: 24px;
         }
 
-        #zoomLens,
-        #zoomResult {
-            display: none !important;
-        }
+        
 
         #zoomContainer {
             cursor: default;
@@ -1510,10 +1470,7 @@ document.addEventListener('keydown', function(e) {
             cursor: default;
         }
 
-        #zoomLens,
-        #zoomResult {
-            display: none !important;
-        }
+       
 
         /* Tên và thông tin sản phẩm */
         #product-detail-page h1 {
@@ -1582,5 +1539,159 @@ document.addEventListener('keydown', function(e) {
             height: 40px;
         }
     }
+    /* =====================================
+   ZOOM ẢNH SẢN PHẨM - DESKTOP
+===================================== */
+
+#productGallery {
+    position: relative;
+}
+
+#zoomContainer {
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+}
+
+#zoomLens {
+    position: absolute;
+    display: none;
+    width: 35%;
+    height: 38%;
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+    z-index: 10;
+}
+
+#zoomResult {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: calc(100% + 12px);
+    width: 65%;
+    height: 70%;
+    overflow: hidden;
+    background: white;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+    z-index: 100;
+    pointer-events: none;
+}
+
+#zoomImage {
+    position: absolute;
+    max-width: none;
+    object-fit: fill;
+    pointer-events: none;
+}
+
+/* Chỉ bật zoom trên desktop */
+@media (min-width: 1200px) {
+    #zoomContainer {
+        cursor: crosshair;
+    }
+}
+
+/* Tablet và điện thoại */
+@media (max-width: 1199px) {
+    #zoomLens,
+    #zoomResult {
+        display: none !important;
+    }
+
+    #zoomContainer {
+        cursor: default;
+    }
+}
+
+/* =====================================
+   ZOOM ẢNH SẢN PHẨM - DESKTOP
+===================================== */
+
+#productGallery {
+    position: relative;
+    width: 100%;
+    overflow: visible;
+}
+
+#zoomContainer {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    cursor: default;
+}
+
+#mainImage {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+/* Kính lúp */
+#zoomLens {
+    position: absolute;
+    display: none;
+    width: 35%;
+    height: 38%;
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Khung ảnh phóng to */
+#zoomResult {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: calc(100% + 12px);
+    width: 65%;
+    height: 70%;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    pointer-events: none;
+}
+
+/* Ảnh bên trong khung zoom */
+#zoomImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+
+    /* Quan trọng: ghi đè max-width: 100% ở CSS tổng */
+    max-width: none !important;
+    max-height: none !important;
+
+    object-fit: fill;
+    pointer-events: none;
+}
+
+/* Chỉ bật zoom trên desktop */
+@media (min-width: 1200px) {
+    #zoomContainer {
+        cursor: crosshair;
+    }
+}
+
+/* Tablet và điện thoại */
+@media (max-width: 1199px) {
+    #zoomLens,
+    #zoomResult {
+        display: none !important;
+    }
+
+    #zoomContainer {
+        cursor: default;
+    }
+}
+
 </style>
 @endsection
