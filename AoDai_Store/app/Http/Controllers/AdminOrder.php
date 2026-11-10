@@ -21,12 +21,13 @@ class AdminOrder extends Controller
         $query = Order::query();
 
         // Tìm kiếm theo số điện thoại
-        if ($request->filled('search_phone')) {
-            $query->where(
-                'SDTNguoiNhan',
-                'LIKE',
-                '%' . $request->search_phone . '%'
-            );
+        $search = trim((string) $request->input('search', ''));
+
+        if ($search !== '') {
+          $query->where(function ($q) use ($search) {
+              $q->where('HoTenNguoiNhan', 'LIKE', "%{$search}%")
+                ->orWhere('SDTNguoiNhan', 'LIKE', "%{$search}%");
+          });
         }
 
         // Lọc theo trạng thái đơn hàng
@@ -81,10 +82,23 @@ class AdminOrder extends Controller
             ->orderByDesc('MaDonHang')
             ->paginate(10)
             ->withQueryString();
+        $totalOrders = \App\Models\Order::count();
+
+$pendingOrders = \App\Models\Order::where(
+    'TrangThai', 'ChoXacNhan'
+)->count();
+
+$shippingOrders = \App\Models\Order::where(
+    'TrangThai', 'DangGiao'
+)->count();
+
+$deliveredOrders = \App\Models\Order::where(
+    'TrangThai', 'DaGiao'
+)->count();
 
         return view(
             'admin.order.index',
-            compact('orders')
+            compact('orders', 'totalOrders', 'pendingOrders', 'shippingOrders', 'deliveredOrders')
         );
     }
 

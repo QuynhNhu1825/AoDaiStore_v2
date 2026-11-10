@@ -46,11 +46,13 @@
         <div class="px-6 py-5 border-b border-red-100 flex items-center justify-between">
             <div>
                 <h2 class="text-xl font-bold text-red-900">
-                    Chỉnh sửa sản phẩm
-                </h2>
-                <p class="text-xs text-stone-400 mt-1">
-                    Cập nhật thông tin và các biến thể sản phẩm
-                </p>
+                <i class="fas fa-edit mr-2"></i>
+                Chỉnh sửa sản phẩm
+            </h2>
+
+            <p class="text-xs text-stone-500 mt-1">
+                Cập nhật thông tin sản phẩm trong hệ thống.
+            </p>
             </div>
 
             <span class="text-xs font-bold text-red-800 bg-red-50 px-3 py-2 rounded-lg">

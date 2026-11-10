@@ -3,145 +3,136 @@
 @section('title', 'Chỉnh sửa tài khoản: ' . $account->TenDangNhap)
 
 @section('content')
-<div class="max-w-4xl mx-auto">
+<div class="w-full max-w-4xl mx-auto space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+             <h2 class="text-xl font-bold text-red-900">
+                <i class="fas fa-edit mr-2"></i>
+                Chỉnh sửa tài khoản
+            </h2>
 
-    {{-- Nút quay lại --}}
-    <div class="mb-4">
+            <p class="text-xs text-stone-500 mt-1">
+                Cập nhật thông tin tài khoản trong hệ thống.
+            </p>
+        </div>
         <a href="{{ route('admin.accounts.index') }}"
-           class="text-indigo-600 hover:underline flex items-center transition">
-            <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách tài khoản
+           class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 bg-white text-red-900 text-xs font-bold hover:bg-red-50 transition">
+            <i class="fas fa-arrow-left"></i> Quay lại danh sách
         </a>
     </div>
 
-    {{-- Thẻ nội dung --}}
-    <div class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-indigo-600">
-        <div class="mb-6 border-b pb-4">
-            <h2 class="text-xl font-bold text-gray-800 uppercase tracking-wide">
-                Cập nhật thông tin tài khoản
-            </h2>
-            <p class="text-xs text-gray-500 mt-1 italic">
-                Mã tài khoản: #{{ $account->MaTaiKhoan }}
-            </p>
+    @if($errors->any())
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-xs" role="alert">
+            <p class="font-bold mb-2"><i class="fas fa-exclamation-circle mr-1"></i> Vui lòng kiểm tra thông tin:</p>
+            <ul class="list-disc pl-5 space-y-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <div class="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
+        <div class="px-5 sm:px-7 py-5 bg-red-50 border-b border-red-100">
+            <h2 class="font-bold text-red-900 text-sm uppercase tracking-wide">Thông tin tài khoản</h2>
+            <p class="text-xs text-stone-500 mt-1">Mã khách hàng #{{ $account->MaTaiKhoan }}</p>
         </div>
 
-        <form action="{{ route('admin.accounts.update', $account->MaTaiKhoan) }}"
-              method="POST">
+        <form id="account-edit-form" action="{{ route('admin.accounts.update', $account->MaTaiKhoan) }}" method="POST" class="p-5 sm:p-7 space-y-5">
             @csrf
 
-            <div class="grid grid-cols-1 gap-6">
-
-                {{-- Username --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Tên đăng nhập
-                    </label>
-                    <input type="text" value="{{ $account->TenDangNhap }}" disabled
-                           class="w-full border rounded-lg p-2.5 bg-gray-100 text-gray-500">
+                    <label for="TenDangNhap" class="block text-xs font-bold text-stone-700 mb-2">Tên đăng nhập</label>
+                    <input id="TenDangNhap" type="text" value="{{ $account->TenDangNhap }}" disabled
+                           class="w-full rounded-xl border border-stone-200 bg-stone-100 text-stone-500 px-3 py-2.5 text-sm cursor-not-allowed">
                 </div>
-
-                {{-- Họ tên --}}
                 <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Họ tên
-                    </label>
-                    <input type="text" name="HoTen"
-                           value="{{ old('HoTen', $account->HoTen) }}"
-                           class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="block text-xs font-bold text-stone-700 mb-2">Quyền tài khoản</label>
+                    <div class="min-h-[42px] rounded-xl border border-stone-200 bg-stone-100 px-3 py-2.5 flex items-center justify-between gap-3">
+                        <span class="text-sm text-stone-600 font-semibold">{{ $account->Role === 'Admin' ? 'Quản trị viên' : 'Khách hàng' }}</span>
+                        <span class="text-[10px] px-2.5 py-1 rounded-full font-bold {{ $account->Role === 'Admin' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-700' }}">{{ $account->Role }}</span>
+                    </div>
                 </div>
-
-                {{-- Email --}}
                 <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Email
-                    </label>
-                    <input type="email" name="Email"
-                           value="{{ old('Email', $account->Email) }}"
-                           class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label for="HoTen" class="block text-xs font-bold text-stone-700 mb-2">Họ và tên <span class="text-red-600">*</span></label>
+                    <input id="HoTen" name="HoTen" type="text" required maxlength="255" value="{{ old('HoTen', $account->HoTen) }}"
+                           class="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm focus:border-red-700 focus:ring-red-700 @error('HoTen') border-red-500 @enderror">
+                    @error('HoTen') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                 </div>
-
-                {{-- Số điện thoại --}}
                 <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Số điện thoại
-                    </label>
-                    <input type="text" name="SoDienThoai"
-                           value="{{ old('SoDienThoai', $account->SoDienThoai) }}"
-                           class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label for="Email" class="block text-xs font-bold text-stone-700 mb-2">Email <span class="text-red-600">*</span></label>
+                    <input id="Email" name="Email" type="email" required maxlength="255" value="{{ old('Email', $account->Email) }}"
+                           class="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm focus:border-red-700 focus:ring-red-700 @error('Email') border-red-500 @enderror">
+                    @error('Email') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                 </div>
-
-                {{-- Địa chỉ --}}
                 <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Địa chỉ
-                    </label>
-                    <input type="text" name="DiaChi"
-                           value="{{ old('DiaChi', $account->DiaChi) }}"
-                           class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label for="SDT" class="block text-xs font-bold text-stone-700 mb-2">Số điện thoại <span class="text-red-600">*</span></label>
+                    <input id="SDT" name="SDT" type="tel" required maxlength="10" inputmode="numeric" value="{{ old('SDT', $account->SDT) }}"
+                           class="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm focus:border-red-700 focus:ring-red-700 @error('SDT') border-red-500 @enderror">
+                    @error('SDT') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                 </div>
-
-                {{-- Quyền --}}
                 <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Quyền tài khoản
-                    </label>
-                    <select name="Role"
-                        class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
-
-                        <option value="Admin" {{ $account->Role == 'Admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="User"  {{ $account->Role == 'User'  ? 'selected' : '' }}>User</option>
-
-                    </select>
-
+                    <label class="block text-xs font-bold text-stone-700 mb-2">Trạng thái tài khoản</label>
+                    <div class="min-h-[42px] rounded-xl border border-stone-200 bg-stone-100 px-3 py-2.5 flex items-center">
+                        @if($account->TrangThai)
+                            <span class="text-xs font-bold text-green-700"><i class="fas fa-check-circle mr-1"></i> Đang hoạt động</span>
+                        @else
+                            <span class="text-xs font-bold text-red-700"><i class="fas fa-lock mr-1"></i> Đã khóa</span>
+                        @endif
+                    </div>
+                    <p class="text-[11px] text-stone-400 mt-1">Khóa/mở khóa tại danh sách tài khoản.</p>
                 </div>
-
-                {{-- Mật khẩu mới --}}
-                <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Mật khẩu mới (nếu đổi)
-                    </label>
-                    <input type="password" name="MatKhau"
-                           class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"
-                           placeholder="Nhập nếu muốn đổi mật khẩu">
-                </div>
-
-                {{-- Trạng thái --}}
-                <div>
-                    <label class="block font-semibold mb-2 text-gray-700 uppercase text-xs tracking-widest">
-                        Trạng thái
-                    </label>
-                    <select name="TrangThai"
-                            class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <option value="1" {{ $account->TrangThai == 1 ? 'selected' : '' }}>Hoạt động</option>
-                        <option value="0" {{ $account->TrangThai == 0 ? 'selected' : '' }}>Bị khóa</option>
-                    </select>
-                </div>
-
             </div>
 
-            {{-- Nút --}}
-            <div class="mt-8 flex flex-col sm:flex-row gap-4 border-t pt-6">
-                <button type="submit"
-                        class="flex-1 bg-indigo-600 text-white py-3.5 rounded-lg font-bold
-                               hover:bg-indigo-700 shadow-lg hover:shadow-indigo-200 transition-all
-                               flex justify-center items-center uppercase tracking-widest">
-                    <i class="fas fa-sync-alt mr-2"></i> Lưu thay đổi
-                </button>
+            <div>
+                <label for="DiaChi" class="block text-xs font-bold text-stone-700 mb-2">Địa chỉ <span class="text-red-600">*</span></label>
+                <textarea id="DiaChi" name="DiaChi" rows="3" required maxlength="500"
+                          class="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm focus:border-red-700 focus:ring-red-700 @error('DiaChi') border-red-500 @enderror">{{ old('DiaChi', $account->DiaChi) }}</textarea>
+                @error('DiaChi') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+            </div>
 
-                <a href="{{ route('admin.accounts.index') }}"
-                   class="px-10 py-3.5 border border-gray-300 text-gray-500 rounded-lg
-                          hover:bg-gray-50 transition font-bold text-center">
-                    Hủy
-                </a>
+            <div>
+                <label for="MatKhau" class="block text-xs font-bold text-stone-700 mb-2">Mật khẩu mới <span class="font-normal text-stone-400">(không bắt buộc)</span></label>
+                <input id="MatKhau" name="MatKhau" type="password" minlength="6" maxlength="32" autocomplete="new-password" placeholder="Để trống nếu không đổi mật khẩu"
+                       class="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm focus:border-red-700 focus:ring-red-700 @error('MatKhau') border-red-500 @enderror">
+                @error('MatKhau') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 border-t border-stone-100 pt-5">
+                <a href="{{ route('admin.accounts.index') }}" class="inline-flex items-center justify-center px-6 py-3 rounded-xl border border-stone-200 bg-stone-100 text-stone-600 text-xs font-bold hover:bg-stone-200 transition">Hủy</a>
+                <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-red-800 text-white text-xs font-bold hover:bg-red-900 transition shadow-sm">
+                    <i class="fas fa-save"></i> Lưu thay đổi
+                </button>
             </div>
         </form>
     </div>
 
-    <div class="mt-6 bg-indigo-50 p-4 rounded-lg flex items-center text-indigo-700 border border-indigo-100">
-        <i class="fas fa-info-circle mr-3"></i>
-        <p class="text-xs italic">
-            Lưu ý: Thay đổi thông tin tài khoản có thể ảnh hưởng đến quyền truy cập hệ thống.
-        </p>
+    <div class="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs text-red-900">
+        <i class="fas fa-info-circle mt-0.5"></i>
+        <p>Lưu ý: Thay đổi thông tin có thể ảnh hưởng đến việc sử dụng tài khoản. Quyền và trạng thái không thể chỉnh sửa tại trang này.</p>
     </div>
-
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById('account-edit-form').addEventListener('submit', function (event) {
+        if (!this.checkValidity()) return;
+        event.preventDefault();
+        const form = this;
+        Swal.fire({
+            title: 'Xác nhận cập nhật',
+            text: 'Cậu có chắc muốn lưu các thay đổi cho tài khoản này?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Lưu thay đổi',
+            cancelButtonText: 'Hủy bỏ',
+            confirmButtonColor: '#991b1b',
+            cancelButtonColor: '#78716c',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) HTMLFormElement.prototype.submit.call(form);
+        });
+    });
+</script>
 @endsection

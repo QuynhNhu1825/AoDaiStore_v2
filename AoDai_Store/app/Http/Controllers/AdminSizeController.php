@@ -24,17 +24,8 @@ class AdminSizeController extends Controller
 
         $sizes = $query->orderBy('MaSize', 'desc')->get();
 
-        // Tổng số kích cỡ chưa bị xóa
-        $totalSizeCount = Size::where('IsDeleted', 0)->count();
-
-        // Không có TrangThai riêng nên số đang áp dụng
-        // chính là số kích cỡ chưa bị xóa
-        $activeSizeCount = $totalSizeCount;
-
         return view('admin.sizes.index', compact(
             'sizes',
-            'totalSizeCount',
-            'activeSizeCount',
             'search'
         ));
     }

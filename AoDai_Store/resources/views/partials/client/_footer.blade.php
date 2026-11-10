@@ -1,4 +1,3 @@
-
 <footer class="bg-stone-900 text-stone-300 pt-10 pb-5">
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
@@ -52,7 +51,7 @@
                     </li>
 
                     <li>
-                        <a href="{{ url('/products') }}"
+                        <a href="{{ url('/products/category') }}"
                            class="hover:text-white transition">
                             Bộ sưu tập áo dài
                         </a>
