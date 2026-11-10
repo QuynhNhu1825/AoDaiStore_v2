@@ -6,19 +6,19 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<section class="max-w-7xl mx-auto py-16 px-4 min-h-screen">
+<section class="max-w-7xl mx-auto py-8 sm:py-12 lg:py-16 px-3 sm:px-4 min-h-screen">
 
     {{-- ==================== TIÊU ĐỀ ==================== --}}
-    <div class="text-center mb-12">
-        <h2 class="serif text-3xl font-bold text-stone-800 uppercase tracking-widest">
+    <div class="text-center mb-8 sm:mb-10 lg:mb-12">
+    <h2 class="serif text-2xl sm:text-3xl font-bold text-stone-800 uppercase tracking-widest">
             Túi hàng của bạn
         </h2>
         <div class="h-1 w-20 bg-red-800 mx-auto mt-4"></div>
     </div>
 
     {{-- QUAY LẠI --}}
-        <div class="pt-6 border-t border-stone-200">
-            <a href="{{ route('home') }}" class="text-stone-600 hover:text-red-800 transition flex items-center gap-2 font-medium">
+        <div class="pt-4 sm:pt-6 border-t border-stone-200 mb-5 sm:mb-6">
+            <a href="{{ route('home') }}"    class="text-sm sm:text-base text-stone-600 hover:text-red-800 transition flex items-center gap-2 font-medium">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -44,10 +44,10 @@
         
         @if($cartItems->count() > 0)
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10 xl:gap-12">
 
                 {{-- ==================== DANH SÁCH SẢN PHẨM ==================== --}}
-                <div class="lg:col-span-2 space-y-8">
+                <div class="lg:col-span-2 space-y-5 sm:space-y-6 lg:space-y-8 min-w-0">
 
                     {{-- Xóa sạch giỏ hàng --}}
                     <div class="flex justify-end mb-4">
@@ -66,12 +66,13 @@
                     </div>
                     
                     {{-- CHỌN TẤT CẢ --}}
-                    <div class="flex items-center justify-between bg-white border border-stone-200 p-4 rounded-lg mb-5">
+                    <div class="flex flex-wrap items-center justify-between gap-3
+                    bg-white border border-stone-200 p-3 sm:p-4 rounded-lg mb-4 sm:mb-5">
 
                     <label class="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" id="select-all" class="w-5 h-5 accent-red-800 cursor-pointer">
 
-                    <span class="font-semibold text-stone-700">
+                    <span class="font-semibold text-stone-700 text-sm sm:text-base">
                         Chọn tất cả
                     </span>
                     </label>
@@ -93,9 +94,9 @@
 
                         <div
                             class="cart-item flex flex-col md:flex-row
-                                bg-white shadow-sm border border-stone-100
-                                p-6 group hover:shadow-md transition
-                                rounded-lg gap-4"
+                            bg-white shadow-sm border border-stone-100
+                            p-3 sm:p-5 lg:p-6 group hover:shadow-md transition
+                            rounded-lg gap-3 sm:gap-4 min-w-0"
 
                             data-id="{{ $item->MaGioHang }}"
                             data-price="{{ $detail->Gia ?? 0 }}"
@@ -114,8 +115,8 @@
                             </div>
 
                             {{-- HÌNH ẢNH --}}
-                            <div class="w-full md:w-32 h-44 overflow-hidden
-                                        mb-4 md:mb-0 bg-stone-100 shrink-0">
+                            <div class="w-full md:w-32 h-48 sm:h-56 md:h-44 overflow-hidden
+                            mb-2 md:mb-0 bg-stone-100 shrink-0">
 
                                 @if($sanPham->HinhAnh)
                                     <img
@@ -138,8 +139,8 @@
                                 <div>
                                     <div class="flex justify-between items-start gap-4">
 
-                                        <h3 class="serif text-xl font-semibold
-                                                text-stone-700 uppercase">
+                                        <h3 class="serif text-base sm:text-lg lg:text-xl font-semibold
+                                        text-stone-700 uppercase break-words min-w-0">
                                             {{ $sanPham->TenSanPham }}
                                         </h3>
 
@@ -176,9 +177,8 @@
                                     </div>
 
                                     {{-- THUỘC TÍNH --}}
-                                    <div class="mt-3 grid grid-cols-2 gap-y-1
-                                                text-sm text-stone-500 italic">
-
+                                    <div class="mt-2 sm:mt-3 grid grid-cols-1 sm:grid-cols-2 gap-y-2
+                                     text-xs sm:text-sm text-stone-500 italic">
                                         <p>
                                             Màu sắc:
                                             <span class="text-stone-700">
@@ -197,7 +197,7 @@
                                 </div>
 
                                 {{-- SỐ LƯỢNG + GIÁ --}}
-                                <div class="flex justify-between items-center mt-6 gap-3">
+                                <div class="flex flex-wrap justify-between items-center mt-4 sm:mt-6 gap-3">
 
                                     <div class="flex items-center border
                                                 border-stone-300 rounded">
@@ -239,7 +239,7 @@
 
                                     <div class="text-right">
 
-                                        <p class="text-red-800 font-bold text-xl">
+                                        <p class="text-red-800 font-bold text-base sm:text-lg lg:text-xl whitespace-nowrap">
                                             {{ number_format(
                                                 ($detail->Gia ?? 0) * $item->SoLuong,
                                                 0, ',', '.'
@@ -263,8 +263,11 @@
 
                 {{-- ==================== TÓM TẮT ĐƠN HÀNG ==================== --}}
                 <div class="lg:col-span-1">
-                    <div class="bg-stone-50 p-8 border border-stone-200 sticky top-24 shadow-sm">
-                        <h3 class="serif text-xl font-bold text-stone-800 mb-6 uppercase tracking-widest border-b border-stone-300 pb-4">
+                    <div class="bg-stone-50 p-4 sm:p-6 lg:p-8 border border-stone-200
+                    lg:sticky lg:top-24 shadow-sm rounded-lg">
+                        <h3 class="serif text-lg sm:text-xl font-bold text-stone-800
+                        mb-4 sm:mb-6 uppercase tracking-widest
+                        border-b border-stone-300 pb-3 sm:pb-4">
                             Tóm tắt đơn hàng
                         </h3>
 
@@ -335,11 +338,12 @@
 
         @else
             {{-- ==================== GIỎ HÀNG TRỐNG ==================== --}}
-            <div class="text-center py-24 bg-white border border-stone-100 shadow-sm">
+            <div class="text-center py-14 sm:py-20 lg:py-24 px-4
+            bg-white border border-stone-100 shadow-sm">
                 <svg class="mx-auto h-16 w-16 text-stone-200 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                <p class="text-stone-500 italic mb-8 text-xl">Giỏ hàng của bạn hiện đang trống.</p>
+                <p class="text-stone-500 italic mb-6 sm:mb-8 text-base sm:text-xl">Giỏ hàng của bạn hiện đang trống.</p>
                 <a href="{{ route('home') }}" class="inline-block bg-stone-800 text-white px-10 py-4 hover:bg-stone-900 transition uppercase tracking-widest font-bold">
                     Tiếp tục mua sắm
                 </a>
@@ -420,13 +424,16 @@
                     }
                 },
                 error: function (xhr) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Rất tiếc...',
-                        text: 'Có lỗi xảy ra khi cập nhật số lượng!',
-                        confirmButtonColor: '#991b1b'
-                    });
-                }
+                const response = xhr.responseJSON;
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không đủ số lượng!',
+                    text: response?.message || 'Số lượng sản phẩm vượt quá tồn kho hiện tại.',
+                    confirmButtonColor: '#A71920',
+                    confirmButtonText: 'Đã hiểu'
+                });
+            }
             });
         });
     });
@@ -474,9 +481,10 @@ function renderGuestCart(cart) {
 
         itemsHtml += `
             <div
-                class="cart-item flex flex-col md:flex-row gap-4
-                       bg-white shadow-sm border border-stone-100
-                       p-6 rounded-lg hover:shadow-md transition"
+                class="cart-item flex flex-col md:flex-row gap-3 sm:gap-4
+                bg-white shadow-sm border border-stone-100
+                p-3 sm:p-5 lg:p-6 rounded-lg hover:shadow-md transition
+                min-w-0"
                 data-id="${key}"
                 data-price="${item.price}"
                 data-quantity="${item.SoLuong}"
@@ -492,8 +500,8 @@ function renderGuestCart(cart) {
                 </div>
 
                 <!-- HÌNH ẢNH -->
-                <div class="w-full md:w-32 h-44 overflow-hidden
-                            mb-4 md:mb-0 bg-stone-100 shrink-0">
+                <div class="w-full md:w-32 h-48 sm:h-56 md:h-44 overflow-hidden
+                mb-2 md:mb-0 bg-stone-100 shrink-0">
                     <img
                         src="${imgBaseUrl}${item.productImage}"
                         class="w-full h-full object-cover"
@@ -505,8 +513,8 @@ function renderGuestCart(cart) {
                 <div class="md:ml-4 flex-1 flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-start gap-4">
-                            <h3 class="serif text-xl font-semibold
-                                       text-stone-700 uppercase">
+                            <h3 class="serif text-base sm:text-lg lg:text-xl font-semibold
+                            text-stone-700 uppercase break-words min-w-0">
                                 ${item.productName}
                             </h3>
 
@@ -520,8 +528,8 @@ function renderGuestCart(cart) {
                             </button>
                         </div>
 
-                        <div class="mt-3 grid grid-cols-2 gap-y-1
-                                    text-sm text-stone-500 italic">
+                        <div class="mt-2 sm:mt-3 grid grid-cols-1 sm:grid-cols-2 gap-y-2
+                         text-xs sm:text-sm text-stone-500 italic">
                             <p>
                                 Màu sắc:
                                 <span class="text-stone-700">
@@ -538,7 +546,7 @@ function renderGuestCart(cart) {
                     </div>
 
                     <!-- SỐ LƯỢNG + GIÁ -->
-                    <div class="flex justify-between items-center mt-6 gap-3">
+                    <div class="flex flex-wrap justify-between items-center mt-4 sm:mt-6 gap-3">
                         <div class="flex items-center border
                                     border-stone-300 rounded">
                             <button
@@ -564,7 +572,7 @@ function renderGuestCart(cart) {
                             >+</button>
                         </div>
 
-                        <p class="text-red-800 font-bold text-xl">
+                       <p class="text-red-800 font-bold text-base sm:text-lg lg:text-xl whitespace-nowrap">
                             ${formatCartMoney(itemTotal)}
                         </p>
                     </div>
@@ -574,10 +582,10 @@ function renderGuestCart(cart) {
     });
 
     document.getElementById('cart-container').innerHTML = `
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10 xl:gap-12">
 
             <!-- DANH SÁCH SẢN PHẨM -->
-            <div class="lg:col-span-2 space-y-6">
+            <div class="lg:col-span-2 space-y-5 sm:space-y-6 min-w-0">
 
                 <div class="flex justify-end">
                     <button
@@ -615,8 +623,8 @@ function renderGuestCart(cart) {
 
             <!-- TÓM TẮT ĐƠN HÀNG -->
             <div class="lg:col-span-1">
-                <div class="bg-stone-50 p-8 border border-stone-200
-                            sticky top-24 shadow-sm">
+                <div class="bg-stone-50 p-4 sm:p-6 lg:p-8
+                border border-stone-200 lg:sticky lg:top-24 shadow-sm rounded-lg">
 
                     <h3 class="serif text-xl font-bold text-stone-800
                                mb-6 uppercase tracking-widest
@@ -672,18 +680,41 @@ function renderGuestCart(cart) {
 
     // Các hàm phụ trợ cho khách vãng lai
     function guestUpdateQty(index, step) {
-        let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
-        if (cart[index]) {
-            cart[index].SoLuong += step;
-            if (cart[index].SoLuong < 1) cart[index].SoLuong = 1;
-            localStorage.setItem('guest_cart', JSON.stringify(cart));
-            
-            Toast.fire({ icon: 'success', title: 'Đã cập nhật số lượng' });
-            updateGuestCartBadge();
-            renderGuestCart(cart);
-        }
+    let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+
+    if (!cart[index]) return;
+
+    const currentQty = Number(cart[index].SoLuong);
+    const newQty = currentQty + step;
+    const stock = Number(cart[index].stock);
+
+    if (newQty < 1) return;
+
+    // Kiểm tra tồn kho khi tăng số lượng
+    if (step > 0 && newQty > stock) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Không đủ số lượng!',
+            text: `Sản phẩm chỉ còn ${stock} sản phẩm trong kho. Bạn đang có ${currentQty} sản phẩm trong giỏ.`,
+            confirmButtonText: 'Đã hiểu',
+            confirmButtonColor: '#A71920'
+        });
+
+        return;
     }
 
+    cart[index].SoLuong = newQty;
+
+    localStorage.setItem('guest_cart', JSON.stringify(cart));
+
+    Toast.fire({
+        icon: 'success',
+        title: 'Đã cập nhật số lượng'
+    });
+
+    updateGuestCartBadge();
+    renderGuestCart(cart);
+}
     function guestRemoveItem(index) {
         Swal.fire({
             title: 'Xóa sản phẩm này?',

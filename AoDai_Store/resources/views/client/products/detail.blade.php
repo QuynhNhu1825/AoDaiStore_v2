@@ -5,7 +5,7 @@
 @section('content')
 
 <div id="product-detail-page">
-    <div class="product-main-layout grid grid-cols-2 gap-12">
+    <div class="product-main-layout grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
 
         {{-- =========================
              CỘT 1: HÌNH ẢNH SẢN PHẨM
@@ -16,8 +16,7 @@
 
                 {{-- Ảnh chính --}}
                 <div id="zoomContainer"
-                    class="relative h-[520px] w-full overflow-hidden bg-white cursor-crosshair">
-
+                    class="relative h-[360px] sm:h-[450px] lg:h-[520px] w-full overflow-hidden bg-white cursor-crosshair">
                     <img
                         id="mainImage"
                         src="{{ asset('img/products/' . $product->HinhAnh) }}"
@@ -95,7 +94,8 @@
                         Trang chủ / {{ $product->danhMucs->first()?->TenDanhMuc ?? 'Áo dài' }}
                     </nav>
 
-                    <h1 class="serif text-4xl text-stone-900 leading-tight uppercase">
+                    <h1 class="serif text-2xl sm:text-3xl lg:text-4xl
+                     text-stone-900 leading-tight uppercase break-words">
                         {{ $product->TenSanPham }}
                     </h1>
 
@@ -161,7 +161,7 @@
                     data-id="{{ $product->MaSanPham }}"
                     data-authenticated="{{ Auth::check() ? '1' : '0' }}"
                     aria-pressed="{{ $isFavorite ? 'true' : 'false' }}"
-                    class="flex items-center gap-2 px-4 py-2 border rounded-md transition duration-200
+                    class="flex items-center gap-2 px-3 py-2 border rounded-md transition duration-200
                         {{ $isFavorite
                             ? 'bg-amber-100 border-amber-600 text-amber-900'
                             : 'bg-white border-amber-700 text-amber-800 hover:bg-amber-50' }}"
@@ -187,7 +187,8 @@
                 </button>
                  </div>
                     {{-- Giá sản phẩm --}}
-                    <p id="product-price" class="text-2xl text-red-800 font-bold mt-2">
+                   <p id="product-price"
+                    class="text-xl sm:text-2xl text-red-800 font-bold mt-2">
                         {{ number_format($product->chiTietSanPham->first()?->Gia ?? 0, 0, ',', '.') }} đ
                     </p>
                 </div>
@@ -386,8 +387,7 @@
 @endphp
 
 
-<div class="mt-12 grid grid-cols-2 gap-6 items-stretch">
-
+<div class="mt-8 sm:mt-10 lg:mt-12 grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 items-stretch">
     {{-- CỘT 1: CHI TIẾT SẢN PHẨM --}}
     <section class="min-w-0 h-full bg-white border border-stone-200 rounded-sm overflow-hidden">
         <div class="bg-[#A71920] px-5 md:px-4 py-4 border-b border-[#A71920] text-center">
@@ -969,26 +969,85 @@
         radio.addEventListener('change', updateSelectedVariant);
     });
 
-    function changeQty(step) {
-        const selected = document.querySelector('input[name="MaSize"]:checked');
-        if (!selected) {
-            alert('Vui lòng chọn màu sắc và kích cỡ trước!');
-            return;
-        }
+    // ===============================
+// KIỂM TRA SỐ LƯỢNG TỒN KHO
+// ===============================
+function validateQuantity(showAlert = true) {
+    const selectedSize = document.querySelector(
+        'input[name="MaSize"]:checked'
+    );
 
-        const max = parseInt(selected.dataset.stock || '0', 10);
-        let val = parseInt(qtyInput.value || '1', 10) + step;
+    if (!selectedSize) return false;
 
-        if (val < 1) val = 1;
-        if (val > max) val = max;
+    const maxStock = parseInt(selectedSize.dataset.stock || '0', 10);
+    let quantity = parseInt(qtyInput.value || '1', 10);
 
-        qtyInput.value = val;
+    if (maxStock <= 0) {
+        qtyInput.value = 1;
+        return false;
     }
 
-    // Khởi tạo biến thể mặc định
-    updateVariantOptions();
+    if (quantity > maxStock) {
+        qtyInput.value = maxStock;
 
+        if (showAlert) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Vượt quá số lượng tồn kho!',
+                text: `Sản phẩm hiện chỉ còn ${maxStock} sản phẩm trong kho.`,
+                confirmButtonText: 'Đã hiểu',
+                confirmButtonColor: '#A71920'
+            });
+        }
 
+        return false;
+    }
+
+    if (quantity < 1 || isNaN(quantity)) {
+        qtyInput.value = 1;
+    }
+
+    return true;
+}
+
+// ===============================
+// TĂNG GIẢM SỐ LƯỢNG
+// ===============================
+function changeQty(step) {
+    const selected = document.querySelector(
+        'input[name="MaSize"]:checked'
+    );
+
+    if (!selected) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Chưa chọn kích cỡ!',
+            text: 'Vui lòng chọn màu sắc và kích cỡ trước.',
+            confirmButtonColor: '#A71920'
+        });
+        return;
+    }
+
+    const max = parseInt(selected.dataset.stock || '0', 10);
+    const current = parseInt(qtyInput.value || '1', 10);
+
+    if (step > 0 && current >= max) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Đã đạt số lượng tối đa!',
+            text: `Sản phẩm hiện chỉ còn ${max} sản phẩm trong kho.`,
+            confirmButtonText: 'Đã hiểu',
+            confirmButtonColor: '#A71920'
+        });
+        return;
+    }
+
+    let val = current + step;
+
+    if (val < 1) val = 1;
+
+    qtyInput.value = val;
+}
     // ===============================
     // ===============================
 // YÊU THÍCH SẢN PHẨM
@@ -1118,6 +1177,27 @@ if (favoriteButton) {
 
     if (formAddToCart) {
         formAddToCart.addEventListener('submit', function(e) {
+            // Kiểm tra tồn kho trước khi thêm giỏ hàng
+            const selectedSize = document.querySelector(
+                'input[name="MaSize"]:checked'
+            );
+
+            if (!selectedSize) {
+                e.preventDefault();
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Vui lòng chọn kích cỡ!',
+                    confirmButtonColor: '#A71920'
+                });
+
+                return;
+            }
+
+            if (!validateQuantity(true)) {
+                e.preventDefault();
+                return;
+            }
             
             // Nếu là khách vãng lai
             if (isGuest) {
@@ -1126,12 +1206,7 @@ if (favoriteButton) {
                 const colorInput = document.querySelector('input[name="MaMau"]:checked');
                 const sizeInput = document.querySelector('input[name="MaSize"]:checked');
                 const qtyInput = document.getElementById('quantity');
-
-                if (!colorInput || !sizeInput) {
-                    alert('Vui lòng chọn đầy đủ màu sắc và kích cỡ!');
-                    return;
-                }
-
+                
                 // Dữ liệu cần thiết để lưu vào giỏ hàng
                 const productId = "{{ $product->MaSanPham }}";
                 const productName = "{{ $product->TenSanPham }}";
@@ -1148,7 +1223,19 @@ if (favoriteButton) {
 
                 // Lấy giỏ hàng từ LocalStorage
                 let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+                const stock = parseInt(sizeInput.dataset.stock || '0', 10);
 
+                // Kiểm tra số lượng muốn thêm
+                if (qty > stock) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Không đủ số lượng!',
+                        text: `Sản phẩm hiện chỉ còn ${stock} sản phẩm trong kho.`,
+                        confirmButtonColor: '#A71920'
+                    });
+
+                    return;
+                }
                 // Kiểm tra xem sản phẩm có trong giỏ chưa
                 let existingIndex = cart.findIndex(item => 
                     item.productId == productId && 
@@ -1157,20 +1244,39 @@ if (favoriteButton) {
                 );
 
                 if (existingIndex > -1) {
-                    cart[existingIndex].SoLuong += qty;
-                } else {
-                    cart.push({
-                        productId: productId,
-                        productName: productName,
-                        productImage: productImage,
-                        price: price,
-                        colorId: colorId,
-                        colorName: colorName,
-                        sizeId: sizeId,
-                        sizeName: sizeName,
-                        SoLuong: qty
-                    });
-                }
+
+    const currentQty = Number(cart[existingIndex].SoLuong);
+    const newQty = currentQty + qty;
+
+            if (newQty > stock) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không đủ số lượng!',
+                    text: `Bạn đã có ${currentQty} sản phẩm trong giỏ. Kho hiện chỉ còn ${stock} sản phẩm.`,
+                    confirmButtonColor: '#A71920'
+                });
+
+                return;
+            }
+
+            cart[existingIndex].SoLuong = newQty;
+            cart[existingIndex].stock = stock;
+
+        } else {
+
+            cart.push({
+                productId,
+                productName,
+                productImage,
+                price,
+                colorId,
+                colorName,
+                sizeId,
+                sizeName,
+                SoLuong: qty,
+                stock: stock
+            });
+        }
 
                 // Cập nhật LocalStorage
 localStorage.setItem('guest_cart', JSON.stringify(cart));
@@ -1288,26 +1394,193 @@ document.addEventListener('keydown', function(e) {
     }
 </style>
 <style>
-    html {
-        overflow-x: auto;
+    /* =====================================
+       RESPONSIVE TOÀN BỘ TRANG CHI TIẾT
+    ===================================== */
+
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     #product-detail-page {
-        width: 1200px;
-        min-width: 1200px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    @media (max-width: 1200px) {
-        #product-detail-page {
-            margin-left: 0;
-            margin-right: 0;
-        }
+        width: 100%;
+        max-width: 1440px;
+        min-width: 0;
+        margin: 0 auto;
+        padding: 24px 32px;
     }
 
     #product-detail-page * {
         box-sizing: border-box;
+    }
+
+    #product-detail-page img {
+        max-width: 100%;
+    }
+
+    /* =====================================
+       ZOOM ẢNH - DESKTOP
+    ===================================== */
+
+    #zoomLens {
+        position: absolute;
+        display: none;
+        width: 35%;
+        height: 38%;
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
+        pointer-events: none;
+        z-index: 10;
+    }
+
+    #zoomResult {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: calc(100% + 12px);
+        width: 70%;
+        height: 70%;
+        overflow: hidden;
+        background: white;
+        border: 1px solid #e5e5e5;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+        z-index: 100;
+        pointer-events: none;
+    }
+
+    #zoomImage {
+        position: absolute;
+        max-width: none;
+        object-fit: fill;
+        pointer-events: none;
+    }
+
+    /* Chỉ bật zoom khi màn hình đủ rộng */
+    @media (min-width: 1200px) {
+        #zoomContainer {
+            cursor: crosshair;
+        }
+
+        #zoomContainer:hover #zoomLens {
+            display: block;
+        }
+
+        #zoomContainer:hover ~ #zoomResult {
+            display: block;
+        }
+    }
+
+    /* =====================================
+       MÁY TÍNH BẢNG
+    ===================================== */
+
+    @media (min-width: 768px) and (max-width: 1023px) {
+        #product-detail-page {
+            padding: 24px;
+        }
+
+        #zoomLens,
+        #zoomResult {
+            display: none !important;
+        }
+
+        #zoomContainer {
+            cursor: default;
+        }
+
+        .product-main-layout {
+            gap: 28px;
+        }
+    }
+
+    /* =====================================
+       ĐIỆN THOẠI
+    ===================================== */
+
+    @media (max-width: 767px) {
+        #product-detail-page {
+            padding: 16px 14px;
+        }
+
+        #zoomContainer {
+            height: 340px;
+            cursor: default;
+        }
+
+        #zoomLens,
+        #zoomResult {
+            display: none !important;
+        }
+
+        /* Tên và thông tin sản phẩm */
+        #product-detail-page h1 {
+            line-height: 1.3;
+        }
+
+        /* Khoảng cách khu vực thông tin */
+        #product-detail-page .product-main-layout {
+            gap: 24px;
+        }
+
+        /* Các lựa chọn màu và kích cỡ */
+        #product-detail-page .color-radio + span {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+
+        #product-detail-page .size-label {
+            width: 48px;
+            height: 44px;
+        }
+
+        /* Nút thêm giỏ hàng */
+        #formAddToCart button[type="submit"] {
+            padding: 14px 10px;
+            font-size: 13px;
+        }
+
+        /* Chi tiết và mô tả */
+        #product-detail-page section {
+            min-width: 0;
+        }
+
+        /* Tiêu đề đánh giá */
+        #product-detail-page details summary h2 {
+            font-size: 20px;
+        }
+
+        /* Ảnh đánh giá */
+        #reviewImagePreview {
+            max-width: 100%;
+            max-height: 75vh;
+        }
+    }
+
+    /* =====================================
+       ĐIỆN THOẠI NHỎ
+    ===================================== */
+
+    @media (max-width: 380px) {
+        #product-detail-page {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        #zoomContainer {
+            height: 280px;
+        }
+
+        #product-detail-page .text-sm {
+            font-size: 12px;
+        }
+
+        #product-detail-page .size-label {
+            width: 42px;
+            height: 40px;
+        }
     }
 </style>
 @endsection

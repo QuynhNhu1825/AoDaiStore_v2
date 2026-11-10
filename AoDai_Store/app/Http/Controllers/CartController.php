@@ -14,115 +14,184 @@ class CartController extends Controller
      * Thêm sản phẩm vào giỏ hàng thành viên.
      * Khách vãng lai sử dụng Local Storage ở frontend.
      */
-    public function addToCart(Request $request, $id) // $id ở đây là MaSanPham truyền qua URL
-    {
-        // 1. Phân luồng cho khách vãng lai
-        if (!Auth::check()) {
-            // Nếu gọi qua API/Fetch (AJAX)
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Vui lòng sử dụng Local Storage cho giỏ hàng khách vãng lai.'
-                ], 401);
-            }
-            
-            // Nếu submit form HTML bình thường (có thể do lỗi JS, session hết hạn...)
-            return back()->with('error', 'Vui lòng đăng nhập để thêm vào giỏ hàng hoặc bật JavaScript để dùng giỏ hàng khách vãng lai!');
+    public function addToCart(Request $request, $id)
+{
+    // Khách vãng lai sử dụng Local Storage
+    if (!Auth::check()) {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng sử dụng Local Storage cho giỏ hàng khách vãng lai.'
+            ], 401);
         }
 
-        // 2. Validate bắt buộc phải có Màu sắc và Kích thước từ form gửi lên
-        $request->validate([
-            'SoLuong' => 'nullable|integer|min:1',
-            'MaMau'   => 'required',
-            'MaSize'  => 'required',
-        ], [
-            'MaMau.required'  => 'Vui lòng chọn màu sắc sản phẩm!',
-            'MaSize.required' => 'Vui lòng chọn kích cỡ sản phẩm!',
-        ]);
+        return back()->with('error', 'Vui lòng đăng nhập để thêm vào giỏ hàng!');
+    }
 
-        $quantity = (int) $request->input('SoLuong', 1);
+    $request->validate([
+        'SoLuong' => 'nullable|integer|min:1',
+        'MaMau'   => 'required',
+        'MaSize'  => 'required',
+    ], [
+        'MaMau.required'  => 'Vui lòng chọn màu sắc sản phẩm!',
+        'MaSize.required' => 'Vui lòng chọn kích cỡ sản phẩm!',
+    ]);
 
-        // 3. Tìm chính xác biến thể (Chi tiết sản phẩm) dựa trên thông số khách chọn
+    $quantity = (int) $request->input('SoLuong', 1);
+
+    $result = DB::transaction(function () use ($request, $id, $quantity) {
+
+        // Khóa biến thể để tránh cập nhật tồn kho đồng thời
         $productDetail = ProductDetail::where('MaSanPham', $id)
             ->where('MaMau', $request->MaMau)
             ->where('MaSize', $request->MaSize)
             ->where('IsDeleted', 0)
+            ->lockForUpdate()
             ->first();
 
         if (!$productDetail) {
-            return back()->with('error', 'Phân loại sản phẩm này không tồn tại hoặc đã hết hàng!');
+            return [
+                'success' => false,
+                'message' => 'Phân loại sản phẩm không tồn tại hoặc đã bị xóa!'
+            ];
         }
 
-        $detailId = $productDetail->MaChiTietSP;
+        $stock = (int) $productDetail->SoLuong;
 
-        // 4. Kiểm tra và cập nhật giỏ hàng trong Database
+        if ($stock <= 0) {
+            return [
+                'success' => false,
+                'message' => 'Sản phẩm đã hết hàng!'
+            ];
+        }
+
         $cartItem = Cart::where('MaTaiKhoan', Auth::id())
-            ->where('MaChiTietSP', $detailId)
+            ->where('MaChiTietSP', $productDetail->MaChiTietSP)
+            ->lockForUpdate()
             ->first();
 
+        $currentQuantity = $cartItem
+            ? (int) $cartItem->SoLuong
+            : 0;
+
+        $newQuantity = $currentQuantity + $quantity;
+
+        // Kiểm tra tổng số lượng sau khi thêm
+        if ($newQuantity > $stock) {
+            return [
+                'success' => false,
+                'message' => "Bạn đã có {$currentQuantity} sản phẩm trong giỏ. Kho hiện chỉ còn {$stock} sản phẩm."
+            ];
+        }
+
         if ($cartItem) {
-            $cartItem->SoLuong += $quantity;
+            $cartItem->SoLuong = $newQuantity;
             $cartItem->save();
         } else {
             Cart::create([
                 'MaTaiKhoan'  => Auth::id(),
-                'MaChiTietSP' => $detailId,
+                'MaChiTietSP' => $productDetail->MaChiTietSP,
                 'SoLuong'     => $quantity,
                 'NgayThem'    => now(),
             ]);
         }
 
-        return back()->with('success', 'Sản phẩm đã được thêm vào giỏ hàng!');
+        return [
+            'success' => true,
+            'message' => 'Sản phẩm đã được thêm vào giỏ hàng!'
+        ];
+    });
+
+    if (!$result['success']) {
+        return back()->withInput()->with('error', $result['message']);
     }
 
+    return back()->with('success', $result['message']);
+}
     /**
      * Đồng bộ giỏ hàng Local Storage vào database sau đăng nhập.
      */
     public function mergeCartAfterLogin(Request $request)
-    {
-        if (!Auth::check()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bạn chưa đăng nhập!'
-            ], 401);
-        }
+{
+    if (!Auth::check()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Bạn chưa đăng nhập!'
+        ], 401);
+    }
 
-        $request->validate([
-            'items'           => 'required|array',
-            'items.*.SoLuong' => 'required|integer|min:1',
-        ]);
+    $request->validate([
+        'items'           => 'required|array',
+        'items.*.SoLuong' => 'required|integer|min:1',
+    ]);
 
+    try {
         DB::transaction(function () use ($request) {
-            foreach ($request->items as $item) {
-                $quantity = $item['SoLuong'];
-                $productDetail = null;
 
-                // Tương thích cả định dạng gửi MaChiTietSP hoặc gửi ID gốc kèm Màu & Size từ LocalStorage
+            foreach ($request->items as $item) {
+
+                $quantity = (int) $item['SoLuong'];
+
                 if (!empty($item['MaChiTietSP'])) {
-                    $productDetail = ProductDetail::where('MaChiTietSP', $item['MaChiTietSP'])->first();
-                } elseif (!empty($item['productId']) && !empty($item['colorId']) && !empty($item['sizeId'])) {
-                    $productDetail = ProductDetail::where('MaSanPham', $item['productId'])
+                    $productDetail = ProductDetail::where(
+                        'MaChiTietSP',
+                        $item['MaChiTietSP']
+                    )
+                        ->where('IsDeleted', 0)
+                        ->lockForUpdate()
+                        ->first();
+
+                } elseif (
+                    !empty($item['productId']) &&
+                    !empty($item['colorId']) &&
+                    !empty($item['sizeId'])
+                ) {
+                    $productDetail = ProductDetail::where(
+                        'MaSanPham',
+                        $item['productId']
+                    )
                         ->where('MaMau', $item['colorId'])
                         ->where('MaSize', $item['sizeId'])
                         ->where('IsDeleted', 0)
+                        ->lockForUpdate()
                         ->first();
+
+                } else {
+                    continue;
                 }
 
-                if (!$productDetail) continue;
+                if (!$productDetail) {
+                    throw new \RuntimeException(
+                        'Một sản phẩm trong giỏ hàng không còn tồn tại.'
+                    );
+                }
 
-                $detailId = $productDetail->MaChiTietSP;
+                $stock = (int) $productDetail->SoLuong;
 
                 $existing = Cart::where('MaTaiKhoan', Auth::id())
-                    ->where('MaChiTietSP', $detailId)
+                    ->where('MaChiTietSP', $productDetail->MaChiTietSP)
+                    ->lockForUpdate()
                     ->first();
 
+                $currentQuantity = $existing
+                    ? (int) $existing->SoLuong
+                    : 0;
+
+                $newQuantity = $currentQuantity + $quantity;
+
+                if ($newQuantity > $stock) {
+                    throw new \RuntimeException(
+                        "Sản phẩm {$productDetail->MaChiTietSP} không đủ tồn kho. Hiện có {$stock} sản phẩm, số lượng trong giỏ là {$currentQuantity}, số lượng cần đồng bộ là {$quantity}."
+                    );
+                }
+
                 if ($existing) {
-                    $existing->SoLuong += $quantity;
+                    $existing->SoLuong = $newQuantity;
                     $existing->save();
                 } else {
                     Cart::create([
                         'MaTaiKhoan'  => Auth::id(),
-                        'MaChiTietSP' => $detailId,
+                        'MaChiTietSP' => $productDetail->MaChiTietSP,
                         'SoLuong'     => $quantity,
                         'NgayThem'    => now(),
                     ]);
@@ -130,59 +199,109 @@ class CartController extends Controller
             }
         });
 
-        // Đánh dấu đã hoàn tất đồng bộ giỏ hàng
-        $request->session()->forget('merge_cart_pending');
-
+    } catch (\RuntimeException $e) {
         return response()->json([
-            'success' => true,
-            'message' => 'Đồng bộ giỏ hàng thành công!'
-     ]);
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 422);
     }
 
+    $request->session()->forget('merge_cart_pending');
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Đồng bộ giỏ hàng thành công!'
+    ]);
+}
     /**
      * Cập nhật số lượng sản phẩm trong giỏ hàng thành viên.
      */
     public function updateQuantity(Request $request)
-    {
-        if (!Auth::check()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Vui lòng đăng nhập!'
-            ], 401);
-        }
+{
+    if (!Auth::check()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Vui lòng đăng nhập!'
+        ], 401);
+    }
 
-        $request->validate([
-            'id'   => 'required|integer',
-            'type' => 'required|in:increase,decrease',
-        ]);
+    $request->validate([
+        'id'   => 'required|integer',
+        'type' => 'required|in:increase,decrease',
+    ]);
+
+    $result = DB::transaction(function () use ($request) {
 
         $item = Cart::where('MaGioHang', $request->id)
             ->where('MaTaiKhoan', Auth::id())
+            ->lockForUpdate()
             ->first();
 
         if (!$item) {
-            return response()->json([
+            return [
                 'success' => false,
                 'message' => 'Không tìm thấy sản phẩm trong giỏ hàng!'
-            ], 404);
+            ];
         }
 
+        // Lấy tồn kho của đúng biến thể
+        $productDetail = ProductDetail::where(
+            'MaChiTietSP',
+            $item->MaChiTietSP
+        )
+            ->where('IsDeleted', 0)
+            ->lockForUpdate()
+            ->first();
+
+        if (!$productDetail) {
+            return [
+                'success' => false,
+                'message' => 'Biến thể sản phẩm không còn tồn tại!'
+            ];
+        }
+
+        $currentQuantity = (int) $item->SoLuong;
+        $stock = (int) $productDetail->SoLuong;
+
         if ($request->type === 'increase') {
-            $item->SoLuong += 1;
+
+            $newQuantity = $currentQuantity + 1;
+
+            // Không cho tăng vượt tồn kho
+            if ($newQuantity > $stock) {
+                return [
+                    'success' => false,
+                    'message' => "Sản phẩm chỉ còn {$stock} sản phẩm trong kho. Bạn đang có {$currentQuantity} sản phẩm trong giỏ."
+                ];
+            }
+
+            $item->SoLuong = $newQuantity;
+
         } else {
-            if ($item->SoLuong > 1) {
-                $item->SoLuong -= 1;
+
+            if ($currentQuantity > 1) {
+                $item->SoLuong = $currentQuantity - 1;
             }
         }
 
         $item->save();
 
-        return response()->json([
+        return [
             'success' => true,
             'new_qty' => $item->SoLuong,
-        ]);
+            'message' => 'Đã cập nhật số lượng!'
+        ];
+    });
+
+    if (!$result['success']) {
+        return response()->json([
+            'success' => false,
+            'message' => $result['message']
+        ], 422);
     }
 
+    return response()->json($result);
+}
     /**
      * Xóa một sản phẩm khỏi giỏ hàng thành viên.
      */

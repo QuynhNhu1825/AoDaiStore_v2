@@ -36,39 +36,64 @@
 </section>
 
 
+
 {{-- ==================== BỘ LỌC SẢN PHẨM ==================== --}}
-<section
-    id="product-section"
-    class="bg-stone-50 border-y border-stone-200 py-8 sticky top-0 z-20 shadow-sm"
->
-    <div class="max-w-7xl mx-auto px-4">
-        <form
-            id="filter-form"
-            action="{{ route('home') }}"
-            method="GET"
-            class="flex flex-col md:flex-row gap-4 items-center justify-between"
-        >
-            {{-- Tìm kiếm --}}
-            <div class="relative w-full md:w-1/3">
-                <input
-                    type="text"
-                    name="search"
-                    value="{{ request('search') }}"
-                    placeholder="Tìm tên sản phẩm..."
-                    class="w-full pl-10 pr-4 py-2 bg-white border border-stone-300 focus:border-red-800 focus:ring-0 rounded-lg text-sm transition-all"
-                >
+<section id="product-section"
+         class="relative z-20 py-5 sm:py-6">
 
-                <div class="absolute left-3 top-2.5 text-stone-400">
-                    <i class="fas fa-search"></i>
-                </div>
-            </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
 
-            <div class="flex flex-wrap gap-4 w-full md:w-auto">
+        {{-- KHUNG BỘ LỌC --}}
+<div class="max-w-6xl mx-auto bg-[#faf9f6]
+            border border-stone-200 rounded-2xl
+            shadow-sm p-4 sm:p-5 lg:px-6">
 
-                {{-- Lọc màu sắc --}}
+    <form id="filter-form"
+          action="{{ route('home') }}"
+          method="GET"
+          class="flex flex-col lg:flex-row
+                 items-stretch lg:items-center
+                 gap-3 lg:gap-4">
+
+        {{-- TÌM KIẾM --}}
+        <div class="relative w-full lg:flex-1 lg:min-w-[220px]">
+
+            <input
+                type="text"
+                name="search"
+                value="{{ request('search') }}"
+                placeholder="Tìm kiếm mẫu áo dài..."
+                class="w-full h-12 pl-11 pr-4
+                       bg-white border border-stone-200
+                       rounded-xl text-sm text-stone-700
+                       placeholder:text-stone-400
+                       outline-none transition-all duration-200
+                       focus:border-[#A71920]
+                       focus:ring-2 focus:ring-[#A71920]/10"
+            >
+
+            <i class="fas fa-search absolute left-4 top-1/2
+                      -translate-y-1/2 text-stone-400
+                      text-sm pointer-events-none"></i>
+        </div>
+
+        {{-- CÁC DROPDOWN --}}
+        <div class="grid grid-cols-1 sm:grid-cols-3
+                    lg:flex lg:flex-none gap-2 sm:gap-3">
+
+            {{-- MÀU SẮC --}}
+            <div class="relative w-full lg:w-[165px]">
                 <select
                     name="color"
-                    class="filter-select border-stone-300 focus:border-red-800 focus:ring-0 rounded-lg text-sm min-w-[150px] cursor-pointer bg-white"
+                    class="filter-select appearance-none
+                           w-full h-12 pl-3 pr-9
+                           bg-white border border-stone-200
+                           rounded-xl text-sm text-stone-600
+                           cursor-pointer outline-none
+                           transition-all duration-200
+                           hover:border-stone-400
+                           focus:border-[#A71920]
+                           focus:ring-2 focus:ring-[#A71920]/10"
                 >
                     <option value="">Tất cả màu sắc</option>
 
@@ -82,10 +107,25 @@
                     @endforeach
                 </select>
 
-                {{-- Lọc danh mục --}}
+                <i class="fas fa-chevron-down absolute right-3
+                          top-1/2 -translate-y-1/2
+                          text-[10px] text-stone-400
+                          pointer-events-none"></i>
+            </div>
+
+            {{-- DANH MỤC --}}
+            <div class="relative w-full lg:w-[175px]">
                 <select
                     name="category"
-                    class="filter-select border-stone-300 focus:border-red-800 focus:ring-0 rounded-lg text-sm min-w-[150px] cursor-pointer bg-white"
+                    class="filter-select appearance-none
+                           w-full h-12 pl-3 pr-9
+                           bg-white border border-stone-200
+                           rounded-xl text-sm text-stone-600
+                           cursor-pointer outline-none
+                           transition-all duration-200
+                           hover:border-stone-400
+                           focus:border-[#A71920]
+                           focus:ring-2 focus:ring-[#A71920]/10"
                 >
                     <option value="">Tất cả danh mục</option>
 
@@ -99,39 +139,68 @@
                     @endforeach
                 </select>
 
-                {{-- Sắp xếp --}}
+                <i class="fas fa-chevron-down absolute right-3
+                          top-1/2 -translate-y-1/2
+                          text-[10px] text-stone-400
+                          pointer-events-none"></i>
+            </div>
+
+            {{-- SẮP XẾP --}}
+            <div class="relative w-full lg:w-[175px]">
                 <select
                     name="sort"
-                    class="filter-select border-stone-300 focus:border-red-800 focus:ring-0 rounded-lg text-sm cursor-pointer bg-white"
+                    class="filter-select appearance-none
+                           w-full h-12 pl-3 pr-9
+                           bg-white border border-stone-200
+                           rounded-xl text-sm text-stone-600
+                           cursor-pointer outline-none
+                           transition-all duration-200
+                           hover:border-stone-400
+                           focus:border-[#A71920]
+                           focus:ring-2 focus:ring-[#A71920]/10"
                 >
-                    <option value="">Sắp xếp</option>
+                    <option value="">Sắp xếp sản phẩm</option>
 
-                    <option
-                        value="price_asc"
-                        {{ request('sort') == 'price_asc' ? 'selected' : '' }}
-                    >
+                    <option value="price_asc"
+                        {{ request('sort') == 'price_asc' ? 'selected' : '' }}>
                         Giá: Thấp đến Cao
                     </option>
 
-                    <option
-                        value="price_desc"
-                        {{ request('sort') == 'price_desc' ? 'selected' : '' }}
-                    >
+                    <option value="price_desc"
+                        {{ request('sort') == 'price_desc' ? 'selected' : '' }}>
                         Giá: Cao đến Thấp
                     </option>
 
-                    <option
-                        value="newest"
-                        {{ request('sort') == 'newest' ? 'selected' : '' }}
-                    >
+                    <option value="newest"
+                        {{ request('sort') == 'newest' ? 'selected' : '' }}>
                         Mới nhất
                     </option>
                 </select>
-            </div>
-        </form>
-    </div>
-</section>
 
+                <i class="fas fa-chevron-down absolute right-3
+                          top-1/2 -translate-y-1/2
+                          text-[10px] text-stone-400
+                          pointer-events-none"></i>
+            </div>
+
+        </div>
+  
+
+    {{-- XÓA BỘ LỌC --}}
+    <div class="mt-3 pt-3 border-t border-stone-200 flex justify-end">
+        <a href="{{ route('home') }}"
+           class="inline-flex items-center gap-2 text-xs text-stone-500
+                  hover:text-[#A71920] transition">
+
+            <i class="fas fa-times-circle"></i>
+            Xóa tất cả bộ lọc
+        </a>
+    </div>
+
+        </div>
+    </div>
+      </form>
+</section>
 
 {{-- ==================== TẤT CẢ SẢN PHẨM ==================== --}}
 <div id="product-data-container">
@@ -470,5 +539,68 @@
 
     });
 </script>
+<style>
+    /* Ngăn trang bị tràn chiều ngang */
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
 
+    /* Hình ảnh không vượt khỏi khung */
+    #product-data-container img,
+    section img {
+        max-width: 100%;
+    }
+
+    /* Banner */
+    .css-carousel {
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .css-carousel .slides,
+    .css-carousel .slide {
+        width: 100%;
+    }
+
+    .css-carousel .slide img {
+        display: block;
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+    }
+
+    /* Điện thoại */
+    @media (max-width: 767px) {
+        .css-carousel .slide img {
+            min-height: 220px;
+            max-height: 360px;
+        }
+
+        .css-carousel .content {
+            max-width: 90%;
+            padding: 12px;
+        }
+
+        .css-carousel .content h1 {
+            font-size: 24px;
+        }
+
+        .css-carousel .content p {
+            font-size: 12px;
+        }
+
+        .css-carousel .content a {
+            font-size: 11px;
+        }
+    }
+
+    /* Máy tính bảng */
+    @media (min-width: 768px) and (max-width: 1023px) {
+        .css-carousel .slide img {
+            max-height: 480px;
+        }
+    }
+</style>
 @endsection
