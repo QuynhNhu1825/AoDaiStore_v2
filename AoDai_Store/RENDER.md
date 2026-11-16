@@ -1,5 +1,11 @@
 # Triển khai lên Render
 
+## Môi trường local và production
+
+- **Local:** Laravel đọc `.env`. Cấu hình MySQL trên máy với `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_DATABASE=aodaistore_db`, `DB_USERNAME=root` và `DB_PASSWORD` theo máy của bạn. Không đặt `MYSQL_ATTR_SSL_CA` hoặc `DB_URL` khi dùng cấu hình MySQL local thông thường. Bật MySQL, tạo database và nhập schema/dữ liệu cửa hàng hiện có. Các migration hiện tại chưa tạo đủ bảng nghiệp vụ. Sau khi thay đổi cấu hình, chạy `php artisan config:clear` rồi `php artisan serve`.
+- **Production:** Trong Render → Environment, nhập các biến theo `.env.production.example`, thay các giá trị mẫu bằng thông tin thật của TiDB và các dịch vụ cần dùng. Tệp mẫu không được Laravel hoặc Render tự động nạp. Đặt `MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt` để kết nối TiDB qua TLS. Đặt `APP_KEY` production cố định, riêng với local. Chọn Save và deploy lại. Không commit mật khẩu hay khóa thật.
+- `.env` chỉ dành cho máy local và được Docker loại khỏi image. Render không dùng `.env` local; biến trong Render Environment quyết định cấu hình production. Nếu chạy `config:cache`, xóa hoặc tạo lại cache sau khi thay đổi biến.
+
 ## Sửa lỗi `php: command not found`
 
 Lỗi này cho thấy lệnh khởi động đang chạy trong môi trường không có PHP. Dockerfile của dự án đã cung cấp PHP và Apache; service cần sử dụng image này.
