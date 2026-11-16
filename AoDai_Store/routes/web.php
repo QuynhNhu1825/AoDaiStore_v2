@@ -22,6 +22,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AdminRatingController;
 use App\Http\Controllers\MoMoController;
 
+Route::get('/health', fn () => response()->json(['status' => 'ok']));
+
 //login
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
