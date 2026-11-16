@@ -1,5 +1,7 @@
 # Triển khai lên Render
 
+Nếu build báo thiếu `resources/css/app.css`, hãy chắc chắn tệp này đã được commit và push cùng mã nguồn. Log dùng Yarn với đường dẫn `/opt/render/project/src` cho thấy cần kiểm tra runtime: ứng dụng Laravel này cần Web Service chạy Docker. Chọn `Dockerfile` (không phải tệp `.Dockerfile` trống). Nếu repository chứa ứng dụng trong thư mục `AoDai_Store`, đặt Root Directory là `AoDai_Store`, Dockerfile Path là `./Dockerfile` và Docker Build Context Directory là `.`. Nếu ứng dụng nằm ngay gốc repository thì để trống Root Directory, các đường dẫn Docker vẫn như trên.
+
 1. Đẩy mã nguồn lên GitHub và tạo **Web Service** trên Render, chọn repository và runtime **Docker**. Render sẽ sử dụng `Dockerfile` ở thư mục gốc.
 2. Trong **Environment**, cấu hình tối thiểu:
    - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://<ten-service>.onrender.com`
