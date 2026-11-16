@@ -11,7 +11,7 @@ FROM php:8.2-apache
 WORKDIR /var/www/html
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libonig-dev libzip-dev unzip \
+        ca-certificates libonig-dev libzip-dev unzip \
     && docker-php-ext-install pdo_mysql mbstring zip \
     && a2enmod rewrite \
     && printf '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\n' > /etc/apache2/conf-available/laravel.conf \
