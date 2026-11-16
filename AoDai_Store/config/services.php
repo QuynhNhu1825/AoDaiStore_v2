@@ -13,11 +13,19 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
-    'vnpay' => [
-    'tmn_code' => env('VNP_TMNCODE'),      // Xóa dấu gạch dưới để khớp với .env
-    'hash_secret' => env('VNP_HASHSECRET'), // Xóa dấu gạch dưới để khớp với .env
-    'url' => env('VNP_URL'),
-    'return_url' => env('VNP_RETURNURL'),   // Khớp với VNP_RETURNURL trong .env
+    'momo' => [
+    'mode' => env('MOMO_MODE', 'sandbox'),
+
+    'partner_code' => env('MOMO_PARTNER_CODE'),
+
+    'access_key' => env('MOMO_ACCESS_KEY'),
+
+    'secret_key' => env('MOMO_SECRET_KEY'),
+
+    'endpoint' => env(
+        'MOMO_ENDPOINT',
+        'https://test-payment.momo.vn/v2/gateway/api/create'
+    ),
 ],
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
@@ -39,5 +47,6 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+
 
 ];
