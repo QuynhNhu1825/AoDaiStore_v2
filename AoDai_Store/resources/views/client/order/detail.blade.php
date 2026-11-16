@@ -712,7 +712,6 @@
                    class="inline-flex items-center gap-2
                           text-sm text-stone-600
                           hover:text-red-800 transition">
-                    <span>←</span>
                     <i class="fas fa-arrow-left"></i>
                     Quay lại danh sách
 

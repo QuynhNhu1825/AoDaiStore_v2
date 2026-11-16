@@ -20,7 +20,7 @@ use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AdminRatingController;
-use App\Http\Controllers\VietQRController;
+use App\Http\Controllers\MoMoController;
 
 //login
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -99,13 +99,8 @@ Route::post('/admin/sizes/toggle-status/{MaSize}', [AdminSizeController::class, 
 Route::resource('/admin/orders', App\Http\Controllers\AdminOrder::class)->names('orders');
 Route::post('/admin/orders/status/{id}', [AdminOrder::class, 'confirmstatus'])->name('orders.confirmstatus');
 Route::patch('/orders/{id}/confirm-payment', [AdminOrder::class, 'confirmPayment'])->name('orders.confirmPayment');
-Route::post('/orders/status/{id}', [AdminOrder::class, 'confirmstatus'])
-    ->name('orders.confirmstatus');
 Route::patch('/orders/{id}/confirm-payment', [AdminOrder::class, 'confirmPayment'])
     ->name('orders.confirmPayment');
-
-//order client
-Route::resource(('/order'), App\Http\Controllers\OrderController::class)->names('order');
 
 //profile
 Route::middleware(['auth'])->group(function () {
@@ -139,12 +134,6 @@ Route::post('/rating/{MaSanPham}',
     [App\Http\Controllers\RatingController::class, 'store']
 )->name('rating.store')->middleware('auth');
 //cancel oders
-Route::patch('/orders/{id}/cancel', [OrderController::class, 'cancel'])
-    ->name('orders.cancel')
-    ->middleware('auth');
-Route::patch('/orders/{id}/submit', [OrderController::class, 'submit'])
-    ->name('orders.submit')
-    ->middleware('auth');
 //hide comments (admin)
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/comments', [AdminRatingController::class, 'index'])
@@ -197,19 +186,27 @@ Route::view('/phuong-thuc-thanh-toan', 'client.pages.payment-methods')
 Route::view('/gioi-thieu', 'client.pages.introduction')
     ->name('pages.introduction');
 
-//vietqr
+// Các route dành cho khách hàng đã đăng nhập
 Route::middleware('auth')->group(function () {
 
-    // Trang thanh toán VietQR
-    Route::get('/vietqr/{id}', [
-        VietQRController::class,
-        'show'
-    ])->name('vietqr.show');
+    // Hiển thị trang thanh toán MoMo
+    Route::get('/momo/{id}', [
+        MoMoController::class, 'show'
+    ])->name('momo.show');
 
-    // Khách xác nhận đã chuyển khoản
-    Route::post('/vietqr/{id}/confirm', [
-        OrderController::class,
-        'confirmTransfer'
-    ])->name('vietqr.confirm');
+    // Gửi yêu cầu thanh toán MoMo
+    Route::post('/momo/{id}/pay', [
+        MoMoController::class, 'pay'
+    ])->name('momo.pay');
 
 });
+
+// Khách quay lại website sau thanh toán
+Route::get('/momo-return', [
+    MoMoController::class, 'return'
+])->name('momo.return');
+
+// MoMo gửi kết quả thanh toán về hệ thống
+Route::post('/momo/ipn', [
+    MoMoController::class, 'ipn'
+])->name('momo.ipn');

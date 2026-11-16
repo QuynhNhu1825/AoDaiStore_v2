@@ -65,26 +65,26 @@
                                 <td data-label="Thao tác" class="px-3 py-3">
                                     <div class="flex justify-end space-x-2">
                                         <a href="{{ route('admin.categories.edit', $category->MaDanhMuc) }}"
-   title="Sửa danh mục"
-   class="w-7 h-7 flex items-center justify-center
-          rounded-md border border-red-200 text-red-800
-          hover:bg-red-800 hover:text-white transition-all">
-    <i class="fas fa-edit text-[10px]"></i>
-</a>
+                                            title="Sửa danh mục"
+                                            class="w-7 h-7 flex items-center justify-center
+                                                    rounded-md border border-red-200 text-red-800
+                                                    hover:bg-red-800 hover:text-white transition-all">
+                                                <i class="fas fa-edit text-[10px]"></i>
+                                            </a>
 
-                                        {{-- NÚT XÓA DANH MỤC --}}
-<button
-    type="button"
-    onclick="confirmDelete(@js($category->MaDanhMuc), @js($category->TenDanhMuc))"
-    title="Xóa danh mục"
-    aria-label="Xóa danh mục"
-    class="w-7 h-7 flex items-center justify-center
-           rounded-md border border-red-200 text-red-600
-           hover:bg-red-700 hover:text-white
-           transition-all duration-200"
->
-    <i class="fas fa-trash-alt text-[10px]"></i>
-</button>
+                                                                                    {{-- NÚT XÓA DANH MỤC --}}
+                                            <button
+                                                type="button"
+                                                onclick="confirmDelete(@js($category->MaDanhMuc), @js($category->TenDanhMuc))"
+                                                title="Xóa danh mục"
+                                                aria-label="Xóa danh mục"
+                                                class="w-7 h-7 flex items-center justify-center
+                                                    rounded-md border border-red-200 text-red-600
+                                                    hover:bg-red-700 hover:text-white
+                                                    transition-all duration-200"
+                                            >
+                                                <i class="fas fa-trash-alt text-[10px]"></i>
+                                            </button>
                                     </div>
                                 </td>
                             </tr>

@@ -191,14 +191,14 @@
     <input
         type="radio"
         name="PhuongThucThanhToan"
-        value="vietqr"
-        {{ old('PhuongThucThanhToan') == 'vietqr' ? 'checked' : '' }}
+        value="momo"
+        {{ old('PhuongThucThanhToan') == 'momo' ? 'checked' : '' }}
         class="text-red-800 focus:ring-red-800"
     >
 
     <div>
         <p class="font-semibold text-stone-800">
-            Thanh toán qua VietQR.
+            Thanh toán qua ví Momo.
         </p>
 
         <p class="text-xs text-stone-500 mt-1">

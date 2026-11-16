@@ -104,7 +104,7 @@ public function index(Request $request)
             'DiaChiNhan' => 'required|string|max:500',
             'PhuongThucThanhToan' => [
                 'required',
-                Rule::in(['cod', 'vietqr'])
+                Rule::in(['cod', 'momo'])
             ],
             'GhiChu' => 'nullable|string|max:500',
         ], [
@@ -202,6 +202,10 @@ public function index(Request $request)
                     'PhuongThucThanhToan' =>
                         $validated['PhuongThucThanhToan'],
                     'TrangThai' => 'ChoXacNhan',
+                    'TrangThaiThanhToan' => 'ChuaThanhToan',
+                    'HanThanhToan' => $validated['PhuongThucThanhToan'] === 'momo'
+                        ? now()->addMinutes(15)
+                        : null,
                     'GhiChu' => $validated['GhiChu'] ?? null,
                 ]);
 
@@ -229,9 +233,9 @@ public function index(Request $request)
             });
 
             session()->forget('selected_cart_ids');
-            // Nếu chọn VietQR thì chuyển đến trang thanh toán QR
-            if ($order->PhuongThucThanhToan === 'vietqr') {
-                return redirect()->route('vietqr.show', $order->MaDonHang);
+            // Nếu chọn MoMo thì chuyển đến trang thanh toán MoMo
+            if ($order->PhuongThucThanhToan === 'momo') {
+                return redirect()->route('momo.show', $order->MaDonHang);
             }
             return redirect()
                 ->route('order.history')
@@ -275,6 +279,24 @@ public function index(Request $request)
                     throw new Exception(
                         'Chỉ có thể hủy đơn đang chờ xác nhận.'
                     );
+                }
+
+                // Không cho hủy đơn đã thanh toán hoặc đang có
+                // giao dịch MoMo chưa được xác minh.
+                if ($order->TrangThaiThanhToan === 'DaThanhToan') {
+                    throw new Exception('Đơn hàng đã thanh toán, không thể tự hủy.');
+                }
+
+                if ($order->PhuongThucThanhToan === 'momo') {
+                    $pendingPayment = $order->paymentTransactions()
+                        ->whereIn('TrangThaiGiaoDich', ['DangCho', 'CanDoiSoat'])
+                        ->exists();
+
+                    if ($pendingPayment) {
+                        throw new Exception(
+                            'Giao dịch MoMo đang được xử lý hoặc đối soát. Vui lòng chờ xác minh trước khi hủy.'
+                        );
+                    }
                 }
 
                 $orderDetails = OrderDetail::where(
@@ -473,33 +495,4 @@ public function reorder($id)
         );
     }
 }
-/**
- * Khách hàng xác nhận đã chuyển khoản VietQR.
- */
-public function confirmTransfer($id)
-{
-    $order = Order::where('MaDonHang', $id)
-        ->where('MaTaiKhoan', Auth::id())
-        ->where('PhuongThucThanhToan', 'vietqr')
-        ->firstOrFail();
-
-    // Nếu đơn đã được xác nhận thanh toán
-    if ($order->TrangThaiThanhToan === 'DaThanhToan') {
-        return back()->with(
-            'success',
-            'Đơn hàng này đã được xác nhận thanh toán.'
-        );
-    }
-
-    // Chuyển sang trạng thái chờ Admin xác nhận
-    $order->update([
-        'TrangThaiThanhToan' => 'ChoXacNhanThanhToan'
-    ]);
-
-    return back()->with(
-        'success',
-        'Đã gửi yêu cầu xác nhận chuyển khoản. Vui lòng chờ cửa hàng kiểm tra.'
-    );
-}
-
 }
