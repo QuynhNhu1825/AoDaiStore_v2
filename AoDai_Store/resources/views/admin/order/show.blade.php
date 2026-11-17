@@ -38,10 +38,13 @@
 
     $canCancel =
         in_array($order->TrangThai, ['ChoXacNhan', 'DaXacNhan'], true) &&
-        $order->TrangThaiThanhToan !== 'DaThanhToan';
+        $order->TrangThaiThanhToan !== 'DaThanhToan' &&
+        ($order->TrangThaiYeuCauHuy ?? 'KhongCo') !== 'ChoDuyet' &&
+        !($order->TrangThai === 'DaXacNhan' && $order->TrangThaiYeuCauHuy === 'TuChoi');
 
     $total = (float) $order->TienHang
-           + (float) $order->PhiVanChuyen;
+           + (float) $order->PhiVanChuyen
+           - (float) ($order->GiamGia ?? 0);
 @endphp
 
 <div class="max-w-7xl mx-auto pb-10 space-y-5 admin-order-show">
@@ -214,7 +217,40 @@
                 </div>
             </div>
 
-            {{-- XỬ LÝ ĐƠN HÀNG --}}
+             {{-- YÊU CẦU HỦY ĐƠN HÀNG --}}
+             @if(($order->TrangThaiYeuCauHuy ?? 'KhongCo') === 'ChoDuyet')
+                 <div class="bg-amber-50 border border-amber-300 rounded-xl p-4 sm:p-5">
+                     <h3 class="font-bold text-amber-900 mb-2"><i class="fas fa-exclamation-triangle mr-2"></i>Khách hàng yêu cầu hủy đơn</h3>
+                     <p class="text-sm text-amber-800 mb-3">Yêu cầu gửi lúc: {{ $order->NgayYeuCauHuy ? \Carbon\Carbon::parse($order->NgayYeuCauHuy)->format('d/m/Y H:i') : 'Không xác định' }}</p>
+                     @if($order->TrangThaiThanhToan === 'DaThanhToan')
+                         <p class="text-sm text-red-700 mb-3 font-semibold">Đơn hàng đã được thanh toán. Khi đồng ý hủy, hệ thống sẽ thông báo cho khách về thời gian hoàn tiền dự kiến 1–2 ngày làm việc. Admin chủ động chuyển khoản hoàn tiền sau, không cần xác nhận đã hoàn tiền trên website.</p>
+                     @endif
+                     <div class="flex flex-wrap gap-3">
+                         <form action="{{ route('orders.reviewCancellation', $order->MaDonHang) }}" method="POST"
+                                   data-confirm-title="Đồng ý hủy đơn hàng?"
+                                   data-confirm-text="Chấp thuận hủy đơn và hoàn lại tồn kho? Nếu khách đã thanh toán VietQR, hệ thống sẽ thông báo thời gian hoàn tiền dự kiến 1–2 ngày làm việc."
+                                   data-confirm-icon="warning">
+                                 @csrf
+                                 @method('PATCH')
+                                 <input type="hidden" name="decision" value="approve">
+                                 <button class="px-5 py-3 bg-red-800 text-white rounded-xl text-sm font-bold hover:bg-red-900" type="submit">Xác nhận hủy</button>
+                             </form>
+                         <form action="{{ route('orders.reviewCancellation', $order->MaDonHang) }}" method="POST"
+                               data-confirm-title="Từ chối yêu cầu hủy?"
+                               data-confirm-text="Yêu cầu hủy sẽ bị từ chối và đơn hàng tiếp tục được xử lý."
+                               data-confirm-icon="question">
+                             @csrf
+                             @method('PATCH')
+                             <input type="hidden" name="decision" value="reject">
+                             <button class="px-5 py-3 bg-stone-700 text-white rounded-xl text-sm font-bold hover:bg-stone-800" type="submit">Từ chối hủy</button>
+                         </form>
+                     </div>
+                 </div>
+
+             {{-- Đã xử lý: không hiển thị thông báo cố định; kết quả thao tác dùng toast 4 giây. --}}
+             @endif
+
+             {{-- XỬ LÝ ĐƠN HÀNG --}}
             <div class="bg-white rounded-xl border border-red-100 p-4 sm:p-5">
                 <h3 class="font-bold text-red-900 mb-5">
                     <i class="fas fa-tasks text-red-900 mr-2"></i>
@@ -240,7 +276,7 @@
                     @endif
 
                     {{-- ĐANG GIAO --}}
-                    @if($order->TrangThai === 'DaXacNhan')
+                    @if($order->TrangThai === 'DaXacNhan' && ($order->TrangThaiYeuCauHuy ?? 'KhongCo') !== 'ChoDuyet')
                         <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}"
                               method="POST">
                             @csrf

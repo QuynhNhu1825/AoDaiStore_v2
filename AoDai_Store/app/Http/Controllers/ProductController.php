@@ -398,7 +398,7 @@ $query = Product::with([
         ->whereHas('chiTietSanPham', function ($q) {
             $q->where('IsDeleted', 0);
         })
-        ->orderBy('NgayTao', 'desc')
+        ->orderBy('NgayTao', 'asc')
         ->paginate(8);
 
         return view(

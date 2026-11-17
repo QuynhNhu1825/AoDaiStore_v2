@@ -96,8 +96,8 @@
                                     placeholder="Ví dụ: 123 Lê Lợi"
                                     class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 focus:bg-white focus:border-red-800 outline-none text-stone-700">
                             </div>
-
-                            <div>
+                            
+                            <div class="md:col-span-2">
                                 <label class="block text-xs font-bold text-stone-600 mb-2">
                                     Phường / Xã *
                                 </label>
@@ -106,19 +106,8 @@
                                     id="phuong_xa"
                                     value="{{ old('phuong_xa', $addressData['phuongXa'] ?? '') }}"
                                     required
-                                    class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 focus:bg-white focus:border-red-800 outline-none text-stone-700">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-stone-600 mb-2">
-                                    Quận / Huyện *
-                                </label>
-                                <input
-                                    type="text"
-                                    id="quan_huyen"
-                                    value="{{ old('quan_huyen', $addressData['quanHuyen'] ?? '') }}"
-                                    required
-                                    class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 focus:bg-white focus:border-red-800 outline-none text-stone-700">
+                                    class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 focus:bg-white focus:border-red-800 outline-none text-stone-700"
+                                    placeholder="Nhập phường hoặc xã">
                             </div>
 
                             <div class="md:col-span-2">
@@ -186,19 +175,18 @@
                         </div>
                     </label>
 
-                    
-<label class="flex items-center gap-3 p-4 border border-stone-200 rounded-xl cursor-pointer hover:border-red-800 transition">
-    <input
-        type="radio"
-        name="PhuongThucThanhToan"
-        value="momo"
-        {{ old('PhuongThucThanhToan') == 'momo' ? 'checked' : '' }}
-        class="text-red-800 focus:ring-red-800"
-    >
+                    <label class="flex items-center gap-3 p-4 border border-stone-200 rounded-xl cursor-pointer hover:border-red-800 transition">
+                        <input
+                            type="radio"
+                            name="PhuongThucThanhToan"
+                            value="vietqr"
+                            {{ old('PhuongThucThanhToan') == 'vietqr' ? 'checked' : '' }}
+                            class="text-red-800 focus:ring-red-800"
+                        >
 
     <div>
         <p class="font-semibold text-stone-800">
-            Thanh toán qua ví Momo.
+            Thanh toán qua ví VietQR.
         </p>
 
         <p class="text-xs text-stone-500 mt-1">
@@ -327,7 +315,6 @@ document.querySelector('form[action="{{ route('order.store') }}"]')
         const parts = [
             document.getElementById('so_nha').value.trim(),
             document.getElementById('phuong_xa').value.trim(),
-            document.getElementById('quan_huyen').value.trim(),
             document.getElementById('tinh_thanh').value.trim()
         ];
 

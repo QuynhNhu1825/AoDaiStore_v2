@@ -10,8 +10,7 @@
         'DaXacNhan' => 'Đã xác nhận',
         'DangGiao' => 'Đang giao',
         'DaGiao' => 'Đã giao',
-        'DaHoanThanh' => 'Đã hoàn thành',
-        'DaHuy' => 'Đã hủy',
+                'DaHuy' => 'Đã hủy',
     ];
 
     $statusColors = [
@@ -19,8 +18,7 @@
         'DaXacNhan' => 'bg-blue-50 text-blue-700 border-blue-200',
         'DangGiao' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
         'DaGiao' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        'DaHoanThanh' => 'bg-green-50 text-green-700 border-green-200',
-        'DaHuy' => 'bg-red-50 text-red-700 border-red-200',
+                'DaHuy' => 'bg-red-50 text-red-700 border-red-200',
     ];
 
     $status = $order->TrangThai;
@@ -148,13 +146,13 @@
 
                 </div>
 
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                     <div>
                         <p class="text-xs text-stone-500 mb-2">
                             Họ và tên người nhận
                         </p>
-
                         <p class="text-sm font-semibold text-stone-800">
                             {{ $order->HoTenNguoiNhan }}
                         </p>
@@ -164,18 +162,16 @@
                         <p class="text-xs text-stone-500 mb-2">
                             Số điện thoại
                         </p>
-
                         <p class="text-sm font-semibold text-stone-800">
                             {{ $order->SDTNguoiNhan }}
                         </p>
                     </div>
 
-                    <div class="md:col-span-2">
+                    <div>
                         <p class="text-xs text-stone-500 mb-2">
                             Địa chỉ giao hàng
                         </p>
-
-                        <p class="text-sm font-semibold text-stone-800">
+                        <p class="text-sm font-semibold text-stone-800 leading-relaxed break-words">
                             {{ $order->DiaChiNhan }}
                         </p>
                     </div>
@@ -186,54 +182,27 @@
                         </p>
 
                         <p class="text-sm font-semibold text-stone-800">
-
                             @if($paymentMethod === 'cod')
-
-                                <i class="fas fa-money-bill-wave
-                                          text-green-700 mr-2"></i>
-
+                                <i class="fas fa-money-bill-wave text-green-700 mr-2"></i>
                                 Thanh toán khi nhận hàng (COD)
-
-                            @elseif($paymentMethod === 'vnpay')
-
-                                <i class="fas fa-credit-card
-                                          text-blue-700 mr-2"></i>
-
-                                Thanh toán qua VNPay
-
+                            @elseif($paymentMethod === 'vietqr')
+                                <i class="fas fa-credit-card text-blue-700 mr-2"></i>
+                                Chuyển khoản VietQR
                             @else
-
                                 {{ $order->PhuongThucThanhToan }}
-
                             @endif
-
-                        </p>
-                    </div>
-
-                    <div>
-                        <p class="text-xs text-stone-500 mb-2">
-                            Tổng số lượng
-                        </p>
-
-                        <p class="text-sm font-semibold text-stone-800">
-                            {{ $totalQuantity }} sản phẩm
                         </p>
                     </div>
 
                     @if($order->GhiChu)
-
                         <div class="md:col-span-2">
-
                             <p class="text-xs text-stone-500 mb-2">
                                 Ghi chú
                             </p>
-
-                            <p class="text-sm text-stone-700">
+                            <p class="text-sm font-semibold text-stone-800 leading-relaxed">
                                 {{ $order->GhiChu }}
                             </p>
-
                         </div>
-
                     @endif
 
                 </div>
@@ -241,6 +210,56 @@
             </div>
 
         </div>
+
+        
+        {{-- THÔNG TIN YÊU CẦU HỦY --}}
+        @if($order->TrangThaiYeuCauHuy === 'ChoDuyet')
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 text-amber-900">
+                <p class="font-bold"><i class="fas fa-clock mr-2"></i>Yêu cầu hủy đang chờ Admin xét duyệt</p>
+                <p class="text-sm mt-1">Đơn hàng vẫn được giữ ở trạng thái hiện tại cho đến khi Admin quyết định.</p>
+                @if($order->NgayYeuCauHuy)
+                    <p class="text-xs mt-2">Gửi lúc: {{ \Carbon\Carbon::parse($order->NgayYeuCauHuy)->format('d/m/Y H:i') }}</p>
+                @endif
+            </div>
+        @elseif(in_array($order->TrangThaiYeuCauHuy, ['DaDuyet', 'TuChoi'], true))
+            {{-- Đồng bộ khóa localStorage với trang history --}}
+            <div class="cancel-result-notice hidden rounded-xl border p-5 mb-6 text-sm
+                {{ $order->TrangThaiYeuCauHuy === 'DaDuyet'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-stone-50 border-stone-200 text-stone-700' }}"
+                 data-user-id="{{ auth()->id() }}"
+                 data-order-id="{{ $order->MaDonHang }}"
+                 data-result="{{ $order->TrangThaiYeuCauHuy }}"
+                 data-reviewed-at="{{ $order->NgayXuLyYeuCauHuy ? \Carbon\Carbon::parse($order->NgayXuLyYeuCauHuy)->timestamp : '0' }}"
+                 role="status">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-start gap-3 min-w-0">
+                        <i class="fas fa-info-circle mt-1"></i>
+                        <div>
+                            <p class="font-bold">Kết quả yêu cầu hủy đơn #{{ $order->MaDonHang }}</p>
+                            <p class="mt-1 leading-relaxed">
+                                @if($order->TrangThaiYeuCauHuy === 'DaDuyet')
+                                    @if($order->PhuongThucThanhToan === 'vietqr' && $order->TrangThaiThanhToan === 'DaThanhToan')
+                                                    Yêu cầu hủy đã được chấp thuận. Đơn hàng đã được hủy. Số tiền đã thanh toán qua VietQR sẽ được cửa hàng hoàn trả thủ công trong vòng 1–2 ngày làm việc. Vui lòng kiểm tra tài khoản ngân hàng của bạn.
+                                                @else
+                                                    Yêu cầu hủy đã được chấp thuận. Đơn hàng đã được hủy thành công.
+                                                @endif
+                                @elseif($status === 'DaGiao')
+                                    Yêu cầu hủy trước đó không được chấp thuận. Đơn hàng hiện đã được giao.
+                                @elseif($status === 'DangGiao')
+                                    Yêu cầu hủy chưa được chấp thuận. Đơn hàng hiện đang được vận chuyển.
+                                @else
+                                    Yêu cầu hủy chưa được chấp thuận. Đơn hàng tiếp tục được xử lý.
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" class="dismiss-cancel-notice shrink-0 font-semibold underline hover:opacity-70">
+                        Đã hiểu
+                    </button>
+                </div>
+            </div>
+        @endif
 
         {{-- ================= SẢN PHẨM ĐÃ ĐẶT ================= --}}
         <div class="bg-white border border-stone-200
@@ -256,7 +275,7 @@
                 </h3>
 
                 <span class="text-xs text-stone-500">
-                    {{ $totalQuantity }} sản phẩm
+                    Tổng số lượng: {{ $totalQuantity }} sản phẩm
                 </span>
 
             </div>
@@ -310,22 +329,31 @@
 
                     <div class="flex flex-col sm:flex-row gap-5 p-5 sm:p-6">
 
-                    {{-- ẢNH SẢN PHẨM --}}
-                    <div class="w-28 h-36 flex-shrink-0
-                                bg-stone-100 rounded-md
-                                overflow-hidden border border-stone-100">
-
-                        <img src="{{ $imageUrl }}"
-                            alt="{{ $productName }}"
-                            class="w-full h-full object-cover"
-                            onerror="this.onerror=null;this.src='{{ asset('img/no-image.png') }}'">
+                    {{-- ẢNH SẢN PHẨM: nhấn để xem chi tiết nếu sản phẩm còn tồn tại --}}
+                    <div class="w-28 h-36 flex-shrink-0 bg-stone-100 rounded-md overflow-hidden border border-stone-100">
+                        @if($product)
+                            <a href="{{ route('product.detail', $product->MaSanPham) }}"
+                               title="Xem chi tiết {{ $productName }}" class="block w-full h-full">
+                                <img src="{{ $imageUrl }}" alt="{{ $productName }}"
+                                     class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                     onerror="this.onerror=null;this.src='{{ asset('img/no-image.png') }}'">
+                            </a>
+                        @else
+                            <img src="{{ $imageUrl }}" alt="{{ $productName }}" class="w-full h-full object-cover"
+                                 onerror="this.onerror=null;this.src='{{ asset('img/no-image.png') }}'">
+                        @endif
                     </div>
 
                     {{-- THÔNG TIN SẢN PHẨM --}}
                     <div class="flex-1 min-w-0">
-
                         <h4 class="font-bold text-stone-800 text-base uppercase leading-relaxed">
-                            {{ $productName }}
+                            @if($product)
+                                <a href="{{ route('product.detail', $product->MaSanPham) }}"
+                                   class="hover:text-red-800 hover:underline transition-colors"
+                                   title="Xem chi tiết {{ $productName }}">{{ $productName }}</a>
+                            @else
+                                <span class="text-stone-400">{{ $productName }}</span>
+                            @endif
                         </h4>
 
                         <div class="flex flex-wrap gap-x-8 gap-y-2
@@ -720,11 +748,11 @@
                 <div class="flex flex-wrap gap-3">
 
                     {{-- HỦY ĐƠN --}}
-                    @if($status === 'ChoXacNhan')
+                    @if($order->canCancel() && ($order->TrangThaiThanhToan !== 'DaThanhToan' || $status === 'DaXacNhan'))
 
                         <form action="{{ route('order.cancel', $order->MaDonHang) }}"
                               method="POST"
-                              class="cancel-order-form">
+                              class="cancel-order-form" data-request="{{ $status === 'DaXacNhan' ? '1' : '0' }}">
 
                             @csrf
                             @method('PATCH')
@@ -735,7 +763,7 @@
                                            hover:text-white text-xs font-bold
                                            uppercase tracking-wide transition">
 
-                                Hủy đơn hàng
+                                {{ $status === 'DaXacNhan' ? 'Yêu cầu hủy đơn' : 'Hủy đơn hàng' }}
 
                             </button>
 
@@ -810,6 +838,27 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
+    // Dùng chung trạng thái đã xem với history.blade.php (không cần thêm cột DB).
+    document.querySelectorAll('.cancel-result-notice').forEach(function (notice) {
+        const key = [
+            'heritage_cancel_notice',
+            notice.dataset.userId,
+            notice.dataset.orderId,
+            notice.dataset.result,
+            notice.dataset.reviewedAt
+        ].join('_');
+
+        let seen = false;
+        try { seen = localStorage.getItem(key) === 'seen'; } catch (error) {}
+        if (seen) return;
+
+        notice.classList.remove('hidden');
+        notice.querySelector('.dismiss-cancel-notice')?.addEventListener('click', function () {
+            try { localStorage.setItem(key, 'seen'); } catch (error) {}
+            notice.classList.add('hidden');
+        });
+    });
+
     // Tự động ẩn thông báo sau 4 giây
     ['success-alert', 'error-alert'].forEach(function (id) {
 
@@ -838,8 +887,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 event.preventDefault();
 
                 Swal.fire({
-                    title: title,
-                    text: message,
+                    title: selector === '.cancel-order-form' && form.dataset.request === '1' ? 'Gửi yêu cầu hủy?' : title,
+                    text: selector === '.cancel-order-form' && form.dataset.request === '1' ? 'Admin sẽ xét duyệt yêu cầu; đơn chưa bị hủy ngay.' : message,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#991b1b',
@@ -861,8 +910,8 @@ document.addEventListener('DOMContentLoaded', function () {
     confirmAction(
         '.cancel-order-form',
         'Xác nhận hủy đơn hàng?',
-        'Bạn có chắc chắn muốn hủy đơn hàng này?',
-        'Đồng ý hủy'
+        'Bạn có chắc chắn muốn thực hiện thao tác hủy đơn?',
+        'Xác nhận'
     );
 
     // Đã nhận hàng
