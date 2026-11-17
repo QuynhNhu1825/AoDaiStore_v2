@@ -43,12 +43,13 @@
     </style>
 
     {{-- THỐNG KÊ ĐƠN HÀNG: 4 THẺ, RESPONSIVE --}}
-    <div class="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3">
+    <div class="grid grid-cols-2 xl:grid-cols-5 gap-2 sm:gap-3">
         @foreach([
             ['label' => 'Tổng đơn hàng', 'value' => $totalOrders, 'icon' => 'fa-receipt', 'color' => 'red'],
             ['label' => 'Chờ xác nhận', 'value' => $pendingOrders, 'icon' => 'fa-clock', 'color' => 'amber'],
             ['label' => 'Đang giao', 'value' => $shippingOrders, 'icon' => 'fa-truck', 'color' => 'indigo'],
             ['label' => 'Đã giao', 'value' => $deliveredOrders, 'icon' => 'fa-check-circle', 'color' => 'green'],
+            ['label' => 'Chờ duyệt hủy', 'value' => $pendingCancellationOrders ?? 0, 'icon' => 'fa-exclamation-circle', 'color' => 'amber'],
         ] as $stat)
             @php
                 $statColors = [
@@ -100,7 +101,7 @@
                        class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-[11px] focus:ring-0 focus:border-red-700 transition-all">
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 md:col-span-2 xl:col-span-1 gap-2 min-w-0">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 md:col-span-2 xl:col-span-1 gap-2 min-w-0">
                 <select name="status" aria-label="Trạng thái đơn hàng"
                         class="bg-stone-50 border border-stone-200 rounded-xl py-2.5 px-3 text-[11px] focus:ring-0 focus:border-red-700 cursor-pointer w-full min-w-0">
                     <option value="">-- Trạng thái đơn --</option>
@@ -126,6 +127,13 @@
                     <option value="ChuaThanhToan" @selected(request('payment_status') === 'ChuaThanhToan')>Chưa thanh toán</option>
                     <option value="ChoXacNhanThanhToan" @selected(request('payment_status') === 'ChoXacNhanThanhToan')>Chờ xác nhận</option>
                     <option value="DaThanhToan" @selected(request('payment_status') === 'DaThanhToan')>Đã thanh toán</option>
+                </select>
+                <select name="cancellation_status" aria-label="Trạng thái yêu cầu hủy"
+                        class="bg-stone-50 border border-stone-200 rounded-xl py-2.5 px-3 text-[11px] w-full min-w-0">
+                    <option value="">-- Yêu cầu hủy --</option>
+                    @foreach(['KhongCo' => 'Không có yêu cầu', 'ChoDuyet' => 'Chờ duyệt hủy', 'DaDuyet' => 'Đã duyệt hủy', 'TuChoi' => 'Đã từ chối'] as $value => $label)
+                        <option value="{{ $value }}" @selected(request('cancellation_status') === $value)>{{ $label }}</option>
+                    @endforeach
                 </select>
             </div>
 
@@ -201,7 +209,9 @@
 
                             $canCancel =
                                 in_array($order->TrangThai, ['ChoXacNhan', 'DaXacNhan'], true) &&
-                                $order->TrangThaiThanhToan !== 'DaThanhToan';
+                                $order->TrangThaiThanhToan !== 'DaThanhToan' &&
+                                ($order->TrangThaiYeuCauHuy ?? 'KhongCo') !== 'ChoDuyet' &&
+                                !($order->TrangThai === 'DaXacNhan' && $order->TrangThaiYeuCauHuy === 'TuChoi');
 
                             $total = (float) $order->TienHang
                                    + (float) $order->PhiVanChuyen;
@@ -246,10 +256,21 @@
                                 <span class="inline-block px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap {{ $statusColors[$order->TrangThai] ?? 'bg-stone-100 text-stone-600' }}">
                                     {{ $statusLabels[$order->TrangThai] ?? $order->TrangThai }}
                                 </span>
+                                @if($order->TrangThaiYeuCauHuy === 'ChoDuyet')
+                                    <a href="{{ route('orders.show', $order->MaDonHang) }}" class="block mt-2 text-[11px] font-bold text-amber-700 hover:underline">⚠ Chờ duyệt hủy</a>
+                                @endif
                             </td>
 
                             <td data-label="Thao tác" class="px-3 py-3">
                                 <div class="flex flex-wrap justify-end gap-1">
+
+                                    @if($order->TrangThaiYeuCauHuy === 'ChoDuyet')
+                                        <a href="{{ route('orders.show', $order->MaDonHang) }}"
+                                           title="Xét duyệt yêu cầu hủy"
+                                           class="inline-flex items-center gap-1 px-2 h-8 rounded-lg bg-amber-600 text-white hover:bg-amber-700 text-xs font-bold">
+                                            <i class="fas fa-clipboard-check"></i> Duyệt hủy
+                                        </a>
+                                    @endif
 
                                     {{-- XEM CHI TIẾT --}}
                                     <a href="{{ route('orders.show', $order->MaDonHang) }}"
@@ -298,7 +319,7 @@
                                     @endif
 
                                     {{-- CHUYỂN SANG ĐANG GIAO --}}
-                                    @if($order->TrangThai === 'DaXacNhan')
+                                    @if($order->TrangThai === 'DaXacNhan' && ($order->TrangThaiYeuCauHuy ?? 'KhongCo') !== 'ChoDuyet')
                                         <form action="{{ route('orders.confirmstatus', $order->MaDonHang) }}" method="POST"
                                               class="form-confirm"
                                               data-title="Bắt đầu giao hàng?"

@@ -1,4 +1,4 @@
-<nav class="bg-white shadow-sm sticky top-0 z-50">
+<nav class="bg-white shadow-sm relative w-full">
 
     {{-- ================= HEADER DESKTOP + MOBILE ================= --}}
     <div class="max-w-7xl mx-auto px-4">
@@ -227,7 +227,7 @@
     <div
         id="mobileMenu"
         class="hidden md:hidden bg-white border-t border-stone-100
-               shadow-lg"
+               shadow-lg max-h-[calc(100dvh-80px)] overflow-y-auto"
     >
 
         <div class="max-w-7xl mx-auto px-5 py-4

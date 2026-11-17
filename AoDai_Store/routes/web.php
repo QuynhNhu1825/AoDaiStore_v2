@@ -1,9 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminAccountController;
-use App\Http\Controllers\AdminOrder;
 use App\Http\Controllers\AdminSizeController;
-
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminProductController;
@@ -15,14 +13,12 @@ use App\Http\Controllers\AdminMaterialController;
 use App\Http\Controllers\AdminColorController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\StatisticsController;
-
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AdminRatingController;
-use App\Http\Controllers\MoMoController;
-
-Route::get('/health', fn () => response()->json(['status' => 'ok']));
+use App\Http\Controllers\VietQRController;
 
 //login
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -98,11 +94,15 @@ Route::delete('/admin/sizes/delete/{MaSize}', [AdminSizeController::class, 'dest
 Route::post('/admin/sizes/toggle-status/{MaSize}', [AdminSizeController::class, 'toggleStatus'])->name('admin.sizes.toggleStatus');
 
 //order
-Route::resource('/admin/orders', App\Http\Controllers\AdminOrder::class)->names('orders');
-Route::post('/admin/orders/status/{id}', [AdminOrder::class, 'confirmstatus'])->name('orders.confirmstatus');
-Route::patch('/orders/{id}/confirm-payment', [AdminOrder::class, 'confirmPayment'])->name('orders.confirmPayment');
-Route::patch('/orders/{id}/confirm-payment', [AdminOrder::class, 'confirmPayment'])
+Route::resource('/admin/orders', App\Http\Controllers\AdminOrderController::class)->names('orders');
+Route::post('/admin/orders/status/{id}', [AdminOrderController::class, 'confirmstatus'])->name('orders.confirmstatus');
+Route::patch('/orders/{id}/confirm-payment', [AdminOrderController::class, 'confirmPayment'])->name('orders.confirmPayment');
+Route::post('/orders/status/{id}', [AdminOrderController::class, 'confirmstatus'])
+    ->name('orders.confirmstatus');
+Route::patch('/orders/{id}/confirm-payment', [AdminOrderController::class, 'confirmPayment'])
     ->name('orders.confirmPayment');
+Route::patch('/admin/orders/{id}/review-cancellation',[AdminOrderController::class, 'reviewCancellation'])
+    ->name('orders.reviewCancellation');
 
 //profile
 Route::middleware(['auth'])->group(function () {
@@ -135,7 +135,7 @@ Route::delete('/favorite/{id}', [FavoriteController::class, 'destroy'])
 Route::post('/rating/{MaSanPham}', 
     [App\Http\Controllers\RatingController::class, 'store']
 )->name('rating.store')->middleware('auth');
-//cancel oders
+
 //hide comments (admin)
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/comments', [AdminRatingController::class, 'index'])
@@ -150,22 +150,16 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
 //order client
 Route::middleware('auth')->group(function () {
-    // Danh sách đơn hàng
     Route::get('/order', [OrderController::class, 'index'])
         ->name('order.history');
-    // Đặt hàng
     Route::post('/order', [OrderController::class, 'store'])
         ->name('order.store');
-    // Hủy đơn hàng
     Route::patch('/orders/{id}/cancel', [OrderController::class, 'cancel'])
         ->name('order.cancel');
-    // Xác nhận đã nhận hàng
     Route::patch('/orders/{id}/submit', [OrderController::class, 'submit'])
         ->name('order.submit');
-    // Chi tiết đơn hàng
     Route::get('/order/{id}', [OrderController::class, 'show'])
         ->name('order.show');
-    //Đặt lại đơn hàng
     Route::post('/orders/{id}/reorder',[OrderController::class, 'reorder'])
         ->name('order.reorder');
 });
@@ -188,27 +182,3 @@ Route::view('/phuong-thuc-thanh-toan', 'client.pages.payment-methods')
 Route::view('/gioi-thieu', 'client.pages.introduction')
     ->name('pages.introduction');
 
-// Các route dành cho khách hàng đã đăng nhập
-Route::middleware('auth')->group(function () {
-
-    // Hiển thị trang thanh toán MoMo
-    Route::get('/momo/{id}', [
-        MoMoController::class, 'show'
-    ])->name('momo.show');
-
-    // Gửi yêu cầu thanh toán MoMo
-    Route::post('/momo/{id}/pay', [
-        MoMoController::class, 'pay'
-    ])->name('momo.pay');
-
-});
-
-// Khách quay lại website sau thanh toán
-Route::get('/momo-return', [
-    MoMoController::class, 'return'
-])->name('momo.return');
-
-// MoMo gửi kết quả thanh toán về hệ thống
-Route::post('/momo/ipn', [
-    MoMoController::class, 'ipn'
-])->name('momo.ipn');

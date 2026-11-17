@@ -32,6 +32,15 @@
 
 {{-- ==================== FONT GLOBAL ==================== --}}
 <style>
+    /* Sticky đặt ở layout, không đặt trên nav con */
+    #heritage-sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        width: 100%;
+        background: #fff;
+    }
+    html { scroll-padding-top: 88px; }
     /* Font mặc định toàn bộ trang khách hàng */
     body {
         font-family: 'Roboto', sans-serif;
@@ -72,7 +81,9 @@
 <body class="bg-slate-50 text-stone-800">
 
     {{-- ==================== HEADER ==================== --}}
-    @include('partials.client._header')
+    <div id="heritage-sticky-header">
+        @include('partials.client._header')
+    </div>
 
     {{-- ==================== NỘI DUNG ==================== --}}
     <main>
