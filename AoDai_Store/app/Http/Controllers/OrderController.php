@@ -20,6 +20,12 @@ class OrderController extends Controller
      * Lọc theo trạng thái và phân trang 5 đơn/trang.
      */
     
+
+/**
+ * Danh sách đơn hàng của khách hàng.
+ * Lọc theo trạng thái, phân trang 5 đơn/trang.
+ * Kiểm tra sản phẩm đã đánh giá.
+ */
 public function index(Request $request)
 {
     $statuses = [
@@ -32,10 +38,14 @@ public function index(Request $request)
 
     $status = $request->query('status', 'all');
 
-    if ($status !== 'all' && !in_array($status, $statuses, true)) {
+    if (
+        $status !== 'all' &&
+        !in_array($status, $statuses, true)
+    ) {
         $status = 'all';
     }
 
+    // Lấy danh sách đơn hàng
     $query = Order::where('MaTaiKhoan', Auth::id())
         ->with([
             'orderDetails.productDetail.product',
@@ -43,18 +53,44 @@ public function index(Request $request)
             'orderDetails.productDetail.size',
         ]);
 
+    // Lọc theo trạng thái
     if ($status !== 'all') {
         $query->where('TrangThai', $status);
     }
 
+    // Phân trang
     $orders = $query
         ->orderByDesc('NgayDat')
         ->paginate(5)
         ->withQueryString();
 
+    // Lấy mã các đơn hàng đang hiển thị
+    $orderIds = $orders->getCollection()
+        ->pluck('MaDonHang')
+        ->all();
+
+    // Lấy danh sách sản phẩm đã đánh giá
+    $reviewedByOrder = Review::where(
+        'MaTaiKhoan',
+        Auth::id()
+    )
+        ->whereIn('MaDonHang', $orderIds)
+        ->get(['MaDonHang', 'MaSanPham'])
+        ->groupBy('MaDonHang')
+        ->map(function ($reviews) {
+            return $reviews
+                ->pluck('MaSanPham')
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values()
+                ->all();
+        });
+
+    // Truyền dữ liệu sang view
     return view('client.order.history', compact(
         'orders',
-        'status'
+        'status',
+        'reviewedByOrder'
     ));
 }
 
@@ -360,26 +396,41 @@ public function index(Request $request)
      */
     public function submit($id)
     {
-        $updated = Order::where('MaDonHang', $id)
-            ->where('MaTaiKhoan', Auth::id())
-            ->where('TrangThai', 'DangGiao')
-            ->update([
-                'TrangThai' => 'DaGiao'
-            ]);
+        try {
+            DB::transaction(function () use ($id) {
+                $order = Order::where('MaDonHang', $id)
+                    ->where('MaTaiKhoan', Auth::id())
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-        if (!$updated) {
-            return back()->with(
-                'error',
-                'Không thể xác nhận đơn hàng này.'
-            );
+                if ($order->TrangThai !== 'DangGiao') {
+                    throw new Exception('Không thể xác nhận đơn hàng này.');
+                }
+
+                $order->TrangThai = 'DaGiao';
+
+                // COD: khách xác nhận nhận hàng thì ghi nhận đã thanh toán.
+                if (
+                    strtolower((string) $order->PhuongThucThanhToan) === 'cod' &&
+                    $order->TrangThaiThanhToan !== 'DaThanhToan'
+                ) {
+                    $order->TrangThaiThanhToan = 'DaThanhToan';
+                    $order->NgayThanhToan = now();
+                }
+
+                // VietQR: không thay đổi trạng thái thanh toán tại đây.
+                $order->save();
+            });
+
+            return back()->with('success', 'Xác nhận đã nhận hàng thành công.');
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', 'Không thể xác nhận đơn hàng này.');
         }
-
-        return back()->with(
-            'success',
-            'Xác nhận đã nhận hàng thành công.'
-        );
     }
     
+
 /**
  * Mua lại đơn hàng đã giao hoặc đã hủy.
  */

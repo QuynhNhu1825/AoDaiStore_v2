@@ -90,90 +90,121 @@
         </div>
     </div>
 
-    {{-- ================= TÌM KIẾM VÀ LỌC ================= --}}
-    <div class="bg-white p-4 rounded-2xl shadow-sm border border-red-100">
+    
+{{-- ================= TÌM KIẾM VÀ LỌC ================= --}}
+<div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
 
-        <form action="{{ route('admin.comments.index') }}"
-              method="GET"
-              class="grid grid-cols-1 sm:grid-cols-2
-                     xl:grid-cols-[minmax(220px,1fr)_160px_180px_auto_auto]
-                     items-stretch gap-3">
+    <form action="{{ route('admin.comments.index') }}"
+          method="GET"
+          class="flex flex-wrap xl:flex-nowrap items-center gap-3 w-full min-w-0">
 
-            {{-- Tìm kiếm --}}
-            <div class="relative w-full min-w-0 sm:col-span-2 xl:col-span-1">
+        {{-- TÌM KIẾM --}}
+        <div class="relative w-full sm:flex-1 xl:flex-[2] min-w-0">
 
-                <span class="absolute inset-y-0 left-3 flex items-center text-stone-400">
-                    <i class="fas fa-search text-xs"></i>
-                </span>
+            <span class="absolute inset-y-0 left-3 flex items-center text-stone-400">
+                <i class="fas fa-search text-xs"></i>
+            </span>
 
-                <input
-                    type="text"
-                    name="search"
-                    value="{{ request('search') }}"
-                    placeholder="Tên người dùng, sản phẩm, nội dung..."
-                    class="w-full pl-9 pr-3 py-2.5 bg-stone-50
-                           border border-stone-200 rounded-xl text-xs
-                           focus:border-red-700 transition"
-                >
-            </div>
+            <input type="text"
+                   name="search"
+                   value="{{ request('search') }}"
+                   placeholder="Tên người dùng, sản phẩm..."
+                   class="w-full min-w-0 pl-9 pr-3 py-3
+                          bg-stone-50 border border-stone-200
+                          rounded-xl text-xs
+                          focus:border-red-700 focus:ring-0
+                          outline-none transition">
+        </div>
 
-            {{-- Lọc số sao --}}
-            <select
-                name="stars"
-                class="w-full min-w-0 bg-stone-50 border border-stone-200
-                       rounded-xl py-2.5 px-3 text-xs
-                       focus:border-red-700 cursor-pointer">
+        {{-- LỌC SỐ SAO --}}
+        <select name="stars"
+                class="w-full sm:w-auto sm:flex-1 xl:flex-1 min-w-0
+                       bg-stone-50 border border-stone-200
+                       rounded-xl px-3 py-3 text-xs
+                       focus:border-red-700 focus:ring-0 cursor-pointer">
 
-                <option value="">-- Tất cả số sao --</option>
+            <option value="">-- Số sao --</option>
 
-                @for($i = 5; $i >= 1; $i--)
-                    <option value="{{ $i }}"
-                        @selected(request('stars') == (string) $i)>
-                        {{ $i }} sao
-                    </option>
-                @endfor
-            </select>
-
-            {{-- Lọc trạng thái --}}
-            <select
-                name="status"
-                class="w-full min-w-0 bg-stone-50 border border-stone-200
-                       rounded-xl py-2.5 px-3 text-xs
-                       focus:border-red-700 cursor-pointer">
-
-                <option value="">-- Tất cả trạng thái --</option>
-
-                <option value="1" @selected(request('status') === '1')>
-                    Đang hiển thị
+            @for($i = 5; $i >= 1; $i--)
+                <option value="{{ $i }}"
+                    @selected(request('stars') == (string) $i)>
+                    {{ $i }} sao
                 </option>
+            @endfor
 
-                <option value="0" @selected(request('status') === '0')>
-                    Đã ẩn
-                </option>
-            </select>
+        </select>
 
-            {{-- Lọc --}}
-            <button type="submit"
-                    class="w-full bg-red-800 hover:bg-red-900
-                           text-white px-5 py-2.5 rounded-xl
-                           text-[10px] font-bold uppercase
-                           tracking-widest transition whitespace-nowrap">
-                <i class="fas fa-filter mr-1"></i>
-                Lọc đánh giá
-            </button>
+        {{-- LỌC TRẠNG THÁI HIỂN THỊ --}}
+        <select name="status"
+                class="w-full sm:w-auto sm:flex-1 xl:flex-1 min-w-0
+                       bg-stone-50 border border-stone-200
+                       rounded-xl px-3 py-3 text-xs
+                       focus:border-red-700 focus:ring-0 cursor-pointer">
 
-            {{-- Đặt lại --}}
-            <a href="{{ route('admin.comments.index') }}"
-               class="w-full text-center bg-stone-100 hover:bg-stone-200
-                      text-stone-600 px-4 py-2.5 rounded-xl
-                      text-[10px] font-bold uppercase
-                      tracking-widest transition whitespace-nowrap">
-                <i class="fas fa-redo mr-1"></i>
-                Đặt lại
-            </a>
+            <option value="">-- Trạng thái --</option>
 
-        </form>
-    </div>
+            <option value="1"
+                @selected(request('status') === '1')>
+                Đang hiển thị
+            </option>
+
+            <option value="0"
+                @selected(request('status') === '0')>
+                Đã ẩn
+            </option>
+
+        </select>
+
+        {{-- LỌC TRẠNG THÁI PHẢN HỒI --}}
+        <select name="reply_status"
+                class="w-full sm:w-auto sm:flex-1 xl:flex-1 min-w-0
+                       bg-stone-50 border border-stone-200
+                       rounded-xl px-3 py-3 text-xs
+                       focus:border-red-700 focus:ring-0 cursor-pointer">
+
+            <option value="">-- Phản hồi --</option>
+
+            <option value="unanswered"
+                @selected(request('reply_status') === 'unanswered')>
+                Chưa phản hồi
+            </option>
+
+            <option value="answered"
+                @selected(request('reply_status') === 'answered')>
+                Đã phản hồi
+            </option>
+
+        </select>
+
+        {{-- NÚT LỌC --}}
+        <button type="submit"
+                class="w-full sm:w-auto shrink-0
+                       inline-flex items-center justify-center gap-2
+                       bg-red-800 hover:bg-red-900
+                       text-white px-5 py-3 rounded-xl
+                       text-[10px] font-bold uppercase
+                       tracking-wide transition whitespace-nowrap">
+
+            <i class="fas fa-filter"></i>
+            Lọc
+        </button>
+
+        {{-- NÚT ĐẶT LẠI --}}
+        <a href="{{ route('admin.comments.index') }}"
+           class="w-full sm:w-auto shrink-0
+                  inline-flex items-center justify-center gap-2
+                  bg-stone-100 hover:bg-stone-200
+                  text-stone-600 px-4 py-3 rounded-xl
+                  text-[10px] font-bold uppercase
+                  tracking-wide transition whitespace-nowrap">
+
+            <i class="fas fa-redo"></i>
+            Đặt lại
+        </a>
+
+    </form>
+</div>
+
 
     {{-- ================= DANH SÁCH ĐÁNH GIÁ ================= --}}
     <div id="comment-table-container"
@@ -431,26 +462,28 @@
 
                                 @else
 
-                                    <form method="POST"
-                                          action="{{ route('admin.comments.show', $cmt->MaDanhGia) }}"
-                                          onsubmit="return confirmShowRating(event)">
+                                    
+<form method="POST"
+      action="{{ route('admin.comments.show', ['id' => $cmt->MaDanhGia]) }}"
+      onsubmit="return confirmShowRating(event)">
 
-                                        @csrf
-                                        @method('PATCH')
+    @csrf
+    @method('PATCH')
 
-                                        <button type="submit"
-                                                title="Hiển thị lại đánh giá"
-                                                class="inline-flex items-center justify-center
-                                                       gap-1 bg-green-50 hover:bg-green-700
-                                                       text-green-700 hover:text-white
-                                                       border border-green-200 px-3 py-2
-                                                       rounded-lg text-[10px] font-bold
-                                                       transition whitespace-nowrap">
+    <button type="submit"
+            title="Hiển thị lại đánh giá"
+            class="inline-flex items-center justify-center
+                   gap-1 bg-green-50 hover:bg-green-700
+                   text-green-700 hover:text-white
+                   border border-green-200 px-3 py-2
+                   rounded-lg text-[10px] font-bold
+                   transition whitespace-nowrap">
 
-                                            <i class="fas fa-eye"></i>
-                                            Hiện
-                                        </button>
-                                    </form>
+        <i class="fas fa-eye"></i>
+        Hiện
+    </button>
+</form>
+
 
                                 @endif
                             </td>

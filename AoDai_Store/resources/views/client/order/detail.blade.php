@@ -346,10 +346,12 @@
 
                     {{-- THÔNG TIN SẢN PHẨM --}}
                     <div class="flex-1 min-w-0">
-                        <h4 class="font-bold text-stone-800 text-base uppercase leading-relaxed">
+                        <h4 class="serif font-bold text-stone-900
+                           text-base sm:text-lg uppercase
+                           leading-relaxed tracking-wide">
                             @if($product)
                                 <a href="{{ route('product.detail', $product->MaSanPham) }}"
-                                   class="hover:text-red-800 hover:underline transition-colors"
+                                   class="hover:text-red-800 transition-colors"
                                    title="Xem chi tiết {{ $productName }}">{{ $productName }}</a>
                             @else
                                 <span class="text-stone-400">{{ $productName }}</span>

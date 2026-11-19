@@ -25,7 +25,22 @@
                     >
 
                     <div id="zoomLens"></div>
+
                 </div>
+
+                    {{-- Nút chuyển ảnh: nằm giữa hai cạnh ảnh chính --}}
+                    @if($product->hinhanhsanpham->count() > 0)
+                        <button type="button" onclick="navigateProductImage(-1)" onmouseenter="hideProductZoom()"
+                            aria-label="Xem ảnh trước"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/90 text-stone-800 shadow-md hover:bg-red-800 hover:text-white flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-red-800">
+                            <span aria-hidden="true" class="text-3xl leading-none">&#8249;</span>
+                        </button>
+                        <button type="button" onclick="navigateProductImage(1)" onmouseenter="hideProductZoom()"
+                            aria-label="Xem ảnh tiếp theo"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/90 text-stone-800 shadow-md hover:bg-red-800 hover:text-white flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-red-800">
+                            <span aria-hidden="true" class="text-3xl leading-none">&#8250;</span>
+                        </button>
+                    @endif
 
                 {{-- Khung ảnh phóng to --}}
                 <div id="zoomResult">
@@ -38,9 +53,9 @@
             </div>
 
             {{-- Ảnh thumbnail --}}
-            <div class="grid grid-cols-4 gap-3">
+            <div id="productGalleryThumbnails" class="grid grid-cols-4 gap-3">
 
-                <div class="aspect-square overflow-hidden border border-stone-300 hover:border-stone-800 cursor-pointer">
+                <div class="aspect-square overflow-hidden border border-red-800 hover:border-red-800 cursor-pointer">
                     <img
                         src="{{ asset('img/products/' . $product->HinhAnh) }}"
                         onclick="changeImage(this.src)"
@@ -272,7 +287,6 @@
                                     data-stock="{{ $stock }}"
                                     data-price="{{ $matchingDetail?->Gia ?? 0 }}"
                                     {{ $stock <= 0 ? 'disabled' : '' }}
-                                    required
                                 >
                                 <span class="size-label w-14 h-12 border flex items-center justify-center transition relative
                                     peer-checked:bg-stone-800 peer-checked:text-white peer-checked:border-stone-800
@@ -839,14 +853,38 @@ function canZoom() {
     return window.innerWidth >= 1200;
 }
 
-// Đổi ảnh chính và ảnh zoom
+// Danh sách ảnh lấy trực tiếp từ thumbnail, luôn đúng thứ tự hiển thị.
+const galleryThumbnails = Array.from(document.querySelectorAll('#productGalleryThumbnails img'));
+const galleryImages = galleryThumbnails.map(img => img.src);
+let currentGalleryIndex = 0;
+
+function hideProductZoom() {
+    zoomLens.style.display = 'none';
+    zoomResult.style.display = 'none';
+}
+
+// Đổi ảnh chính và ảnh zoom, đồng bộ vị trí thumbnail.
 function changeImage(src) {
     mainImage.src = src;
     zoomImage.src = src;
 
-    // Ẩn zoom trong lúc đổi ảnh
-    zoomLens.style.display = 'none';
-    zoomResult.style.display = 'none';
+    const index = galleryImages.indexOf(src);
+    if (index !== -1) currentGalleryIndex = index;
+
+    galleryThumbnails.forEach((img, i) => {
+        const frame = img.parentElement;
+        frame.classList.toggle('border-red-800', i === currentGalleryIndex);
+        frame.classList.toggle('border-stone-300', i !== currentGalleryIndex);
+    });
+
+    // Ẩn zoom trong lúc đổi ảnh.
+    hideProductZoom();
+}
+
+function navigateProductImage(direction) {
+    if (galleryImages.length < 2) return;
+    const nextIndex = (currentGalleryIndex + direction + galleryImages.length) % galleryImages.length;
+    changeImage(galleryImages[nextIndex]);
 }
 
 // Cập nhật kích thước và vị trí ảnh zoom
@@ -941,7 +979,6 @@ window.addEventListener('resize', function () {
 
     function updateVariantOptions() {
         const selectedColor = parseInt(getSelectedColor() || '0', 10);
-        let firstAvailableSize = null;
 
         sizeRadios.forEach(radio => {
             const sizeId = parseInt(radio.value, 10);
@@ -966,9 +1003,6 @@ window.addEventListener('resize', function () {
                 span.classList.toggle('hover:border-stone-800', stock > 0);
             }
 
-            if (stock > 0 && firstAvailableSize === null) {
-                firstAvailableSize = radio;
-            }
 
             if (radio.checked && stock <= 0) {
                 radio.checked = false;
@@ -976,9 +1010,6 @@ window.addEventListener('resize', function () {
         });
 
         const selectedSize = document.querySelector('input[name="MaSize"]:checked');
-        if (!selectedSize && firstAvailableSize) {
-            firstAvailableSize.checked = true;
-        }
 
         updateSelectedVariant();
     }
@@ -1240,7 +1271,9 @@ if (favoriteButton) {
 
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Vui lòng chọn kích cỡ!',
+                    title: 'Bạn chưa chọn kích cỡ!',
+                    text: 'Vui lòng chọn kích cỡ trước khi thêm sản phẩm vào giỏ hàng.',
+                    confirmButtonText: 'Đã hiểu',
                     confirmButtonColor: '#A71920'
                 });
 

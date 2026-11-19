@@ -27,15 +27,27 @@
         </div>
 
     {{-- ==================== THÔNG BÁO ==================== --}}
-    @if(session('error') || isset($message))
-        <div class="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center">
-            ⚠️ {{ session('error') ?? 'Vui lòng' }}
-            <a href="{{ route('login') }}" class="underline font-bold">
-                đăng nhập
-            </a>
-            để tiến hành thanh toán hoặc đồng bộ giỏ hàng.
+    @if(session('error'))
+        <div role="alert" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            ⚠️ {{ session('error') }}
         </div>
     @endif
+
+    @if(session('success'))
+        <div role="status" class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @guest
+        @if(!empty($message))
+            <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg mb-4">
+                {{ $message }}
+                <a href="{{ route('login') }}" class="underline font-semibold">Đăng nhập</a>
+                để đồng bộ giỏ hàng.
+            </div>
+        @endif
+    @endguest
 
 
     {{-- ==================== CONTAINER CHỨA GIỎ HÀNG ==================== --}}
@@ -139,10 +151,19 @@
                                 <div>
                                     <div class="flex justify-between items-start gap-4">
 
-                                        <h3 class="serif text-base sm:text-lg lg:text-xl font-semibold
-                                        text-stone-700 uppercase break-words min-w-0">
-                                            {{ $sanPham->TenSanPham }}
-                                        </h3>
+                                       
+                            <h4 class="serif text-lg sm:text-xl text-stone-900 uppercase leading-tight break-words min-w-0">
+
+                               <a href="{{ route('product.detail', $sanPham->MaSanPham) }}"
+                               class="hover:text-red-800 underline-offset-4 transition-colors"
+                               title="Xem chi tiết {{ $sanPham->TenSanPham }}">
+
+                               {{ $sanPham->TenSanPham }}
+
+                                </a>
+
+                            </h4>
+
 
                                         {{-- XÓA SẢN PHẨM --}}
                                         <form
@@ -445,8 +466,18 @@
     const checkoutUrl = "{{ route('checkout.home') }}";
     const homeUrl = "{{ route('home') }}";
 
+    function readGuestCart() {
+        try {
+            const data = JSON.parse(localStorage.getItem('guest_cart') || '[]');
+            return Array.isArray(data) ? data : [];
+        } catch (error) {
+            console.error('Dữ liệu giỏ hàng không hợp lệ:', error);
+            return [];
+        }
+    }
+
     if (isGuest) {
-        let guestCart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+        let guestCart = readGuestCart();
         
         if (guestCart.length > 0) {
             renderGuestCart(guestCart);
@@ -513,10 +544,20 @@ function renderGuestCart(cart) {
                 <div class="md:ml-4 flex-1 flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-start gap-4">
-                            <h3 class="serif text-base sm:text-lg lg:text-xl font-semibold
-                            text-stone-700 uppercase break-words min-w-0">
-                                ${item.productName}
-                            </h3>
+                            
+<h4 class="serif text-lg sm:text-xl text-stone-900
+           uppercase leading-tight break-words min-w-0">
+
+    <a href="${homeUrl}aodai/${encodeURIComponent(item.productId)}"
+       class="hover:text-red-800 underline-offset-4 transition-colors"
+       title="Xem chi tiết sản phẩm">
+
+        ${item.productName}
+
+    </a>
+
+</h4>
+
 
                             <button
                                 type="button"
@@ -680,13 +721,13 @@ function renderGuestCart(cart) {
 
     // Các hàm phụ trợ cho khách vãng lai
     function guestUpdateQty(index, step) {
-    let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+    let cart = readGuestCart();
 
     if (!cart[index]) return;
 
     const currentQty = Number(cart[index].SoLuong);
     const newQty = currentQty + step;
-    const stock = Number(cart[index].stock);
+    const stock = Number(cart[index].stock ?? cart[index].SoLuongTon ?? 0);
 
     if (newQty < 1) return;
 
@@ -726,7 +767,7 @@ function renderGuestCart(cart) {
             cancelButtonText: 'Hủy'
         }).then((result) => {
             if (result.isConfirmed) {
-                let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+                let cart = readGuestCart();
                 cart.splice(index, 1);
                 localStorage.setItem('guest_cart', JSON.stringify(cart));
                 
@@ -918,6 +959,22 @@ function checkoutSelected() {
             title: 'Chưa chọn sản phẩm',
             text: 'Vui lòng chọn ít nhất một sản phẩm để đặt hàng.',
             confirmButtonColor: '#991b1b'
+        });
+        return;
+    }
+
+    if (isGuest) {
+        sessionStorage.setItem('heritage_guest_selected_cart', JSON.stringify(selectedIds));
+        Swal.fire({
+            icon: 'info',
+            title: 'Vui lòng đăng nhập',
+            text: 'Đăng nhập để đồng bộ giỏ hàng trước khi thanh toán.',
+            showCancelButton: true,
+            confirmButtonText: 'Đăng nhập',
+            cancelButtonText: 'Để sau',
+            confirmButtonColor: '#991b1b'
+        }).then(result => {
+            if (result.isConfirmed) window.location.href = "{{ route('login') }}";
         });
         return;
     }

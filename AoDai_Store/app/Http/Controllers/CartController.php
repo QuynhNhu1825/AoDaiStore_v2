@@ -328,6 +328,7 @@ class CartController extends Controller
         }
 
         Cart::where('MaTaiKhoan', Auth::id())->delete();
+        session()->forget('selected_cart_ids');
 
         return back()->with('success', 'Giỏ hàng đã được làm trống!');
     }
@@ -363,100 +364,184 @@ class CartController extends Controller
     }
 
     /**
-     * Checkout dành cho thành viên.
+     * Trang thanh toán: chỉ lấy các dòng giỏ hàng đã được chọn.
      */
-    public function checkout()
+public function checkout(Request $request)
+{
+    // Kiểm tra đăng nhập
+    if (!Auth::check()) {
+        return redirect()
+            ->route('login')
+            ->with(
+                'error',
+                'Vui lòng đăng nhập để thanh toán!'
+            );
+    }
+
+    // Lấy danh sách sản phẩm được chọn
+    $selectedIds = $request->session()
+        ->get('selected_cart_ids', []);
+
+    $selectedIds = is_array($selectedIds)
+        ? array_values(array_unique(array_filter(
+            array_map('intval', $selectedIds),
+            fn ($id) => $id > 0
+        )))
+        : [];
+
+    if (empty($selectedIds)) {
+        return redirect()
+            ->route('cart.index')
+            ->with(
+                'error',
+                'Vui lòng chọn sản phẩm trước khi thanh toán.'
+            );
+    }
+
+    // Lấy sản phẩm trong giỏ
+    $cartItems = Cart::with([
+        'productDetail.product',
+        'productDetail.color',
+        'productDetail.size',
+    ])
+        ->where('MaTaiKhoan', Auth::id())
+        ->whereIn('MaGioHang', $selectedIds)
+        ->get();
+
+    // Kiểm tra sản phẩm được chọn
+    if ($cartItems->count() !== count($selectedIds)) {
+
+        $request->session()->forget('selected_cart_ids');
+
+        return redirect()
+            ->route('cart.index')
+            ->with(
+                'error',
+                'Một số sản phẩm đã chọn không còn trong giỏ hàng. Vui lòng chọn lại.'
+            );
+    }
+
+    // Kiểm tra tồn kho và tính tổng tiền
+    $totalPrice = 0;
+
+    foreach ($cartItems as $item) {
+
+        $detail = $item->productDetail;
+
+        if (
+            !$detail ||
+            !$detail->product ||
+            (bool) $detail->IsDeleted ||
+            (int) $item->SoLuong < 1 ||
+            (int) $item->SoLuong > (int) $detail->SoLuong
+        ) {
+            return redirect()
+                ->route('cart.index')
+                ->with(
+                    'error',
+                    'Có sản phẩm không còn khả dụng hoặc không đủ tồn kho. Vui lòng kiểm tra giỏ hàng.'
+                );
+        }
+
+        $totalPrice +=
+            (float) $detail->Gia * (int) $item->SoLuong;
+    }
+
+    // Lấy thông tin khách hàng
+    $info = Auth::user();
+
+    // Khởi tạo địa chỉ
+    $addressData = [
+        'soNha' => '',
+        'phuongXa' => '',
+        'tinhThanh' => '',
+    ];
+
+    // Tách địa chỉ từ tài khoản
+    if ($info && !empty($info->DiaChi)) {
+
+        $parts = array_map(
+            'trim',
+            explode(',', $info->DiaChi)
+        );
+
+        if (count($parts) >= 3) {
+
+            // Tỉnh/thành phố nằm cuối
+            $addressData['tinhThanh'] = array_pop($parts);
+
+            // Phường/xã nằm kế cuối
+            $addressData['phuongXa'] = array_pop($parts);
+
+            // Phần còn lại là số nhà, tên đường
+            $addressData['soNha'] = implode(', ', $parts);
+
+        } elseif (count($parts) === 2) {
+
+            $addressData['soNha'] = $parts[0];
+            $addressData['phuongXa'] = $parts[1];
+
+        } elseif (count($parts) === 1) {
+
+            $addressData['soNha'] = $parts[0];
+        }
+    }
+
+    // Hiển thị trang checkout
+    return view('client.checkout.index', compact(
+        'cartItems',
+        'info',
+        'addressData',
+        'totalPrice'
+    ));
+}
+
+
+    /**
+     * Nhận checkbox MaGioHang từ trang cart và lưu vào Laravel Session.
+     */
+    public function checkoutSelected(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login')
-                ->with('error', 'Vui lòng đăng nhập để thanh toán!');
+                ->with('error', 'Vui lòng đăng nhập để thanh toán.');
         }
 
-       $selectedIds = session('selected_cart_ids', []);
+        $validated = $request->validate([
+            'selected_ids' => ['required', 'array', 'min:1'],
+            'selected_ids.*' => ['required', 'integer', 'min:1'],
+        ], [
+            'selected_ids.required' => 'Vui lòng chọn sản phẩm muốn đặt hàng.',
+            'selected_ids.min' => 'Vui lòng chọn ít nhất một sản phẩm.',
+        ]);
 
-        if (empty($selectedIds)) {
-            return redirect()->route('cart.index')
-                ->with('error', 'Vui lòng chọn sản phẩm trước khi thanh toán.');
-        }
+        $selectedIds = array_values(array_unique(
+            array_map('intval', $validated['selected_ids'])
+        ));
 
-        $cartItems = Cart::with([
-            'productDetail.product',
-            'productDetail.color',
-            'productDetail.size',
-        ])
-            ->where('MaTaiKhoan', Auth::id())
+        $validCount = Cart::where('MaTaiKhoan', Auth::id())
             ->whereIn('MaGioHang', $selectedIds)
-            ->get();
+            ->count();
 
-        if ($cartItems->isEmpty() || $cartItems->count() !== count($selectedIds)) {
-            session()->forget('selected_cart_ids');
-
+        if ($validCount !== count($selectedIds)) {
             return redirect()->route('cart.index')
-                ->with('error', 'Sản phẩm đã chọn không còn trong giỏ hàng.');
+                ->with('error', 'Danh sách sản phẩm không hợp lệ. Vui lòng chọn lại.');
         }
 
-        $totalPrice = 0;
-
-        foreach ($cartItems as $item) {
-            $totalPrice += $item->productDetail->Gia * $item->SoLuong;
-        }
-        $info = Auth::user();
-        $addressData = [
-            'soNha' => '',
-            'phuongXa' => '',
-            'quanHuyen' => '',
-            'tinhThanh' => '',
-        ];
-
-        if ($info && $info->DiaChi) {
-            $parts = explode(', ', $info->DiaChi);
-            $addressData['soNha'] = $parts[0] ?? '';
-            $addressData['phuongXa'] = $parts[1] ?? '';
-            $addressData['quanHuyen'] = $parts[2] ?? '';
-            $addressData['tinhThanh'] = $parts[3] ?? '';
-        }
-
-        return view('client.checkout.index', compact('cartItems', 'info', 'addressData', 'totalPrice'));
-    }
-    public function checkoutSelected(Request $request)
-{
-    $request->validate([
-        'selected_ids' => 'required|array|min:1',
-        'selected_ids.*' => 'required|integer',
-    ], [
-        'selected_ids.required' => 'Vui lòng chọn sản phẩm muốn đặt hàng.',
-        'selected_ids.min' => 'Vui lòng chọn ít nhất một sản phẩm.',
-    ]);
-
-    $selectedIds = array_unique(
-        array_map('intval', $request->selected_ids)
-    );
-
-    $validCount = Cart::where('MaTaiKhoan', Auth::id())
-        ->whereIn('MaGioHang', $selectedIds)
-        ->count();
-
-    if ($validCount !== count($selectedIds)) {
-        return redirect()->route('cart.index')
-            ->with('error', 'Danh sách sản phẩm không hợp lệ. Vui lòng chọn lại.');
+        $request->session()->put('selected_cart_ids', $selectedIds);
+        return redirect()->route('checkout.home');
     }
 
-    session([
-        'selected_cart_ids' => $selectedIds,
-    ]);
-
-    return redirect()->route('checkout.home');
-}
     /**
-     * Trang checkout thành công.
+     * Trang checkout thành công (giữ tương thích route cũ).
      */
     public function checkoutSuccess(Request $request)
     {
         $request->validate([
             'fullName' => 'required|string|max:255',
-            'email'    => 'required|email|max:255',
-            'phone'    => 'required|string|max:20',
-            'address'  => 'required|string|max:500',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:20',
+            'address' => 'required|string|max:500',
         ]);
 
         return view('client.checkout.success');
