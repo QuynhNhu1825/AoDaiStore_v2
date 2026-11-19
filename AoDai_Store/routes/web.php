@@ -24,29 +24,35 @@ use App\Http\Controllers\VietQRController;
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard')->middleware(['auth']);
+Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard')->middleware(['auth', 'admin']);
 //register
 Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
-//material
-Route::get('/admin/materials', [AdminMaterialController::class, 'index'])->name('admin.materials.index');
-Route::get('/admin/materials/create', [AdminMaterialController::class, 'create'])->name('admin.materials.create');
-Route::post('/admin/materials/store', [AdminMaterialController::class, 'store'])->name('admin.materials.store');
-Route::get('/admin/materials/edit/{MaChatLieu}', [AdminMaterialController::class, 'edit'])->name('admin.materials.edit');
-Route::put('/admin/materials/update/{MaChatLieu}', [AdminMaterialController::class, 'update'])->name('admin.materials.update');
-Route::delete('/admin/materials/delete/{MaChatLieu}', [AdminMaterialController::class, 'destroy'])->name('admin.materials.destroy');
+// material
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/materials', [AdminMaterialController::class, 'index'])->name('admin.materials.index');
+    Route::get('/materials/create', [AdminMaterialController::class, 'create'])->name('admin.materials.create');
+    Route::post('/materials/store', [AdminMaterialController::class, 'store'])->name('admin.materials.store');
+    Route::get('/materials/edit/{MaChatLieu}', [AdminMaterialController::class, 'edit'])->name('admin.materials.edit');
+    Route::put('/materials/update/{MaChatLieu}', [AdminMaterialController::class, 'update'])->name('admin.materials.update');
+    Route::delete('/materials/delete/{MaChatLieu}', [AdminMaterialController::class, 'destroy'])->name('admin.materials.destroy');
+});
 //color
-Route::get('/admin/colors', [AdminColorController::class, 'index'])->name('admin.colors.index');
-Route::get('/admin/colors/create', [AdminColorController::class, 'create'])->name('admin.colors.create');
-Route::post('/admin/colors/store', [AdminColorController::class, 'store'])->name('admin.colors.store');
-Route::get('/admin/colors/edit/{MaLoaiMau}', [AdminColorController::class, 'edit'])->name('admin.colors.edit');
-Route::put('/admin/colors/update/{MaLoaiMau}', [AdminColorController::class, 'update'])->name('admin.colors.update');
-Route::delete('/admin/colors/delete/{MaLoaiMau}', [AdminColorController::class, 'destroy'])->name('admin.colors.destroy');
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/colors', [AdminColorController::class, 'index'])->name('admin.colors.index');
+    Route::get('/colors/create', [AdminColorController::class, 'create'])->name('admin.colors.create');
+    Route::post('/colors/store', [AdminColorController::class, 'store'])->name('admin.colors.store');
+    Route::get('/colors/edit/{MaLoaiMau}', [AdminColorController::class, 'edit'])->name('admin.colors.edit');
+    Route::put('/colors/update/{MaLoaiMau}', [AdminColorController::class, 'update'])->name('admin.colors.update');
+    Route::delete('/colors/delete/{MaLoaiMau}', [AdminColorController::class, 'destroy'])->name('admin.colors.destroy');
+});
 //account
-Route::get('/admin/accounts', [AdminAccountController::class, 'index'])->name('admin.accounts.index');
-Route::get('/admin/accounts/edit/{MaTaiKhoan}', [AdminAccountController::class, 'edit'])->name('admin.accounts.edit');
-Route::post('/admin/accounts/update/{MaTaiKhoan}', [AdminAccountController::class, 'update'])->name('admin.accounts.update');
-Route::post('/admin/accounts/lock/{MaTaiKhoan}', [AdminAccountController::class, 'lock'])->name('admin.accounts.lock');
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/accounts', [AdminAccountController::class, 'index'])->name('admin.accounts.index');
+    Route::get('/accounts/edit/{MaTaiKhoan}', [AdminAccountController::class, 'edit'])->name('admin.accounts.edit');
+    Route::post('/accounts/update/{MaTaiKhoan}', [AdminAccountController::class, 'update'])->name('admin.accounts.update');
+    Route::post('/accounts/lock/{MaTaiKhoan}', [AdminAccountController::class, 'lock'])->name('admin.accounts.lock');
+});
 
 //product client
 Route::get('/', [ProductController::class, 'index'])->name('home');
@@ -59,16 +65,17 @@ Route::get('/cart',[CartController::class,'viewCart'])->name('cart.index');
 Route::post('/update-quantity', [CartController::class, 'updateQuantity'])->name('update.quantity');
 Route::get('/category/{id}', [ProductController::class, 'showByCategory'])->name('category.show');
 Route::get('/products/category', [ProductController::class, 'category']) ->name('products.category');
-Route::post('/cart/merge', [CartController::class, 'mergeCartAfterLogin'])
-    ->name('cart.merge');
+Route::post('/cart/merge', [CartController::class, 'mergeCartAfterLogin'])->name('cart.merge');
 // product admin
-Route::get('/admin/products', [AdminProductController::class, 'index'])->name('admin.products.index');
-Route::get('/admin/products/create', [AdminProductController::class, 'create'])->name('admin.products.create');
-Route::post('/admin/products/store', [AdminProductController::class, 'store'])->name('admin.products.store');
-Route::get('/admin/products/edit/{MaSanPham}', [AdminProductController::class, 'edit'])->name('admin.products.edit');
-Route::put('/admin/products/update/{MaSanPham}', [AdminProductController::class, 'update'])->name('admin.products.update');
-Route::delete('/admin/products/delete/{MaSanPham}', [AdminProductController::class, 'destroy'])->name('admin.products.destroy');
-Route::post('/admin/products/toggle-status/{MaSanPham}', [AdminProductController::class, 'toggleStatus'])->name('admin.products.toggleStatus');
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/products', [AdminProductController::class, 'index'])->name('admin.products.index');
+    Route::get('/products/create', [AdminProductController::class, 'create'])->name('admin.products.create');
+    Route::post('/products/store', [AdminProductController::class, 'store'])->name('admin.products.store');
+    Route::get('/products/edit/{MaSanPham}', [AdminProductController::class, 'edit'])->name('admin.products.edit');
+    Route::put('/products/update/{MaSanPham}', [AdminProductController::class, 'update'])->name('admin.products.update');
+    Route::delete('/products/delete/{MaSanPham}', [AdminProductController::class, 'destroy'])->name('admin.products.destroy');
+    Route::post('/products/toggle-status/{MaSanPham}', [AdminProductController::class, 'toggleStatus'])->name('admin.products.toggleStatus');
+});
 
 //check out
 Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.home')->middleware('auth');
@@ -76,33 +83,38 @@ Route::post('/checkout/selected', [CartController::class, 'checkoutSelected'])
     ->name('checkout.selected')
     ->middleware('auth');
 //category
-Route::get('/admin/categories', [AdminCategoryController::class, 'index'])->name('admin.categories.index');
-Route::get('/admin/categories/create', [AdminCategoryController::class, 'create'])->name('admin.categories.create');
-Route::post('/admin/categories/store', [AdminCategoryController::class, 'store'])->name('admin.categories.store');
-Route::get('/admin/categories/edit/{MaLoaiSP}', [AdminCategoryController::class, 'edit'])->name('admin.categories.edit');
-Route::put('/admin/categories/update/{MaLoaiSP}', [AdminCategoryController::class, 'update'])->name('admin.categories.update');
-Route::delete('/admin/categories/delete/{MaLoaiSP}', [AdminCategoryController::class, 'destroy'])->name('admin.categories.destroy');
-Route::post('/admin/categories/toggle-status/{MaLoaiSP}', [AdminCategoryController::class, 'toggleStatus'])->name('admin.categories.toggleStatus');
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/categories', [AdminCategoryController::class, 'index'])->name('admin.categories.index');
+    Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('admin.categories.create');
+    Route::post('/categories/store', [AdminCategoryController::class, 'store'])->name('admin.categories.store');
+    Route::get('/categories/edit/{MaLoaiSP}', [AdminCategoryController::class, 'edit'])->name('admin.categories.edit');
+    Route::put('/categories/update/{MaLoaiSP}', [AdminCategoryController::class, 'update'])->name('admin.categories.update');
+    Route::delete('/categories/delete/{MaLoaiSP}', [AdminCategoryController::class, 'destroy'])->name('admin.categories.destroy');
+    Route::post('/categories/toggle-status/{MaLoaiSP}', [AdminCategoryController::class, 'toggleStatus'])->name('admin.categories.toggleStatus');
+});
 
 //size
-Route::get('/admin/sizes', [AdminSizeController::class, 'index'])->name('admin.sizes.index');
-Route::get('/admin/sizes/create', [AdminSizeController::class, 'create'])->name('admin.sizes.create');
-Route::post('/admin/sizes/store', [AdminSizeController::class, 'store'])->name('admin.sizes.store');
-Route::get('/admin/sizes/edit/{MaSize}', [AdminSizeController::class, 'edit'])->name('admin.sizes.edit');
-Route::put('/admin/sizes/update/{MaSize}', [AdminSizeController::class, 'update'])->name('admin.sizes.update');
-Route::delete('/admin/sizes/delete/{MaSize}', [AdminSizeController::class, 'destroy'])->name('admin.sizes.destroy');
-Route::post('/admin/sizes/toggle-status/{MaSize}', [AdminSizeController::class, 'toggleStatus'])->name('admin.sizes.toggleStatus');
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/sizes', [AdminSizeController::class, 'index'])->name('admin.sizes.index');
+    Route::get('/sizes/create', [AdminSizeController::class, 'create'])->name('admin.sizes.create');
+    Route::post('/sizes/store', [AdminSizeController::class, 'store'])->name('admin.sizes.store');
+    Route::get('/sizes/edit/{MaSize}', [AdminSizeController::class, 'edit'])->name('admin.sizes.edit');
+    Route::put('/sizes/update/{MaSize}', [AdminSizeController::class, 'update'])->name('admin.sizes.update');
+    Route::delete('/sizes/delete/{MaSize}', [AdminSizeController::class, 'destroy'])->name('admin.sizes.destroy');
+    Route::post('/sizes/toggle-status/{MaSize}', [AdminSizeController::class, 'toggleStatus'])->name('admin.sizes.toggleStatus');
+});
 
-//order
-Route::resource('/admin/orders', App\Http\Controllers\AdminOrderController::class)->names('orders');
-Route::post('/admin/orders/status/{id}', [AdminOrderController::class, 'confirmstatus'])->name('orders.confirmstatus');
-Route::patch('/orders/{id}/confirm-payment', [AdminOrderController::class, 'confirmPayment'])->name('orders.confirmPayment');
-Route::post('/orders/status/{id}', [AdminOrderController::class, 'confirmstatus'])
-    ->name('orders.confirmstatus');
-Route::patch('/orders/{id}/confirm-payment', [AdminOrderController::class, 'confirmPayment'])
-    ->name('orders.confirmPayment');
-Route::patch('/admin/orders/{id}/review-cancellation',[AdminOrderController::class, 'reviewCancellation'])
-    ->name('orders.reviewCancellation');
+//order admin
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+        Route::resource('/orders', AdminOrderController::class)
+            ->names('orders');
+        Route::post('/orders/status/{id}', [AdminOrderController::class, 'confirmstatus'])
+            ->name('orders.confirmstatus');
+        Route::patch('/orders/{id}/confirm-payment', [AdminOrderController::class, 'confirmPayment'])
+            ->name('orders.confirmPayment');
+        Route::patch('/orders/{id}/review-cancellation', [AdminOrderController::class, 'reviewCancellation'])
+            ->name('orders.reviewCancellation');
+});
 
 //profile
 Route::middleware(['auth'])->group(function () {
@@ -116,8 +128,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('profile.update');
 });
 //statistics
-Route::get('/admin/statistics', [StatisticsController::class, 'index'])
-    ->name('statistics.index');
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/statistics', [StatisticsController::class, 'index'])
+        ->name('statistics.index');
+});
 //favorite
 Route::post('/favorite/toggle/{id}', [FavoriteController::class, 'toggle'])
     ->name('favorite.toggle')
@@ -136,17 +150,23 @@ Route::post('/rating/{MaSanPham}',
     [App\Http\Controllers\RatingController::class, 'store']
 )->name('rating.store')->middleware('auth');
 
-//hide comments (admin)
-Route::middleware(['auth'])->prefix('admin')->group(function () {
-    Route::get('/comments', [AdminRatingController::class, 'index'])
-        ->name('admin.comments.index');
+// comments (admin)
+Route::middleware(['auth', 'admin'])
+    ->prefix('admin')
+    ->group(function () {
 
-    Route::patch('/comments/{id}/hide', [AdminRatingController::class, 'hide'])
-        ->name('admin.comments.hide');
-    Route::post('/ratings/{id}/show', [AdminRatingController::class, 'show'])->name('admin.comments.show');
-    Route::patch('/comments/{id}/reply', [AdminRatingController::class, 'reply'])
-    ->name('admin.comments.reply');
-});
+        Route::get('/comments', [AdminRatingController::class, 'index'])
+            ->name('admin.comments.index');
+
+        Route::patch('/comments/{id}/hide', [AdminRatingController::class, 'hide'])
+            ->name('admin.comments.hide');
+
+        Route::patch('/comments/{id}/show', [AdminRatingController::class, 'show'])
+            ->name('admin.comments.show');
+
+        Route::patch('/comments/{id}/reply', [AdminRatingController::class, 'reply'])
+            ->name('admin.comments.reply');
+    });
 
 //order client
 Route::middleware('auth')->group(function () {
@@ -181,4 +201,10 @@ Route::view('/phuong-thuc-thanh-toan', 'client.pages.payment-methods')
 
 Route::view('/gioi-thieu', 'client.pages.introduction')
     ->name('pages.introduction');
-
+//vietqr
+Route::middleware('auth')->group(function () {
+    Route::get('/vietqr/{id}', [VietQRController::class, 'show'])
+        ->name('vietqr.show');
+    Route::post('/vietqr/{id}/confirm', [OrderController::class, 'confirmTransfer'])
+        ->name('vietqr.confirm');
+});

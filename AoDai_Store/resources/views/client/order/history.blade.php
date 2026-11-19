@@ -289,7 +289,9 @@
                                 {{-- THÔNG TIN SẢN PHẨM --}}
                                 <div class="flex-1 min-w-0">
 
-                                    <h4 class="font-bold text-stone-800 text-base uppercase leading-relaxed">
+                                    <h4 class="serif font-bold text-stone-900
+                                       text-base sm:text-lg uppercase
+                                       leading-relaxed tracking-wide">
                                         @if($product)
                                             <a href="{{ route('product.detail', $product->MaSanPham) }}"
                                                class="hover:text-red-800 underline-offset-4 transition-colors"
@@ -498,20 +500,34 @@
 
                             @endif
 
-                            {{-- ĐÁNH GIÁ SẢN PHẨM --}}
+                            {{-- ĐÁNH GIÁ SẢN PHẨM: chỉ hiện nếu còn sản phẩm chưa đánh giá --}}
                             @if($orderStatus === 'DaGiao')
+                                @php
+                                    // Mỗi sản phẩm được đánh giá một lần trong mỗi đơn hàng.
+                                    // Nhiều biến thể của cùng sản phẩm chỉ tính một lần.
+                                    $productIds = $details
+                                        ->map(fn ($detail) => $detail->productDetail?->MaSanPham)
+                                        ->filter(fn ($id) => $id !== null)
+                                        ->map(fn ($id) => (int) $id)
+                                        ->unique()
+                                        ->values()
+                                        ->all();
 
-                                <a href="{{ route('order.show', $order->MaDonHang) }}"
-                                   class="inline-flex items-center justify-center
-                                          px-5 py-2.5 bg-red-800
-                                          text-white hover:bg-red-900
-                                          text-xs font-bold uppercase
-                                          tracking-wide transition">
+                                    $reviewedIds = $reviewedByOrder->get($order->MaDonHang, []);
+                                    $hasUnreviewedProducts = count(array_diff($productIds, $reviewedIds)) > 0;
+                                @endphp
 
-                                    Đánh giá sản phẩm
-
-                                </a>
-
+                                @if($hasUnreviewedProducts)
+                                    <a href="{{ route('order.show', $order->MaDonHang) }}"
+                                       class="inline-flex items-center justify-center
+                                              px-5 py-2.5 bg-red-800
+                                              text-white hover:bg-red-900
+                                              text-xs font-bold uppercase
+                                              tracking-wide transition">
+                                        <i class="fas fa-star mr-2"></i>
+                                        Đánh giá sản phẩm
+                                    </a>
+                                @endif
                             @endif
 
                         </div>

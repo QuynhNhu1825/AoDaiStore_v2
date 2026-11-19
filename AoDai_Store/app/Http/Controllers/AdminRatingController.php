@@ -10,11 +10,22 @@ class AdminRatingController extends Controller
 {
     // Danh sách đánh giá
     // Danh sách đánh giá + tìm kiếm + lọc
+
 public function index(Request $request)
 {
     $query = DB::table('danhgia')
-        ->join('taikhoan', 'danhgia.MaTaiKhoan', '=', 'taikhoan.MaTaiKhoan')
-        ->join('sanpham', 'danhgia.MaSanPham', '=', 'sanpham.MaSanPham')
+        ->join(
+            'taikhoan',
+            'danhgia.MaTaiKhoan',
+            '=',
+            'taikhoan.MaTaiKhoan'
+        )
+        ->join(
+            'sanpham',
+            'danhgia.MaSanPham',
+            '=',
+            'sanpham.MaSanPham'
+        )
         ->select(
             'danhgia.MaDanhGia',
             'danhgia.NoiDung',
@@ -29,31 +40,44 @@ public function index(Request $request)
 
     // TÌM KIẾM
     if ($request->filled('search')) {
-
-        $search = trim($request->search);
+        $search = trim($request->input('search'));
 
         $query->where(function ($q) use ($search) {
-
             $q->where('taikhoan.TenDangNhap', 'like', "%{$search}%")
               ->orWhere('sanpham.TenSanPham', 'like', "%{$search}%")
               ->orWhere('danhgia.NoiDung', 'like', "%{$search}%");
-
         });
     }
 
     // LỌC SỐ SAO
-    if ($request->filled('stars')) {
-        $query->where('danhgia.SoSao', $request->stars);
+    if (in_array($request->input('stars'), ['1', '2', '3', '4', '5'], true)) {
+        $query->where('danhgia.SoSao', $request->input('stars'));
     }
 
-    // LỌC TRẠNG THÁI
-    if ($request->filled('status')) {
-        $query->where('danhgia.TrangThai', $request->status);
+    // LỌC TRẠNG THÁI HIỂN THỊ
+    if (in_array($request->input('status'), ['0', '1'], true)) {
+        $query->where('danhgia.TrangThai', $request->input('status'));
+    }
+
+    // LỌC TRẠNG THÁI PHẢN HỒI
+    $replyStatus = $request->input('reply_status');
+
+    if ($replyStatus === 'unanswered') {
+        // Chưa có phản hồi hoặc phản hồi chỉ chứa khoảng trắng
+        $query->where(function ($q) {
+            $q->whereNull('danhgia.PhanHoi')
+              ->orWhereRaw("TRIM(danhgia.PhanHoi) = ''");
+        });
+    } elseif ($replyStatus === 'answered') {
+        // Đã có nội dung phản hồi
+        $query->whereNotNull('danhgia.PhanHoi')
+              ->whereRaw("TRIM(danhgia.PhanHoi) <> ''");
     }
 
     // SẮP XẾP VÀ PHÂN TRANG
     $comments = $query
         ->orderByDesc('danhgia.NgayDanhGia')
+        ->orderByDesc('danhgia.MaDanhGia')
         ->paginate(10)
         ->withQueryString();
 

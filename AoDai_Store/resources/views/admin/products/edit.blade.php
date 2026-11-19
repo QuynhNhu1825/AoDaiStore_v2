@@ -684,53 +684,6 @@ editForm.addEventListener('submit', function () {
 
 });
 
-// QUAN TRỌNG: GỬI DỮ LIỆU CỦA TẤT CẢ CÁC MÀU KHI LƯU
-
-
-editForm.addEventListener('submit', function () {
-
-    // Lưu giá và số lượng đang hiển thị trên màn hình
-    saveVariantValues();
-
-    // Xóa các input ẩn được tạo trước đó (nếu có)
-    editForm.querySelectorAll('.hidden-variant-input').forEach(input => {
-        input.remove();
-    });
-
-    const selectedColors = getSelectedColors();
-
-    selectedColors.forEach(color => {
-
-        // Màu đang hiển thị đã có input thật trong form
-        if (color.id === activeColorId) {
-            return;
-        }
-
-        // Tạo input ẩn cho các màu còn lại
-        sizes.forEach(size => {
-
-            const values = variantValues[color.id]?.[size.id] || {
-                Gia: '',
-                SoLuong: ''
-            };
-
-            ['Gia', 'SoLuong'].forEach(field => {
-
-                const hiddenInput = document.createElement('input');
-
-                hiddenInput.type = 'hidden';
-                hiddenInput.className = 'hidden-variant-input';
-                hiddenInput.name =
-                    `variants[${color.id}][${size.id}][${field}]`;
-
-                hiddenInput.value = values[field] ?? '';
-
-                editForm.appendChild(hiddenInput);
-            });
-        });
-    });
-});
-
     // Xem trước ảnh đại diện
     const mainImageInput = document.getElementById('mainImageInput');
     const mainImagePreview = document.getElementById('mainImagePreview');
