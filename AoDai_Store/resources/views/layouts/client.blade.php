@@ -283,7 +283,7 @@
                 try {
 
                     const response = await fetch(
-                        "{{ route('cart.merge') }}",
+                        {{ Js::from(route('cart.merge', absolute: false)) }},
                         {
                             method: 'POST',
 
