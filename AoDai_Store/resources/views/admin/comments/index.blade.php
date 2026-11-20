@@ -282,16 +282,10 @@
                                 class="px-2 py-3 text-center align-middle">
 
                                 @php
-                                    $imagePath = $cmt->HinhAnh
-                                        ? public_path('img/ratings/' . basename($cmt->HinhAnh))
-                                        : null;
-
-                                    $imageUrl = $cmt->HinhAnh
-                                        ? asset('img/ratings/' . basename($cmt->HinhAnh))
-                                        : null;
+                                    $imageUrl = \App\Models\Review::imageUrl($cmt->HinhAnh);
                                 @endphp
 
-                                @if($imagePath && file_exists($imagePath))
+                                @if($imageUrl)
 
                                     <a href="{{ $imageUrl }}"
                                        target="_blank"
@@ -308,7 +302,7 @@
                                 @else
 
                                     <span class="text-[10px] text-stone-400 italic">
-                                        Không có ảnh
+                                        {{ $cmt->HinhAnh ? 'Ảnh không có trên máy chủ' : 'Không có ảnh' }}
                                     </span>
 
                                 @endif

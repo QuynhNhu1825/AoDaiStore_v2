@@ -77,12 +77,12 @@
             </div>
         @endif
 
-        @if(session('error'))
+        @if(session('error') || $errors->rating->any())
             <div id="error-alert"
                  class="mb-6 p-4 bg-red-50 border border-red-200
                         text-red-700 rounded-lg
                         transition-opacity duration-500">
-                {{ session('error') }}
+                {{ session('error') ?? $errors->rating->first() }}
             </div>
         @endif
 
@@ -192,6 +192,9 @@
                                 {{ $order->PhuongThucThanhToan }}
                             @endif
                         </p>
+                        @if($status !== 'DaHuy' && $paymentMethod === 'vietqr' && $order->TrangThaiThanhToan === 'ChoXacNhanThanhToan')
+                            <p class="mt-1 text-xs text-amber-800">Chờ xác nhận thanh toán</p>
+                        @endif
                     </div>
 
                     @if($order->GhiChu)
@@ -748,6 +751,15 @@
                 </a>
 
                 <div class="flex flex-wrap gap-3">
+
+                    @if($order->canPayWithVietQr())
+                        <a href="{{ route('vietqr.show', $order->MaDonHang) }}"
+                           class="inline-flex items-center px-6 py-3 bg-red-800
+                                  text-white hover:bg-red-900 text-xs font-bold
+                                  uppercase tracking-wide transition">
+                            Tiếp tục thanh toán VietQR
+                        </a>
+                    @endif
 
                     {{-- HỦY ĐƠN --}}
                     @if($order->canCancel() && ($order->TrangThaiThanhToan !== 'DaThanhToan' || $status === 'DaXacNhan'))
