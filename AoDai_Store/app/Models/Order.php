@@ -109,6 +109,13 @@ class Order extends Model
             && $this->TrangThaiYeuCauHuy === 'ChoDuyet';
     }
 
+    public function canPayWithVietQr(): bool
+    {
+        return $this->PhuongThucThanhToan === 'vietqr'
+            && $this->TrangThai === 'ChoXacNhan'
+            && $this->TrangThaiThanhToan === 'ChuaThanhToan';
+    }
+
     /**
      * Một đơn hàng có nhiều chi tiết đơn hàng.
      */

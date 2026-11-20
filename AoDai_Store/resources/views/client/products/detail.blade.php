@@ -653,10 +653,13 @@
                                 </p>
                             @endif
                             {{-- HÌNH ẢNH ĐÁNH GIÁ --}}
-                            @if(!empty($dg->HinhAnh))
+                            @php
+                                $imageUrl = \App\Models\Review::imageUrl($dg->HinhAnh);
+                            @endphp
+                            @if($imageUrl)
                                 <div class="mt-3 flex flex-wrap gap-3">
                                     <img
-                                        src="{{ asset('img/ratings/' . $dg->HinhAnh) }}"
+                                        src="{{ $imageUrl }}"
                                         alt="Ảnh đánh giá sản phẩm"
                                         onclick="openReviewImage(this.src)"
                                         class="w-24 h-24 object-cover rounded-lg

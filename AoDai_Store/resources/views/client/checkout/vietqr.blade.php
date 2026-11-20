@@ -168,11 +168,7 @@
 
 
                 {{-- CHƯA THANH TOÁN --}}
-                @elseif(
-                    $order->TrangThaiThanhToan
-                    === 'ChuaThanhToan'
-                    && $order->TrangThai === 'ChoXacNhan'
-                )
+                @elseif($order->canPayWithVietQr())
 
                     {{-- QR CODE --}}
                     <div class="flex flex-col items-center mb-8">

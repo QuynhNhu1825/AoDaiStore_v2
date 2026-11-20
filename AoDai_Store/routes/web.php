@@ -146,6 +146,8 @@ Route::delete('/favorite/{id}', [FavoriteController::class, 'destroy'])
     ->middleware('auth');
 
 //rating
+Route::get('/review-images', [App\Http\Controllers\RatingController::class, 'image'])
+    ->name('rating.image');
 Route::post('/rating/{MaSanPham}', 
     [App\Http\Controllers\RatingController::class, 'store']
 )->name('rating.store')->middleware('auth');

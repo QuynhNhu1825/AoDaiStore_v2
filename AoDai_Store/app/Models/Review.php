@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Review extends Model
 {
@@ -30,6 +31,39 @@ class Review extends Model
         'TrangThai' => 'boolean',
         'NgayDanhGia' => 'datetime',
     ];
+
+    public static function imageUrl(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+
+        $filename = basename(str_replace('\\', '/', $path));
+
+        return self::imageFile($filename) !== null
+            ? route('rating.image', [], false) . '?file=' . rawurlencode($filename)
+            : null;
+    }
+
+    public static function imageFile(string $filename): ?string
+    {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        if ($filename !== basename(str_replace('\\', '/', $filename))
+            || preg_match('/[:\x00-\x1f\x7f]/', $filename)
+            || !in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'], true)
+        ) {
+            return null;
+        }
+
+        $uploadedPath = Storage::disk('public')->path('ratings/' . $filename);
+        if (is_file($uploadedPath)) {
+            return $uploadedPath;
+        }
+
+        $legacyPath = public_path('img/ratings/' . $filename);
+
+        return is_file($legacyPath) ? $legacyPath : null;
+    }
 
     /**
      * Tài khoản đã gửi đánh giá.

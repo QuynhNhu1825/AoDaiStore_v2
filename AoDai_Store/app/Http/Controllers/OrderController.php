@@ -550,30 +550,28 @@ public function reorder($id)
 /**
  * Khách hàng xác nhận đã chuyển khoản VietQR.
  */
-public function confirmTransfer($id)
-{
-    $order = Order::where('MaDonHang', $id)
-        ->where('MaTaiKhoan', Auth::id())
-        ->where('PhuongThucThanhToan', 'vietqr')
-        ->firstOrFail();
+    public function confirmTransfer($id)
+    {
+        return DB::transaction(function () use ($id) {
+            $order = Order::where('MaDonHang', $id)
+                ->where('MaTaiKhoan', Auth::id())
+                ->where('PhuongThucThanhToan', 'vietqr')
+                ->lockForUpdate()
+                ->firstOrFail();
 
-    // Nếu đơn đã được xác nhận thanh toán
-    if ($order->TrangThaiThanhToan === 'DaThanhToan') {
-        return back()->with(
-            'success',
-            'Đơn hàng này đã được xác nhận thanh toán.'
-        );
+            if ($order->canPayWithVietQr()) {
+                $order->update(['TrangThaiThanhToan' => 'ChoXacNhanThanhToan']);
+            } elseif ($order->TrangThai === 'DaHuy' || !in_array(
+                $order->TrangThaiThanhToan,
+                ['ChoXacNhanThanhToan', 'DaThanhToan'],
+                true
+            )) {
+                return redirect()->route('order.show', $id)
+                    ->with('error', 'Đơn hàng hiện không thể thanh toán qua VietQR.');
+            }
+
+            return redirect()->route('vietqr.show', $id);
+        });
     }
-
-    // Chuyển sang trạng thái chờ Admin xác nhận
-    $order->update([
-        'TrangThaiThanhToan' => 'ChoXacNhanThanhToan'
-    ]);
-
-    return back()->with(
-        'success',
-        'Đã gửi yêu cầu xác nhận chuyển khoản. Vui lòng chờ cửa hàng kiểm tra.'
-    );
-}
 
 }

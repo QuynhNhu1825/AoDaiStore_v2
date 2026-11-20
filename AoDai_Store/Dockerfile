@@ -25,7 +25,7 @@ RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts --no-a
 COPY . .
 COPY --from=frontend /app/public/build ./public/build
 RUN composer dump-autoload --no-dev --optimize \
-    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs storage/app/public/ratings bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && php artisan storage:link \
     && sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf /etc/apache2/apache2.conf

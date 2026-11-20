@@ -412,6 +412,19 @@
                         {{-- ========== NÚT THAO TÁC ========== --}}
                         <div class="flex flex-wrap justify-end gap-3">
 
+                            @if($order->canPayWithVietQr())
+                                <a href="{{ route('vietqr.show', $order->MaDonHang) }}"
+                                   class="inline-flex items-center justify-center px-5 py-2.5
+                                          bg-red-800 text-white hover:bg-red-900
+                                          text-xs font-bold uppercase tracking-wide transition">
+                                    Tiếp tục thanh toán VietQR
+                                </a>
+                            @elseif($orderStatus !== 'DaHuy' && $order->PhuongThucThanhToan === 'vietqr' && $order->TrangThaiThanhToan === 'ChoXacNhanThanhToan')
+                                <span class="self-center text-xs font-semibold text-amber-800">
+                                    VietQR đang chờ xác nhận
+                                </span>
+                            @endif
+
                             {{-- XEM CHI TIẾT --}}
                             <a href="{{ route('order.show', $order->MaDonHang) }}"
                                class="inline-flex items-center justify-center
