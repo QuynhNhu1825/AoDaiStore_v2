@@ -10,17 +10,22 @@
         {{-- =========================
              CỘT 1: HÌNH ẢNH SẢN PHẨM
         ========================== --}}
-        <div class="grid grid-cols-1 gap-4">
+        @php
+            $galleryImages = [asset('img/products/' . $product->HinhAnh)];
+            foreach ($product->hinhanhsanpham as $detailImage) {
+                $galleryImages[] = asset('img/details/' . $detailImage->LinkAnh);
+            }
+        @endphp
+        <div class="min-w-0 self-start space-y-3">
 
             <div class="relative" id="productGallery">
 
                 {{-- Ảnh chính --}}
                 <div id="zoomContainer"
-                    class="relative h-[360px] sm:h-[450px] lg:h-[520px] w-full overflow-hidden bg-white cursor-crosshair">
+                    class="relative h-[360px] sm:h-[450px] lg:h-[520px] w-full overflow-hidden bg-white">
                     <img
                         id="mainImage"
-                        src="{{ asset('img/products/' . $product->HinhAnh) }}"
-                        class="w-full h-full object-cover"
+                        src="{{ $galleryImages[0] }}"
                         alt="{{ $product->TenSanPham }}"
                     >
 
@@ -28,54 +33,39 @@
 
                 </div>
 
-                    {{-- Nút chuyển ảnh: nằm giữa hai cạnh ảnh chính --}}
-                    @if($product->hinhanhsanpham->count() > 0)
-                        <button type="button" onclick="navigateProductImage(-1)" onmouseenter="hideProductZoom()"
-                            aria-label="Xem ảnh trước"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/90 text-stone-800 shadow-md hover:bg-red-800 hover:text-white flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-red-800">
-                            <span aria-hidden="true" class="text-3xl leading-none">&#8249;</span>
-                        </button>
-                        <button type="button" onclick="navigateProductImage(1)" onmouseenter="hideProductZoom()"
-                            aria-label="Xem ảnh tiếp theo"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/90 text-stone-800 shadow-md hover:bg-red-800 hover:text-white flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-red-800">
-                            <span aria-hidden="true" class="text-3xl leading-none">&#8250;</span>
-                        </button>
-                    @endif
+                @if(count($galleryImages) > 1)
+                    <button type="button" class="product-gallery-arrow product-gallery-arrow-prev"
+                        onclick="navigateProductImage(-1)" aria-label="Xem ảnh trước" aria-controls="mainImage">
+                        <span aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="product-gallery-arrow product-gallery-arrow-next"
+                        onclick="navigateProductImage(1)" aria-label="Xem ảnh tiếp theo" aria-controls="mainImage">
+                        <span aria-hidden="true"></span>
+                    </button>
+                @endif
 
                 {{-- Khung ảnh phóng to --}}
-                <div id="zoomResult">
+                <div id="zoomResult" aria-hidden="true">
                     <img
                         id="zoomImage"
-                        src="{{ asset('img/products/' . $product->HinhAnh) }}"
-                        alt="Ảnh sản phẩm phóng to"
+                        src="{{ $galleryImages[0] }}"
+                        alt=""
                     >
                 </div>
             </div>
 
-            {{-- Ảnh thumbnail --}}
-            <div id="productGalleryThumbnails" class="grid grid-cols-4 gap-3">
-
-                <div class="aspect-square overflow-hidden border border-red-800 hover:border-red-800 cursor-pointer">
-                    <img
-                        src="{{ asset('img/products/' . $product->HinhAnh) }}"
-                        onclick="changeImage(this.src)"
-                        class="w-full h-full object-cover"
-                        alt="Ảnh sản phẩm"
-                    >
+            @if(count($galleryImages) > 1)
+                <div id="productGalleryThumbnails" role="group" aria-label="Ảnh sản phẩm">
+                    @foreach($galleryImages as $index => $imageUrl)
+                        <button type="button" class="product-gallery-thumbnail"
+                            onclick="selectProductImage({{ $index }})"
+                            aria-label="{{ $loop->first ? 'Ảnh chính' : 'Ảnh chi tiết ' . $index }}"
+                            aria-current="{{ $loop->first ? 'true' : 'false' }}" aria-controls="mainImage">
+                            <img src="{{ $imageUrl }}" alt="" loading="lazy">
+                        </button>
+                    @endforeach
                 </div>
-
-                @foreach($product->hinhanhsanpham as $img)
-                    <div class="aspect-square overflow-hidden border border-stone-300 hover:border-stone-800 cursor-pointer">
-                        <img
-                            src="{{ asset('img/details/' . $img->LinkAnh) }}"
-                            onclick="changeImage(this.src)"
-                            class="w-full h-full object-cover"
-                            alt="Ảnh chi tiết {{ $loop->iteration }}"
-                        >
-                    </div>
-                @endforeach
-
-            </div>
+            @endif
         </div>
 
 
@@ -849,16 +839,11 @@ const zoomImage = document.getElementById('zoomImage');
 const zoomContainer = document.getElementById('zoomContainer');
 const zoomLens = document.getElementById('zoomLens');
 const zoomResult = document.getElementById('zoomResult');
-
+const galleryStrip = document.getElementById('productGalleryThumbnails');
+const galleryThumbnails = Array.from(document.querySelectorAll('.product-gallery-thumbnail'));
+const desktopZoom = window.matchMedia('(min-width: 1200px) and (hover: hover) and (pointer: fine)');
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const ZOOM_LEVEL = 2;
-
-function canZoom() {
-    return window.innerWidth >= 1200;
-}
-
-// Danh sách ảnh lấy trực tiếp từ thumbnail, luôn đúng thứ tự hiển thị.
-const galleryThumbnails = Array.from(document.querySelectorAll('#productGalleryThumbnails img'));
-const galleryImages = galleryThumbnails.map(img => img.src);
 let currentGalleryIndex = 0;
 
 function hideProductZoom() {
@@ -866,107 +851,75 @@ function hideProductZoom() {
     zoomResult.style.display = 'none';
 }
 
-// Đổi ảnh chính và ảnh zoom, đồng bộ vị trí thumbnail.
-function changeImage(src) {
+function selectProductImage(index) {
+    const thumbnail = galleryThumbnails[index];
+    const src = thumbnail.querySelector('img').src;
+    galleryThumbnails[currentGalleryIndex].setAttribute('aria-current', 'false');
+    thumbnail.setAttribute('aria-current', 'true');
+    currentGalleryIndex = index;
     mainImage.src = src;
     zoomImage.src = src;
-
-    const index = galleryImages.indexOf(src);
-    if (index !== -1) currentGalleryIndex = index;
-
-    galleryThumbnails.forEach((img, i) => {
-        const frame = img.parentElement;
-        frame.classList.toggle('border-red-800', i === currentGalleryIndex);
-        frame.classList.toggle('border-stone-300', i !== currentGalleryIndex);
-    });
-
-    // Ẩn zoom trong lúc đổi ảnh.
     hideProductZoom();
+
+    const stripBounds = galleryStrip.getBoundingClientRect();
+    const thumbnailBounds = thumbnail.getBoundingClientRect();
+    galleryStrip.scrollTo({
+        left: galleryStrip.scrollLeft + thumbnailBounds.left - stripBounds.left
+            - (stripBounds.width - thumbnailBounds.width) / 2,
+        behavior: reducedMotion.matches ? 'instant' : 'smooth',
+    });
 }
 
 function navigateProductImage(direction) {
-    if (galleryImages.length < 2) return;
-    const nextIndex = (currentGalleryIndex + direction + galleryImages.length) % galleryImages.length;
-    changeImage(galleryImages[nextIndex]);
+    const imageCount = galleryThumbnails.length;
+    selectProductImage((currentGalleryIndex + direction + imageCount) % imageCount);
 }
 
-// Cập nhật kích thước và vị trí ảnh zoom
 function updateZoom(e) {
-    if (!canZoom()) return;
-
-    const rect = zoomContainer.getBoundingClientRect();
-
-    const lensWidth = zoomLens.offsetWidth;
-    const lensHeight = zoomLens.offsetHeight;
-
-    const resultWidth = zoomResult.clientWidth;
-    const resultHeight = zoomResult.clientHeight;
-
-    if (!lensWidth || !lensHeight || !resultWidth || !resultHeight) {
+    if (!desktopZoom.matches || !mainImage.complete || !mainImage.naturalWidth) {
+        hideProductZoom();
         return;
     }
 
-    // Tọa độ chuột trong ảnh
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top;
+    // Tính vùng ảnh thực tế bên trong khung object-fit: contain.
+    const frame = mainImage.getBoundingClientRect();
+    const fit = Math.min(frame.width / mainImage.naturalWidth, frame.height / mainImage.naturalHeight);
+    const imageWidth = mainImage.naturalWidth * fit;
+    const imageHeight = mainImage.naturalHeight * fit;
+    const imageLeft = (frame.width - imageWidth) / 2;
+    const imageTop = (frame.height - imageHeight) / 2;
+    const x = e.clientX - frame.left - imageLeft;
+    const y = e.clientY - frame.top - imageTop;
 
-    // Giới hạn tọa độ chuột
-    x = Math.max(lensWidth / 2, Math.min(x, rect.width - lensWidth / 2));
-    y = Math.max(lensHeight / 2, Math.min(y, rect.height - lensHeight / 2));
+    if (x < 0 || x >= imageWidth || y < 0 || y >= imageHeight) {
+        hideProductZoom();
+        return;
+    }
 
-    // Vị trí kính lúp
-    const lensX = x - lensWidth / 2;
-    const lensY = y - lensHeight / 2;
+    zoomResult.style.display = 'block';
+    const resultWidth = zoomResult.clientWidth;
+    const resultHeight = zoomResult.clientHeight;
+    const scale = Math.max(ZOOM_LEVEL, resultWidth / imageWidth, resultHeight / imageHeight);
+    const lensWidth = resultWidth / scale;
+    const lensHeight = resultHeight / scale;
+    const lensX = Math.max(0, Math.min(x - lensWidth / 2, imageWidth - lensWidth));
+    const lensY = Math.max(0, Math.min(y - lensHeight / 2, imageHeight - lensHeight));
 
-    zoomLens.style.left = `${lensX}px`;
-    zoomLens.style.top = `${lensY}px`;
-
-    // Tính tỷ lệ phóng to theo kích thước thực tế
-    const scaleX = resultWidth / lensWidth * ZOOM_LEVEL;
-    const scaleY = resultHeight / lensHeight * ZOOM_LEVEL;
-
-    // Kích thước ảnh phóng to
-    zoomImage.style.width = `${rect.width * scaleX}px`;
-    zoomImage.style.height = `${rect.height * scaleY}px`;
-
-    // Di chuyển ảnh tương ứng với kính lúp
-    zoomImage.style.left = `${-lensX * scaleX}px`;
-    zoomImage.style.top = `${-lensY * scaleY}px`;
+    zoomLens.style.width = `${lensWidth}px`;
+    zoomLens.style.height = `${lensHeight}px`;
+    zoomLens.style.left = `${imageLeft + lensX}px`;
+    zoomLens.style.top = `${imageTop + lensY}px`;
+    zoomLens.style.display = 'block';
+    zoomImage.style.width = `${imageWidth * scale}px`;
+    zoomImage.style.height = `${imageHeight * scale}px`;
+    zoomImage.style.left = `${-lensX * scale}px`;
+    zoomImage.style.top = `${-lensY * scale}px`;
 }
 
-// Khi đưa chuột vào ảnh
-zoomContainer.addEventListener('mouseenter', function () {
-    if (!canZoom()) return;
-
-    zoomLens.style.display = 'block';
-    zoomResult.style.display = 'block';
-});
-
-// Khi di chuyển chuột
-zoomContainer.addEventListener('mousemove', function (e) {
-    if (!canZoom()) return;
-
-    if (zoomLens.style.display !== 'block') {
-        zoomLens.style.display = 'block';
-        zoomResult.style.display = 'block';
-    }
-
-    updateZoom(e);
-});
-
-// Khi rời chuột
-zoomContainer.addEventListener('mouseleave', function () {
-    zoomLens.style.display = 'none';
-    zoomResult.style.display = 'none';
-});
-
-// Khi thay đổi kích thước màn hình
-window.addEventListener('resize', function () {
-    if (!canZoom()) {
-        zoomLens.style.display = 'none';
-        zoomResult.style.display = 'none';
-    }
-});
+zoomContainer.addEventListener('mouseenter', updateZoom);
+zoomContainer.addEventListener('mousemove', updateZoom);
+zoomContainer.addEventListener('mouseleave', hideProductZoom);
+window.addEventListener('resize', hideProductZoom);
 
     // ===============================
     // CHỌN MÀU VÀ KÍCH CỠ
@@ -1483,10 +1436,6 @@ document.addEventListener('keydown', function(e) {
 
         
 
-        #zoomContainer {
-            cursor: default;
-        }
-
         .product-main-layout {
             gap: 28px;
         }
@@ -1575,103 +1524,135 @@ document.addEventListener('keydown', function(e) {
             height: 40px;
         }
     }
-    /* =====================================
-   ZOOM ẢNH SẢN PHẨM - DESKTOP
-===================================== */
-
+/* Thư viện ảnh sản phẩm */
 #productGallery {
     position: relative;
+    width: 100%;
 }
 
 #zoomContainer {
     position: relative;
     overflow: hidden;
-    cursor: default;
-}
-
-#zoomLens {
-    position: absolute;
-    display: none;
-    width: 35%;
-    height: 38%;
-    border: 1px solid rgba(255, 255, 255, 0.95);
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
-    pointer-events: none;
-    z-index: 10;
-}
-
-#zoomResult {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: calc(100% + 12px);
-    width: 65%;
-    height: 70%;
-    overflow: hidden;
-    background: white;
-    border: 1px solid #e5e5e5;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
-    z-index: 100;
-    pointer-events: none;
-}
-
-#zoomImage {
-    position: absolute;
-    max-width: none;
-    object-fit: fill;
-    pointer-events: none;
-}
-
-/* Chỉ bật zoom trên desktop */
-@media (min-width: 1200px) {
-    #zoomContainer {
-        cursor: crosshair;
-    }
-}
-
-/* Tablet và điện thoại */
-@media (max-width: 1199px) {
-    #zoomLens,
-    #zoomResult {
-        display: none !important;
-    }
-
-    #zoomContainer {
-        cursor: default;
-    }
-}
-
-/* =====================================
-   ZOOM ẢNH SẢN PHẨM - DESKTOP
-===================================== */
-
-#productGallery {
-    position: relative;
-    width: 100%;
-    overflow: visible;
-}
-
-#zoomContainer {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    cursor: default;
 }
 
 #mainImage {
+    display: block;
     width: 100%;
     height: 100%;
-    display: block;
-    object-fit: cover;
+    object-fit: contain;
 }
 
-/* Kính lúp */
+#productGalleryThumbnails {
+    --thumbnail-gap: 0.625rem;
+    --visible-thumbnails: 5;
+    display: flex;
+    align-items: flex-start;
+    justify-content: safe center;
+    gap: var(--thumbnail-gap);
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+}
+
+#productGalleryThumbnails::-webkit-scrollbar {
+    display: none;
+}
+
+.product-gallery-thumbnail {
+    position: relative;
+    flex: 0 0 calc((100% - (var(--visible-thumbnails) - 1) * var(--thumbnail-gap)) / var(--visible-thumbnails));
+    min-width: 0;
+    aspect-ratio: 4 / 5;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid transparent;
+    background: #fff;
+    cursor: pointer;
+    scroll-snap-align: center;
+}
+
+.product-gallery-thumbnail img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.product-gallery-thumbnail:hover {
+    border-color: #d6d3d1;
+}
+
+.product-gallery-thumbnail[aria-current="true"] {
+    border-color: #b91c1c;
+}
+
+.product-gallery-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 11;
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.25);
+    color: #292524;
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.product-gallery-arrow-prev {
+    left: 0.75rem;
+}
+
+.product-gallery-arrow-next {
+    right: 0.75rem;
+}
+
+.product-gallery-arrow span {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-top: 2px solid currentColor;
+    border-left: 2px solid currentColor;
+    transform: rotate(-45deg);
+}
+
+.product-gallery-arrow-next span {
+    transform: rotate(135deg);
+}
+
+.product-gallery-arrow:hover {
+    background: #991b1b;
+    color: #fff;
+}
+
+.product-gallery-arrow:focus-visible,
+.product-gallery-thumbnail:focus-visible {
+    outline: 2px solid #292524;
+    outline-offset: -2px;
+}
+
+@media (max-width: 639px) {
+    #productGalleryThumbnails {
+        --thumbnail-gap: 0.375rem;
+        --visible-thumbnails: 4;
+    }
+}
+
+@media (max-width: 380px) {
+    #productGalleryThumbnails {
+        --visible-thumbnails: 3;
+    }
+}
+
 #zoomLens {
     position: absolute;
     display: none;
-    width: 35%;
-    height: 38%;
     border: 1px solid rgba(255, 255, 255, 0.95);
     background: rgba(255, 255, 255, 0.25);
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
@@ -1679,7 +1660,6 @@ document.addEventListener('keydown', function(e) {
     z-index: 10;
 }
 
-/* Khung ảnh phóng to */
 #zoomResult {
     display: none;
     position: absolute;
@@ -1695,37 +1675,17 @@ document.addEventListener('keydown', function(e) {
     pointer-events: none;
 }
 
-/* Ảnh bên trong khung zoom */
-#zoomImage {
+#product-detail-page #zoomImage {
     position: absolute;
     top: 0;
     left: 0;
     display: block;
-
-    /* Quan trọng: ghi đè max-width: 100% ở CSS tổng */
-    max-width: none !important;
-    max-height: none !important;
-
-    object-fit: fill;
-    pointer-events: none;
+    max-width: none;
 }
 
-/* Chỉ bật zoom trên desktop */
-@media (min-width: 1200px) {
+@media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
     #zoomContainer {
         cursor: crosshair;
-    }
-}
-
-/* Tablet và điện thoại */
-@media (max-width: 1199px) {
-    #zoomLens,
-    #zoomResult {
-        display: none !important;
-    }
-
-    #zoomContainer {
-        cursor: default;
     }
 }
 
