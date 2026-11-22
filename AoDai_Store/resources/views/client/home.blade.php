@@ -1,6 +1,6 @@
 @extends('layouts.client')
 
-@section('title', 'Nét đẹp truyền thống Việt')
+@section('title', 'Heritage')
 
 @section('content')
 <div id="heritage-home">
