@@ -71,28 +71,24 @@ $query = Product::with([
         });
 
         
-        // Sắp xếp theo giá thấp nhất của các biến thể còn hoạt động
-        if ($request->sort === 'price_asc') {
-
+        // Sắp xếp theo lựa chọn của khách, mặc định hiển thị sản phẩm cũ trước
+        if (in_array($request->sort, ['price_asc', 'price_desc'], true)) {
             $query->withMin(
                 ['chiTietSanPham as gia_thap_nhat' => function ($q) {
                     $q->where('IsDeleted', 0);
                 }],
                 'Gia'
-            )->orderBy('gia_thap_nhat', 'asc');
+            )
+                ->orderBy('gia_thap_nhat', $request->sort === 'price_desc' ? 'desc' : 'asc')
+                ->orderBy('MaSanPham', 'asc');
 
-        } elseif ($request->sort === 'price_desc') {
+        } elseif ($request->sort === 'newest') {
 
-            $query->withMax(
-                ['chiTietSanPham as gia_cao_nhat' => function ($q) {
-                    $q->where('IsDeleted', 0);
-                }],
-                'Gia'
-            )->orderBy('gia_cao_nhat', 'desc');
+            $query->orderBy('NgayTao', 'desc');
 
         } else {
 
-            $query->orderBy('NgayTao', 'desc');
+            $query->orderBy('NgayTao', 'asc')->orderBy('MaSanPham', 'asc');
 
         }
 
