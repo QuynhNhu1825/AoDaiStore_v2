@@ -20,7 +20,7 @@
                     <i class="fas fa-filter mr-1"></i> Lọc
                 </button>
 
-                <a href="{{ route('admin.categories.index') }}" class="w-full sm:w-auto text-center bg-stone-100 text-stone-600 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-stone-200 transition-all whitespace-nowrap">Đặt lại</a>
+                <a href="{{ route('admin.categories.index') }}" class="w-full sm:w-auto text-center bg-stone-100 text-stone-600 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-stone-200 transition-all whitespace-nowrap"><i class="fas fa-redo mr-1"></i> Đặt lại</a>
                 <a href="{{ route('admin.categories.create') }}" class="col-span-2 sm:col-span-1 w-full sm:w-auto inline-flex items-center justify-center bg-red-50 text-red-900 border border-red-200 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-800 hover:text-white hover:border-red-800 transition-all shadow-sm whitespace-nowrap">
                     <i class="fas fa-plus mr-2"></i> Thêm Danh Mục
                 </a>
