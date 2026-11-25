@@ -464,7 +464,7 @@
     const isGuest = {{ Auth::check() ? 'false' : 'true' }};
     const imgBaseUrl = "{{ asset('img/products') }}/";
     const checkoutUrl = "{{ route('checkout.home') }}";
-    const homeUrl = "{{ route('home') }}";
+    const productDetailUrl = @js(route('product.detail', ['id' => '__PRODUCT_ID__'], absolute: false));
 
     function readGuestCart() {
         try {
@@ -548,7 +548,7 @@ function renderGuestCart(cart) {
 <h4 class="serif text-lg sm:text-xl text-stone-900
            uppercase leading-tight break-words min-w-0">
 
-    <a href="${homeUrl}aodai/${encodeURIComponent(item.productId)}"
+    <a href="${productDetailUrl.replace('__PRODUCT_ID__', encodeURIComponent(item.productId))}"
        class="hover:text-red-800 underline-offset-4 transition-colors"
        title="Xem chi tiết sản phẩm">
 
