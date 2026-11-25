@@ -541,44 +541,23 @@
 {{-- =========================
      ĐÁNH GIÁ SẢN PHẨM
 ========================== --}}
-<details class="w-full mt-12 border-t border-stone-200 group">
+<section id="danh-gia" aria-labelledby="danh-gia-title" class="w-full mt-12 border-t border-stone-200">
 
-    {{-- TIÊU ĐỀ CÓ THỂ BẤM --}}
-    <summary class="list-none cursor-pointer py-6 flex items-center justify-between
-                    hover:bg-stone-50 transition duration-200">
+    <header class="py-6">
+        <p class="text-xs uppercase tracking-[0.2em] text-amber-700 mb-1">
+            Cảm nhận khách hàng
+        </p>
 
-        <div>
-            <p class="text-xs uppercase tracking-[0.2em] text-amber-700 mb-1">
-                Cảm nhận khách hàng
-            </p>
+        <div class="flex items-center gap-3">
+            <h2 id="danh-gia-title" class="serif text-2xl font-bold text-stone-900">
+                Đánh giá sản phẩm
+            </h2>
 
-            <div class="flex items-center gap-3">
-                <h2 class="serif text-2xl font-bold text-stone-900">
-                    Đánh giá sản phẩm
-                </h2>
-
-                <span class="text-sm text-stone-500">
-                    ({{ $dsDanhGia->count() }} đánh giá)
-                </span>
-            </div>
+            <span class="text-sm text-stone-500">
+                ({{ $dsDanhGia->total() }} đánh giá)
+            </span>
         </div>
-
-        {{-- ICON MŨI TÊN --}}
-        <svg
-            class="w-6 h-6 text-stone-600 transition-transform duration-300
-                   group-open:rotate-180"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="1.8">
-
-            <path stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m19 9-7 7-7-7"/>
-        </svg>
-
-    </summary>
+    </header>
 
 
     {{-- NỘI DUNG ĐÁNH GIÁ --}}
@@ -630,6 +609,16 @@
                                 </div>
 
                             </div>
+
+                            @if($dg->bienTheDaMua->isNotEmpty())
+                                <ul class="mt-1.5 flex flex-wrap gap-1.5 text-xs text-stone-600">
+                                    @foreach($dg->bienTheDaMua as $bienThe)
+                                        <li class="rounded bg-stone-100 px-2 py-1">
+                                            Size {{ $bienThe->TenSize ?? '—' }} · Màu {{ $bienThe->TenMau ?? '—' }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
 
                             {{-- NỘI DUNG --}}
                             @if(!empty($dg->NoiDung))
@@ -708,11 +697,31 @@
 
             @endforelse
 
+            @if($dsDanhGia->hasPages())
+                <nav aria-label="Phân trang đánh giá" class="flex flex-wrap items-center justify-center gap-3 pt-4 text-sm">
+                    @if($dsDanhGia->onFirstPage())
+                        <span aria-disabled="true" class="rounded border border-stone-200 px-3 py-1.5 text-stone-400">Trước</span>
+                    @else
+                        <a href="{{ $dsDanhGia->previousPageUrl() }}" rel="prev"
+                           class="rounded border border-stone-300 px-3 py-1.5 text-stone-700 hover:bg-stone-50">Trước</a>
+                    @endif
+
+                    <span class="text-stone-600">Trang {{ $dsDanhGia->currentPage() }} / {{ $dsDanhGia->lastPage() }}</span>
+
+                    @if($dsDanhGia->hasMorePages())
+                        <a href="{{ $dsDanhGia->nextPageUrl() }}" rel="next"
+                           class="rounded border border-stone-300 px-3 py-1.5 text-stone-700 hover:bg-stone-50">Sau</a>
+                    @else
+                        <span aria-disabled="true" class="rounded border border-stone-200 px-3 py-1.5 text-stone-400">Sau</span>
+                    @endif
+                </nav>
+            @endif
+
         </div>
 
     </div>
 
-</details>
+</section>
                 {{-- POPUP XEM ẢNH ĐÁNH GIÁ --}}
                 <div id="reviewImageModal"
                     class="fixed inset-0 z-[99999] hidden
@@ -747,7 +756,11 @@
         Sản phẩm liên quan
     </h2>
     <div class="related-slider">
-        <div class="related-track">
+        <button type="button" class="related-arrow" data-related-prev
+                aria-label="Xem sản phẩm liên quan trước" aria-controls="related-product-track" hidden>
+            <span aria-hidden="true"></span>
+        </button>
+        <div class="related-track" id="related-product-track">
             @foreach($relatedProducts as $item)
                 <div class="related-item">
                     <a href="{{ route('product.detail', $item->MaSanPham) }}">
@@ -769,6 +782,10 @@
                 </div>
             @endforeach
         </div>
+        <button type="button" class="related-arrow" data-related-next
+                aria-label="Xem sản phẩm liên quan tiếp theo" aria-controls="related-product-track" hidden>
+            <span aria-hidden="true"></span>
+        </button>
     </div>
 </div>
 
@@ -845,6 +862,47 @@ const desktopZoom = window.matchMedia('(min-width: 1200px) and (hover: hover) an
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const ZOOM_LEVEL = 2;
 let currentGalleryIndex = 0;
+
+const relatedTrack = document.getElementById('related-product-track');
+if (relatedTrack.children.length > 1) {
+    const slider = relatedTrack.parentElement;
+    const previous = slider.querySelector('[data-related-prev]');
+    const next = slider.querySelector('[data-related-next]');
+    const items = relatedTrack.children;
+
+    function updateRelatedArrows() {
+        const maxScroll = relatedTrack.scrollWidth - relatedTrack.clientWidth;
+        previous.hidden = next.hidden = relatedTrack.scrollWidth <= slider.clientWidth + 1;
+        previous.disabled = relatedTrack.scrollLeft <= 1;
+        next.disabled = relatedTrack.scrollLeft >= maxScroll - 1;
+    }
+
+    function scrollRelated(direction) {
+        const step = items[1].offsetLeft - items[0].offsetLeft;
+        relatedTrack.scrollBy({
+            left: direction * step,
+            behavior: reducedMotion.matches ? 'instant' : 'smooth',
+        });
+    }
+
+    previous.addEventListener('click', () => scrollRelated(-1));
+    next.addEventListener('click', () => scrollRelated(1));
+    relatedTrack.addEventListener('scroll', updateRelatedArrows, { passive: true });
+    new ResizeObserver(updateRelatedArrows).observe(relatedTrack);
+    updateRelatedArrows();
+
+    window.setInterval(() => {
+        if (next.hidden || document.hidden || reducedMotion.matches || slider.matches(':hover, :focus-within')) {
+            return;
+        }
+
+        if (next.disabled) {
+            relatedTrack.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+            scrollRelated(1);
+        }
+    }, 5000);
+}
 
 function hideProductZoom() {
     zoomLens.style.display = 'none';
@@ -1490,7 +1548,7 @@ document.addEventListener('keydown', function(e) {
         }
 
         /* Tiêu đề đánh giá */
-        #product-detail-page details summary h2 {
+        #danh-gia-title {
             font-size: 20px;
         }
 

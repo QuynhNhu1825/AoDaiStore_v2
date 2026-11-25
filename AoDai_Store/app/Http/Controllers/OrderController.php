@@ -14,12 +14,7 @@ use Illuminate\Validation\Rule;
 use Exception;
 
 class OrderController extends Controller
-{
-    /**
-     * Danh sách đơn hàng của khách hàng
-     * Lọc theo trạng thái và phân trang 5 đơn/trang.
-     */
-    
+{  
 
 /**
  * Danh sách đơn hàng của khách hàng.
@@ -291,7 +286,7 @@ public function index(Request $request)
     /**
      * Hủy đơn hàng:
      * - Chờ xác nhận: Hủy trực tiếp và hoàn tồn kho.
-     * - Đã xác nhận: Gửi yêu cầu chờ Admin duyệt.
+     * - Đã xác nhận: Gửi yêu cầu chờ Admin duywệt.
      */
     public function cancel($id)
     {

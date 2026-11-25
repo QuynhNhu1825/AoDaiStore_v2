@@ -203,11 +203,40 @@ $query = Product::with([
             ->where('danhgia.TrangThai', 1)
             ->where('taikhoan.IsDeleted', 0)
             ->orderByDesc('danhgia.NgayDanhGia')
+            ->orderByDesc('danhgia.MaDanhGia')
             ->select(
                 'danhgia.*',
                 'taikhoan.TenDangNhap'
             )
-            ->get();
+            ->paginate(2, ['*'], 'review_page')
+            ->withQueryString()
+            ->fragment('danh-gia');
+
+        if ($dsDanhGia->currentPage() > $dsDanhGia->lastPage()) {
+            return redirect()->to($dsDanhGia->url($dsDanhGia->lastPage()));
+        }
+
+        if ($dsDanhGia->isNotEmpty()) {
+            $bienTheTheoDonHang = DB::table('chitietdonhang as ctdh')
+                ->join('donhang as dh', 'ctdh.MaDonHang', '=', 'dh.MaDonHang')
+                ->join('chitietsanpham as ctsp', 'ctdh.MaChiTietSP', '=', 'ctsp.MaChiTietSP')
+                ->leftJoin('size as s', 'ctsp.MaSize', '=', 's.MaSize')
+                ->leftJoin('mausac as m', 'ctsp.MaMau', '=', 'm.MaMau')
+                ->whereIn('ctdh.MaDonHang', $dsDanhGia->pluck('MaDonHang')->filter()->unique())
+                ->where('ctsp.MaSanPham', $product->MaSanPham)
+                ->distinct()
+                ->orderBy('s.TenSize')
+                ->orderBy('m.TenMau')
+                ->get(['ctdh.MaDonHang', 'dh.MaTaiKhoan', 's.TenSize', 'm.TenMau'])
+                ->groupBy('MaDonHang');
+
+            $dsDanhGia->through(function ($danhGia) use ($bienTheTheoDonHang) {
+                $danhGia->bienTheDaMua = $bienTheTheoDonHang->get($danhGia->MaDonHang, collect())
+                    ->where('MaTaiKhoan', $danhGia->MaTaiKhoan);
+
+                return $danhGia;
+            });
+        }
 
         // Kiểm tra tài khoản đã mua sản phẩm chưa
         $daMua = false;
