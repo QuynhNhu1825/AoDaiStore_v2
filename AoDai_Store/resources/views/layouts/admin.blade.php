@@ -38,6 +38,24 @@
             font-family: inherit;
         }
 
+        .admin-pagination nav > div:first-child {
+            display: none;
+        }
+
+        .admin-pagination nav > div:nth-child(2) {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .admin-pagination nav > div:nth-child(2) > div:last-child {
+            max-width: 100%;
+            overflow-x: auto;
+            padding: 0.25rem;
+        }
+
         /* SIDEBAR */
         .admin-sidebar {
             width: var(--sidebar-width);

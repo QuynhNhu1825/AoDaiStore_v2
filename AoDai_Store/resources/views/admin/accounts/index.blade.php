@@ -85,7 +85,7 @@
     </div>
 
     @if(method_exists($accounts, 'links'))
-        <div class="p-4 bg-white rounded-xl border border-stone-100">{{ $accounts->appends(request()->query())->links('pagination::tailwind') }}</div>
+        <div class="admin-pagination p-4 bg-white rounded-xl border border-stone-100">{{ $accounts->appends(request()->query())->links('pagination::tailwind') }}</div>
     @endif
 </div>
 

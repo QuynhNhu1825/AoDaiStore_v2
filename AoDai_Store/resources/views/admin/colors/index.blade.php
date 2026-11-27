@@ -172,7 +172,7 @@
         </div>
 
         @if($colors->hasPages())
-            <div class="px-4 py-3 border-t border-red-100 bg-red-50">
+            <div class="admin-pagination px-4 py-3 border-t border-red-100 bg-red-50">
                 {{ $colors->links('pagination::tailwind') }}
             </div>
         @endif
