@@ -17,6 +17,7 @@ class AdminStatisticsTest extends TestCase
         Schema::create('donhang', function (Blueprint $table) {
             $table->id('MaDonHang');
             $table->string('TrangThai');
+            $table->string('TrangThaiThanhToan');
             $table->decimal('TienHang');
             $table->decimal('PhiVanChuyen')->nullable();
             $table->dateTime('NgayDat', 6);
@@ -45,10 +46,12 @@ class AdminStatisticsTest extends TestCase
     public function test_report_uses_order_totals_and_includes_the_entire_end_date(): void
     {
         DB::table('donhang')->insert([
-            ['MaDonHang' => 1, 'TrangThai' => 'DaGiao', 'TienHang' => 500000, 'PhiVanChuyen' => 20000, 'NgayDat' => '2025-06-10 23:59:59.999999'],
-            ['MaDonHang' => 2, 'TrangThai' => 'DaGiao', 'TienHang' => 100000, 'PhiVanChuyen' => null, 'NgayDat' => '2025-06-10 00:00:00'],
-            ['MaDonHang' => 3, 'TrangThai' => 'DaGiao', 'TienHang' => 900000, 'PhiVanChuyen' => null, 'NgayDat' => '2025-06-11 00:00:00'],
-            ['MaDonHang' => 4, 'TrangThai' => 'DaHuy', 'TienHang' => 200000, 'PhiVanChuyen' => null, 'NgayDat' => '2025-06-10 12:00:00'],
+            ['MaDonHang' => 1, 'TrangThai' => 'DaGiao', 'TrangThaiThanhToan' => 'DaThanhToan', 'TienHang' => 500000, 'PhiVanChuyen' => 20000, 'NgayDat' => '2025-06-10 23:59:59.999999'],
+            ['MaDonHang' => 2, 'TrangThai' => 'DaGiao', 'TrangThaiThanhToan' => 'DaThanhToan', 'TienHang' => 100000, 'PhiVanChuyen' => null, 'NgayDat' => '2025-06-10 00:00:00'],
+            ['MaDonHang' => 3, 'TrangThai' => 'DaGiao', 'TrangThaiThanhToan' => 'DaThanhToan', 'TienHang' => 900000, 'PhiVanChuyen' => null, 'NgayDat' => '2025-06-11 00:00:00'],
+            ['MaDonHang' => 4, 'TrangThai' => 'DaHuy', 'TrangThaiThanhToan' => 'DaThanhToan', 'TienHang' => 200000, 'PhiVanChuyen' => null, 'NgayDat' => '2025-06-10 12:00:00'],
+            ['MaDonHang' => 5, 'TrangThai' => 'DaGiao', 'TrangThaiThanhToan' => 'ChuaThanhToan', 'TienHang' => 300000, 'PhiVanChuyen' => null, 'NgayDat' => '2025-06-10 13:00:00'],
+            ['MaDonHang' => 6, 'TrangThai' => 'DaGiao', 'TrangThaiThanhToan' => 'ChoXacNhanThanhToan', 'TienHang' => 400000, 'PhiVanChuyen' => null, 'NgayDat' => '2025-06-10 14:00:00'],
         ]);
 
         DB::table('sanpham')->insert(['MaSanPham' => 1, 'TenSanPham' => 'Áo dài', 'IsDeleted' => true]);
@@ -61,26 +64,27 @@ class AdminStatisticsTest extends TestCase
             ['MaDonHang' => 1, 'MaChiTietSP' => 2, 'SoLuong' => 3],
             ['MaDonHang' => 3, 'MaChiTietSP' => 1, 'SoLuong' => 4],
             ['MaDonHang' => 4, 'MaChiTietSP' => 1, 'SoLuong' => 8],
+            ['MaDonHang' => 5, 'MaChiTietSP' => 1, 'SoLuong' => 1],
         ]);
 
         $this->get(route('statistics.index', ['tu_ngay' => '2025-06-10', 'den_ngay' => '2025-06-10']))
             ->assertOk()
-            ->assertViewHas('tongDonHang', 3)
-            ->assertViewHas('donDaGiao', 2)
+            ->assertViewHas('tongDonHang', 5)
+            ->assertViewHas('donDaGiao', 4)
             ->assertViewHas('tongDoanhThu', 620000)
-            ->assertViewHas('soSanPhamDaBan', 5)
-            ->assertViewHas('donTheoTrangThai', fn ($statuses) => array_sum(array_column($statuses, 'count')) === 3)
+            ->assertViewHas('soSanPhamDaBan', 6)
+            ->assertViewHas('donTheoTrangThai', fn ($statuses) => array_sum(array_column($statuses, 'count')) === 5)
             ->assertViewHas('doanhThuTheoNgay', fn ($days) => $days->count() === 1 && (int) $days->sum('tong_tien') === 620000)
-            ->assertViewHas('sanPhamBanChay', fn ($products) => $products->count() === 1 && (int) $products->first()->so_luong_ban === 5)
+            ->assertViewHas('sanPhamBanChay', fn ($products) => $products->count() === 1 && (int) $products->first()->so_luong_ban === 6)
             ->assertSee('620.000 đ');
 
         $this->get(route('statistics.index'))
             ->assertOk()
-            ->assertViewHas('tongDonHang', 4);
+            ->assertViewHas('tongDonHang', 6);
 
         $this->get(route('statistics.index', ['den_ngay' => '2025-06-10']))
             ->assertOk()
-            ->assertViewHas('tongDonHang', 3);
+            ->assertViewHas('tongDonHang', 5);
     }
 
     public function test_report_rejects_a_reversed_date_range(): void

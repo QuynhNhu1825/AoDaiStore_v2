@@ -4,7 +4,7 @@
 <div class="w-full min-w-0 space-y-5">
 
     <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
-        <x-admin.stat-card label="Doanh thu đơn đã giao" :value="$tongDoanhThu" unit="đ" icon="fas fa-wallet" />
+        <x-admin.stat-card label="Doanh thu" :value="$tongDoanhThu" unit="đ" icon="fas fa-wallet" />
         <x-admin.stat-card label="Tổng đơn hàng" :value="$tongDonHang" icon="fas fa-receipt" color="green" />
         <x-admin.stat-card label="Đã giao" :value="$donDaGiao" icon="fas fa-circle-check" color="green" />
         <x-admin.stat-card label="Sản phẩm đã bán" :value="$soSanPhamDaBan" icon="fas fa-box" color="amber" />
@@ -23,11 +23,11 @@
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <section class="bg-white rounded-2xl border border-red-100 shadow-sm p-5 min-w-0">
             <h3 class="font-bold text-sm text-red-900 mb-1">Doanh thu theo thời gian</h3>
-            <p class="text-[11px] text-stone-500 mb-4">Tiền hàng và phí vận chuyển của đơn đã giao, tính theo ngày đặt</p>
+            <p class="text-[11px] text-stone-500 mb-4">Tiền hàng và phí vận chuyển của đơn đã giao và đã thanh toán, tính theo ngày đặt</p>
             @if($doanhThuTheoNgay->isNotEmpty())
                 <div class="relative h-64"><canvas id="revenueChart" aria-label="Biểu đồ doanh thu theo ngày đặt" role="img"></canvas></div>
             @else
-                <p class="py-8 text-center text-xs text-stone-500">Chưa có đơn đã giao trong khoảng thời gian này.</p>
+                <p class="py-8 text-center text-xs text-stone-500">Chưa có đơn nào vừa đã giao vừa đã thanh toán trong khoảng thời gian này.</p>
             @endif
         </section>
         <section class="bg-white rounded-2xl border border-red-100 shadow-sm p-5 min-w-0">
