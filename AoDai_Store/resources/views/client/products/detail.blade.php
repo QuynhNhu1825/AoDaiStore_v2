@@ -345,40 +345,6 @@
         </div>
     </div>
 
-{{-- THÔNG BÁO THÊM GIỎ HÀNG THÀNH CÔNG --}}
-@if(session('success'))
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        Swal.fire({
-            icon: 'success',
-            title: 'Thêm vào giỏ hàng thành công!',
-            text: @json(session('success')),
-            timer: 1000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            confirmButtonColor: '#991b1b'
-        });
-    });
-</script>
-@endif
-
-{{-- THÔNG BÁO THÊM GIỎ HÀNG THẤT BẠI --}}
-@if(session('error'))
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        Swal.fire({
-            icon: 'error',
-            title: 'Không thể thêm vào giỏ hàng!',
-            text: @json(session('error')),
-            timer: 1000,
-            timerProgressBar: true,
-            showConfirmButton: false
-        });
-    });
-</script>
-@endif
-
-
 {{-- =========================
      CHI TIẾT VÀ MÔ TẢ SẢN PHẨM
 ========================== --}}
@@ -1089,12 +1055,10 @@ function validateQuantity(showAlert = true) {
         qtyInput.value = maxStock;
 
         if (showAlert) {
-            Swal.fire({
+            showNotification({
                 icon: 'warning',
                 title: 'Vượt quá số lượng tồn kho!',
-                text: `Sản phẩm hiện chỉ còn ${maxStock} sản phẩm trong kho.`,
-                confirmButtonText: 'Đã hiểu',
-                confirmButtonColor: '#A71920'
+                text: `Sản phẩm hiện chỉ còn ${maxStock} sản phẩm trong kho.`
             });
         }
 
@@ -1117,11 +1081,10 @@ function changeQty(step) {
     );
 
     if (!selected) {
-        Swal.fire({
+        showNotification({
             icon: 'warning',
             title: 'Chưa chọn kích cỡ!',
-            text: 'Vui lòng chọn màu sắc và kích cỡ trước.',
-            confirmButtonColor: '#A71920'
+            text: 'Vui lòng chọn màu sắc và kích cỡ trước.'
         });
         return;
     }
@@ -1130,12 +1093,10 @@ function changeQty(step) {
     const current = parseInt(qtyInput.value || '1', 10);
 
     if (step > 0 && current >= max) {
-        Swal.fire({
+        showNotification({
             icon: 'warning',
             title: 'Đã đạt số lượng tối đa!',
-            text: `Sản phẩm hiện chỉ còn ${max} sản phẩm trong kho.`,
-            confirmButtonText: 'Đã hiểu',
-            confirmButtonColor: '#A71920'
+            text: `Sản phẩm hiện chỉ còn ${max} sản phẩm trong kho.`
         });
         return;
     }
@@ -1243,7 +1204,7 @@ if (favoriteButton) {
             document.getElementById('favorite-count').textContent = data.favoriteCount;
         })
         .catch(error => {
-            alert(error.message);
+            showNotification({ icon: 'error', title: error.message });
         })
         .finally(() => {
             button.disabled = false;
@@ -1283,12 +1244,10 @@ if (favoriteButton) {
             if (!selectedSize) {
                 e.preventDefault();
 
-                Swal.fire({
+                showNotification({
                     icon: 'warning',
                     title: 'Bạn chưa chọn kích cỡ!',
-                    text: 'Vui lòng chọn kích cỡ trước khi thêm sản phẩm vào giỏ hàng.',
-                    confirmButtonText: 'Đã hiểu',
-                    confirmButtonColor: '#A71920'
+                    text: 'Vui lòng chọn kích cỡ trước khi thêm sản phẩm vào giỏ hàng.'
                 });
 
                 return;
@@ -1327,11 +1286,10 @@ if (favoriteButton) {
 
                 // Kiểm tra số lượng muốn thêm
                 if (qty > stock) {
-                    Swal.fire({
+                    showNotification({
                         icon: 'warning',
                         title: 'Không đủ số lượng!',
-                        text: `Sản phẩm hiện chỉ còn ${stock} sản phẩm trong kho.`,
-                        confirmButtonColor: '#A71920'
+                        text: `Sản phẩm hiện chỉ còn ${stock} sản phẩm trong kho.`
                     });
 
                     return;
@@ -1349,11 +1307,10 @@ if (favoriteButton) {
     const newQty = currentQty + qty;
 
             if (newQty > stock) {
-                Swal.fire({
+                showNotification({
                     icon: 'warning',
                     title: 'Không đủ số lượng!',
-                    text: `Bạn đã có ${currentQty} sản phẩm trong giỏ. Kho hiện chỉ còn ${stock} sản phẩm.`,
-                    confirmButtonColor: '#A71920'
+                    text: `Bạn đã có ${currentQty} sản phẩm trong giỏ. Kho hiện chỉ còn ${stock} sản phẩm.`
                 });
 
                 return;
@@ -1388,15 +1345,10 @@ if (typeof updateGuestCartBadge === 'function') {
 
 
  // Thông báo thêm giỏ hàng thành công
-Swal.fire({
+showNotification({
     icon: 'success',
     title: 'Thêm vào giỏ hàng thành công!',
-    text: 'Sản phẩm đã được thêm vào giỏ hàng của bạn.',
-    timer: 1000,
-    timerProgressBar: true,
-    showConfirmButton: false,
-    showCancelButton: false,
-    allowOutsideClick: true
+    text: 'Sản phẩm đã được thêm vào giỏ hàng của bạn.'
 });             
             }
             // Nếu ĐÃ ĐĂNG NHẬP, form sẽ tự động gửi đi như bình thường do không vào if

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Account;
 use App\Models\Order;
@@ -19,18 +18,16 @@ class AdminDashboardController extends Controller
             return redirect('/')->with('error', 'Bạn không có quyền truy cập trang quản trị');
         }
 
-        $totalAccounts   = Account::count();
+        $totalAccounts   = Account::where('IsDeleted', 0)->count();
         $totalOrders     = Order::count();
-        $totalProducts   = Product::count();
-        $totalCategories = Category::count();
-        
+        $totalProducts   = Product::where('IsDeleted', 0)->count();
+        $totalCategories = Category::where('IsDeleted', 0)->count();
 
         return view('admin.dashboard', compact(
             'totalAccounts',
             'totalOrders',
             'totalProducts',
             'totalCategories'
-            
         ));
     }
 }

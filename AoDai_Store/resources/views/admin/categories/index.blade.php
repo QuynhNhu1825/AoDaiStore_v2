@@ -48,7 +48,7 @@
                                         <p class="font-bold text-red-900 uppercase text-[11px] break-words">
                                             {{ $category->TenDanhMuc }}
                                         </p>
-                                        <p class="text-[10px] text-stone-400 font-mono mt-0.5">#{{ $category->MaDanhMuc }}</p>
+                                        <p class="text-[10px] text-stone-400 mt-0.5">#{{ $category->MaDanhMuc }}</p>
                                     </div>
                                 </td>
                                 <td data-label="Mô tả" class="px-3 py-3 text-xs text-stone-600">
@@ -99,43 +99,17 @@
                     </tbody>
                 </table>
             </div>
+            @if($categories->hasPages())
+                <div class="px-4 py-3 border-t border-red-100 bg-red-50">
+                    {{ $categories->links('pagination::tailwind') }}
+                </div>
+            @endif
         </div>
-        @if(method_exists($categories, 'links'))
-            <div class="p-4 border-t border-stone-100">
-                {{ $categories->appends(request()->query())->links('pagination::tailwind') }}
-            </div>
-        @endif
     </div>
 </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    @if(session('success'))
-    Swal.fire({
-        icon: 'success',
-        title: '<span class="serif text-2xl">Thành công!</span>',
-        text: @json(session('success')),
-        timer: 2000,
-        showConfirmButton: false,
-        customClass: { popup: 'glass-popup' }
-    });
-    @endif
-
-    @if(session('error'))
-    Swal.fire({
-        icon: 'error',
-        title: '<span class="serif text-2xl text-red-800">Thông báo lỗi</span>',
-        text: @json(session('error')),
-        confirmButtonText: 'Đóng',
-        buttonsStyling: false,
-        customClass: {
-            popup: 'glass-popup',
-            confirmButton: 'btn-delete-confirm'
-        }
-    });
-    @endif
 
     function refreshTable() {
         const container = document.getElementById('category-page-container');
@@ -149,33 +123,13 @@
             });
     }
 
-    function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, char => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-        })[char]);
-    }
-
     function confirmDelete(id, name) {
-        Swal.fire({
-            title: '<span class="serif">Xác nhận xóa bỏ</span>',
-            html: `
-                <div class="mt-3 text-stone-500 text-sm">
-                    Danh mục <b class="text-stone-900 italic">"${escapeHtml(name)}"</b> sẽ bị xóa khỏi hệ thống.
-                    <br>
-                    <span class="text-red-600 font-bold">Danh mục chỉ được xóa khi không còn sản phẩm liên kết; dữ liệu được lưu dưới dạng xóa mềm.</span>
-                </div>
-            `,
+        confirmNotification({
+            title: 'Xác nhận xóa bỏ',
+            text: `Danh mục "${name}" chỉ được xóa khi không còn sản phẩm liên kết. Dữ liệu vẫn được lưu trong hệ thống.`,
             icon: 'warning',
-            showCancelButton: true,
             confirmButtonText: 'Đồng ý xóa',
             cancelButtonText: 'Hủy',
-            buttonsStyling: false,
-            reverseButtons: true,
-            customClass: {
-                popup: 'glass-popup',
-                confirmButton: 'btn-delete-confirm',
-                cancelButton: 'btn-delete-cancel'
-            }
         }).then(result => {
             if (!result.isConfirmed) return;
 
@@ -194,22 +148,18 @@
             .then(data => {
                 if (!data.success) throw new Error(data.message);
                 
-                Swal.fire({
+                showNotification({
                     icon: 'success',
-                    title: 'Đã xóa!',
-                    timer: 1500,
-                    showConfirmButton: false,
-                    customClass: { popup: 'glass-popup' }
+                    title: 'Đã xóa!'
                 });
 
                 refreshTable();
             })
             .catch(err => {
-                Swal.fire({
+                showNotification({
                     icon: 'error',
                     title: 'Không thể xóa',
-                    text: err.message,
-                    customClass: { popup: 'glass-popup' }
+                    text: err.message
                 });
             });
         });
@@ -218,7 +168,6 @@
 
 
     <style>
-        .serif { font-family: 'Playfair Display', serif; }
         .categories-page { min-width: 0; }
         @media (max-width: 767px) {
             .categories-page .categories-table-wrap {
@@ -285,38 +234,6 @@
             }
             .categories-page .category-responsive-table tbody tr:not(.category-row) { display: block; }
             .categories-page .category-responsive-table tbody tr:not(.category-row) td { display: block; width: 100%; }
-        }
-        .glass-popup {
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(10px);
-            border-radius: 24px !important;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
-        }
-        .btn-delete-confirm {
-            background-color: #991b1b !important;
-            color: white !important;
-            padding: 10px 25px !important;
-            border-radius: 12px !important;
-            font-weight: 600 !important;
-            margin-left: 10px !important;
-            font-size: 12px !important;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            transition: all 0.3s;
-        }
-        .btn-delete-confirm:hover { 
-            background-color: #991b1b !important; 
-            transform: translateY(-2px); 
-        }
-        .btn-delete-cancel {
-            background-color: #f3f4f6 !important;
-            color: #4b5563 !important;
-            padding: 10px 25px !important;
-            border-radius: 12px !important;
-            font-weight: 600 !important;
-            font-size: 12px !important;
-            text-transform: uppercase;
-            transition: all 0.3s;
         }
     </style>
 @endsection

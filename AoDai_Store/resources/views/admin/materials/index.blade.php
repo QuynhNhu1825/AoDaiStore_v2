@@ -61,21 +61,6 @@
 
     </div>
 
-    {{-- ================= THÔNG BÁO ================= --}}
-    @if(session('success'))
-        <div class="bg-green-50 border border-green-100 text-green-700 px-4 py-3 rounded-xl text-xs">
-            <i class="fas fa-check-circle mr-2"></i>
-            {{ session('success') }}
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-xs">
-            <i class="fas fa-exclamation-circle mr-2"></i>
-            {{ session('error') }}
-        </div>
-    @endif
-
     {{-- ================= BẢNG CHẤT LIỆU ================= --}}
     <div id="material-table-container"
          class="w-full max-w-full bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden">
@@ -244,53 +229,17 @@
 
         </div>
 
+        @if($materials->hasPages())
+            <div class="px-4 py-3 border-t border-red-100 bg-red-50">
+                {{ $materials->links('pagination::tailwind') }}
+            </div>
+        @endif
     </div>
-
-    {{-- ================= PHÂN TRANG ================= --}}
-    @if(method_exists($materials, 'links'))
-
-        <div class="p-4 border-t border-stone-100">
-            {{ $materials->appends(request()->query())->links('pagination::tailwind') }}
-        </div>
-
-    @endif
 
 </div>
 
-{{-- ================= SWEETALERT ================= --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-
-    @if(session('success'))
-
-        Swal.fire({
-            icon: 'success',
-            title: '<span class="serif text-2xl">Thành công!</span>',
-            text: @json(session('success')),
-            timer: 2000,
-            showConfirmButton: false,
-            customClass: {
-                popup: 'glass-popup'
-            }
-        });
-
-    @endif
-
-    @if(session('error'))
-
-        Swal.fire({
-            icon: 'error',
-            title: '<span class="serif text-2xl text-red-800">Thông báo lỗi</span>',
-            text: @json(session('error')),
-            confirmButtonText: 'Đóng',
-            confirmButtonColor: '#991b1b',
-            customClass: {
-                popup: 'glass-popup'
-            }
-        });
-
-    @endif
 
     // XÁC NHẬN XÓA
     function confirmDelete(button) {
@@ -303,16 +252,12 @@
         return;
     }
 
-    Swal.fire({
+    confirmNotification({
         title: 'Xác nhận xóa chất liệu',
         text: `Bạn có chắc muốn xóa chất liệu "${name}" không?`,
         icon: 'warning',
-        showCancelButton: true,
         confirmButtonText: 'Đồng ý xóa',
         cancelButtonText: 'Hủy bỏ',
-        confirmButtonColor: '#991b1b',
-        cancelButtonColor: '#78716c',
-        reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
             form.submit();
@@ -320,22 +265,6 @@
     });
 }
 
-    // TRÁNH CHÈN HTML KHÔNG AN TOÀN
-    function escapeHtml(value) {
-
-        return String(value).replace(/[&<>"']/g, function (char) {
-
-            return {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            }[char];
-
-        });
-
-    }
 
 </script>
 
@@ -412,40 +341,6 @@
             width: 100%;
         }
     }
-
-
-    .serif {
-        font-family: 'Playfair Display', serif;
-    }
-
-    .glass-popup {
-        background: rgba(255, 255, 255, 0.95) !important;
-        backdrop-filter: blur(10px);
-        border-radius: 24px !important;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
-    }
-
-    .btn-delete-confirm {
-        background-color: #991b1b !important;
-        color: white !important;
-        padding: 10px 25px !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        font-size: 11px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-left: 10px;
-    }
-
-    .btn-delete-cancel {
-        background-color: #f3f4f6 !important;
-        color: #4b5563 !important;
-        padding: 10px 25px !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        font-size: 11px !important;
-    }
-
 </style>
 
 @endsection

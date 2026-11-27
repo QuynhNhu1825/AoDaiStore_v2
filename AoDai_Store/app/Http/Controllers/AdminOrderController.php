@@ -20,24 +20,19 @@ class AdminOrderController extends Controller
     {
         $query = Order::query();
 
-        // Tìm kiếm theo họ tên hoặc số điện thoại
+        // Tìm kiếm theo mã đơn hàng, họ tên hoặc số điện thoại
         $search = trim((string) $request->input('search', ''));
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('HoTenNguoiNhan', 'LIKE', "%{$search}%")
-                  ->orWhere('SDTNguoiNhan', 'LIKE', "%{$search}%");
+                  ->orWhere('SDTNguoiNhan', 'LIKE', "%{$search}%")
+                   ->orWhere('MaDonHang', 'LIKE', "%{$search}%");
             });
         }
 
         // Lọc trạng thái đơn hàng
-        $validStatuses = [
-            'ChoXacNhan',
-            'DaXacNhan',
-            'DangGiao',
-            'DaGiao',
-            'DaHuy',
-        ];
+        $validStatuses = array_keys(Order::STATUS_LABELS);
 
         if (in_array($request->input('status'), $validStatuses, true)) {
             $query->where('TrangThai', $request->input('status'));
@@ -90,6 +85,10 @@ class AdminOrderController extends Controller
                 'TrangThaiYeuCauHuy',
                 $request->input('cancellation_status')
             );
+
+            if ($request->input('cancellation_status') === 'ChoDuyet') {
+                $query->where('TrangThai', 'DaXacNhan');
+            }
         }
 
         // Phân trang
@@ -99,23 +98,15 @@ class AdminOrderController extends Controller
             ->withQueryString();
 
         // Thống kê
-        $totalOrders = Order::count();
-
-        $pendingOrders = Order::where(
-            'TrangThai', 'ChoXacNhan'
-        )->count();
-
-        $shippingOrders = Order::where(
-            'TrangThai', 'DangGiao'
-        )->count();
-
-        $deliveredOrders = Order::where(
-            'TrangThai', 'DaGiao'
-        )->count();
+        $statusCounts = Order::statusCounts();
+        $totalOrders = $statusCounts->sum();
+        $pendingOrders = $statusCounts->get('ChoXacNhan', 0);
+        $shippingOrders = $statusCounts->get('DangGiao', 0);
+        $deliveredOrders = $statusCounts->get('DaGiao', 0);
 
         $pendingCancellationOrders = Order::where(
-            'TrangThaiYeuCauHuy', 'ChoDuyet'
-        )->count();
+            'TrangThai', 'DaXacNhan'
+        )->where('TrangThaiYeuCauHuy', 'ChoDuyet')->count();
 
         return view('admin.order.index', compact(
             'orders',

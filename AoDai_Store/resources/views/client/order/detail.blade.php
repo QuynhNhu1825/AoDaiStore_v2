@@ -67,25 +67,6 @@
 
         </div>
 
-        {{-- ================= THÔNG BÁO ================= --}}
-        @if(session('success'))
-            <div id="success-alert"
-                 class="mb-6 p-4 bg-green-50 border border-green-200
-                        text-green-700 rounded-lg
-                        transition-opacity duration-500">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if(session('error') || $errors->rating->any())
-            <div id="error-alert"
-                 class="mb-6 p-4 bg-red-50 border border-red-200
-                        text-red-700 rounded-lg
-                        transition-opacity duration-500">
-                {{ session('error') ?? $errors->rating->first() }}
-            </div>
-        @endif
-
         {{-- ================= THẺ ĐƠN HÀNG ================= --}}
         <div class="bg-white border border-stone-200
                     rounded-xl shadow-sm overflow-hidden mb-6">
@@ -215,54 +196,7 @@
         </div>
 
         
-        {{-- THÔNG TIN YÊU CẦU HỦY --}}
-        @if($order->TrangThaiYeuCauHuy === 'ChoDuyet')
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 text-amber-900">
-                <p class="font-bold"><i class="fas fa-clock mr-2"></i>Yêu cầu hủy đang chờ Admin xét duyệt</p>
-                <p class="text-sm mt-1">Đơn hàng vẫn được giữ ở trạng thái hiện tại cho đến khi Admin quyết định.</p>
-                @if($order->NgayYeuCauHuy)
-                    <p class="text-xs mt-2">Gửi lúc: {{ \Carbon\Carbon::parse($order->NgayYeuCauHuy)->format('d/m/Y H:i') }}</p>
-                @endif
-            </div>
-        @elseif(in_array($order->TrangThaiYeuCauHuy, ['DaDuyet', 'TuChoi'], true))
-            {{-- Đồng bộ khóa localStorage với trang history --}}
-            <div class="cancel-result-notice hidden rounded-xl border p-5 mb-6 text-sm
-                {{ $order->TrangThaiYeuCauHuy === 'DaDuyet'
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                    : 'bg-stone-50 border-stone-200 text-stone-700' }}"
-                 data-user-id="{{ auth()->id() }}"
-                 data-order-id="{{ $order->MaDonHang }}"
-                 data-result="{{ $order->TrangThaiYeuCauHuy }}"
-                 data-reviewed-at="{{ $order->NgayXuLyYeuCauHuy ? \Carbon\Carbon::parse($order->NgayXuLyYeuCauHuy)->timestamp : '0' }}"
-                 role="status">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="flex items-start gap-3 min-w-0">
-                        <i class="fas fa-info-circle mt-1"></i>
-                        <div>
-                            <p class="font-bold">Kết quả yêu cầu hủy đơn #{{ $order->MaDonHang }}</p>
-                            <p class="mt-1 leading-relaxed">
-                                @if($order->TrangThaiYeuCauHuy === 'DaDuyet')
-                                    @if($order->PhuongThucThanhToan === 'vietqr' && $order->TrangThaiThanhToan === 'DaThanhToan')
-                                                    Yêu cầu hủy đã được chấp thuận. Đơn hàng đã được hủy. Số tiền đã thanh toán qua VietQR sẽ được cửa hàng hoàn trả thủ công trong vòng 1–2 ngày làm việc. Vui lòng kiểm tra tài khoản ngân hàng của bạn.
-                                                @else
-                                                    Yêu cầu hủy đã được chấp thuận. Đơn hàng đã được hủy thành công.
-                                                @endif
-                                @elseif($status === 'DaGiao')
-                                    Yêu cầu hủy trước đó không được chấp thuận. Đơn hàng hiện đã được giao.
-                                @elseif($status === 'DangGiao')
-                                    Yêu cầu hủy chưa được chấp thuận. Đơn hàng hiện đang được vận chuyển.
-                                @else
-                                    Yêu cầu hủy chưa được chấp thuận. Đơn hàng tiếp tục được xử lý.
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-                    <button type="button" class="dismiss-cancel-notice shrink-0 font-semibold underline hover:opacity-70">
-                        Đã hiểu
-                    </button>
-                </div>
-            </div>
-        @endif
+        @include('client.order.partials.cancellation-notice', ['orderStatus' => $status, 'spacing' => 'mb-6'])
 
         {{-- ================= SẢN PHẨM ĐÃ ĐẶT ================= --}}
         <div class="bg-white border border-stone-200
@@ -846,50 +780,9 @@
 
 </section>
 
-{{-- ================= SWEETALERT2 ================= --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
-    // Dùng chung trạng thái đã xem với history.blade.php (không cần thêm cột DB).
-    document.querySelectorAll('.cancel-result-notice').forEach(function (notice) {
-        const key = [
-            'heritage_cancel_notice',
-            notice.dataset.userId,
-            notice.dataset.orderId,
-            notice.dataset.result,
-            notice.dataset.reviewedAt
-        ].join('_');
-
-        let seen = false;
-        try { seen = localStorage.getItem(key) === 'seen'; } catch (error) {}
-        if (seen) return;
-
-        notice.classList.remove('hidden');
-        notice.querySelector('.dismiss-cancel-notice')?.addEventListener('click', function () {
-            try { localStorage.setItem(key, 'seen'); } catch (error) {}
-            notice.classList.add('hidden');
-        });
-    });
-
-    // Tự động ẩn thông báo sau 4 giây
-    ['success-alert', 'error-alert'].forEach(function (id) {
-
-        const alert = document.getElementById(id);
-
-        if (!alert) return;
-
-        setTimeout(function () {
-
-            alert.classList.add('opacity-0');
-
-            setTimeout(function () {
-                alert.remove();
-            }, 500);
-
-        }, 4000);
-    });
 
     // Hàm xác nhận thao tác
     function confirmAction(selector, title, message, confirmText) {
@@ -900,13 +793,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 event.preventDefault();
 
-                Swal.fire({
+                confirmNotification({
                     title: selector === '.cancel-order-form' && form.dataset.request === '1' ? 'Gửi yêu cầu hủy?' : title,
                     text: selector === '.cancel-order-form' && form.dataset.request === '1' ? 'Admin sẽ xét duyệt yêu cầu; đơn chưa bị hủy ngay.' : message,
                     icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#991b1b',
-                    cancelButtonColor: '#78716c',
                     confirmButtonText: confirmText,
                     cancelButtonText: 'Quay lại'
                 }).then(function (result) {
@@ -1057,7 +947,7 @@ document.querySelectorAll('[data-review-image-input]').forEach(function(input) {
 
         // Kiểm tra định dạng ảnh
         if (!file.type.startsWith('image/')) {
-            alert('Vui lòng chọn file hình ảnh hợp lệ!');
+            showNotification({ icon: 'warning', title: 'Vui lòng chọn file hình ảnh hợp lệ!' });
             this.value = '';
             preview.src = '';
             preview.classList.add('hidden');
@@ -1066,7 +956,7 @@ document.querySelectorAll('[data-review-image-input]').forEach(function(input) {
 
         // Kiểm tra dung lượng tối đa 2MB
         if (file.size > 2 * 1024 * 1024) {
-            alert('Ảnh không được vượt quá 2MB!');
+            showNotification({ icon: 'warning', title: 'Ảnh không được vượt quá 2MB!' });
             this.value = '';
             preview.src = '';
             preview.classList.add('hidden');

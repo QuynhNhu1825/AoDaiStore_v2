@@ -189,73 +189,23 @@
 }
 </style>
 
-{{-- SWEETALERT --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    // Thông báo thành công
-    @if(session('success'))
-        Swal.fire({
-            icon: 'success',
-            title: '<span class="serif text-2xl">Thành công!</span>',
-            text: @json(session('success')),
-            timer: 2000,
-            showConfirmButton: false,
-            customClass: {
-                popup: 'glass-popup'
-            }
-        });
-    @endif
-
-    // Thông báo lỗi
-    @if(session('error'))
-        Swal.fire({
-            icon: 'error',
-            title: '<span class="serif text-2xl text-red-800">Thông báo lỗi</span>',
-            text: @json(session('error')),
-            confirmButtonText: 'Đóng',
-            confirmButtonColor: '#991b1b',
-            buttonsStyling: false,
-            customClass: {
-                popup: 'glass-popup',
-                confirmButton: 'btn-delete-confirm'
-            }
-        });
-    @endif
-
     // XÁC NHẬN XÓA MỀM
     function confirmDeleteSize(id, name) {
 
-        Swal.fire({
-            title: '<span class="serif">Xác nhận xóa bỏ</span>',
+        confirmNotification({
+            title: 'Xác nhận xóa bỏ',
 
-            html: `
-                <div class="mt-3 text-stone-500 text-sm">
-                    Kích cỡ
-                    <b class="text-stone-900">"${escapeHtml(name)}"</b>
-                    sẽ được chuyển vào trạng thái đã xóa.
-                    <br>
-                    <span class="text-red-600 font-bold">
-                        Kích cỡ vẫn được lưu trong cơ sở dữ liệu.
-                    </span>
-                </div>
-            `,
+            text: `Kích cỡ "${name}" sẽ được chuyển vào trạng thái đã xóa. Dữ liệu vẫn được lưu trong hệ thống.`,
 
             icon: 'warning',
-            showCancelButton: true,
             confirmButtonText: 'Đồng ý xóa',
             cancelButtonText: 'Hủy bỏ',
-            buttonsStyling: false,
 
-            customClass: {
-                popup: 'glass-popup',
-                confirmButton: 'btn-delete-confirm',
-                cancelButton: 'btn-delete-cancel'
-            },
 
-            reverseButtons: true,
             showLoaderOnConfirm: true,
 
             preConfirm: () => {
@@ -292,15 +242,11 @@
 
             if (result.isConfirmed && result.value?.success) {
 
-                Swal.fire({
+                showNotification({
                     icon: 'success',
-                    title: '<span class="serif text-2xl">Thành công!</span>',
+                    title: 'Thành công!',
                     text: result.value.message,
-                    timer: 1500,
-                    showConfirmButton: false,
-                    customClass: {
-                        popup: 'glass-popup'
-                    }
+                    timer: 1500
                 }).then(() => {
                     window.location.reload();
                 });
@@ -310,51 +256,6 @@
         });
     }
 
-    // Tránh lỗi HTML khi tên kích cỡ chứa ký tự đặc biệt
-    function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, function(char) {
-            return {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            }[char];
-        });
-    }
 </script>
 
-<style>
-    .serif {
-        font-family: 'Playfair Display', serif;
-    }
-
-    .glass-popup {
-        background: rgba(255, 255, 255, 0.95) !important;
-        backdrop-filter: blur(10px);
-        border-radius: 24px !important;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
-    }
-
-    .btn-delete-confirm {
-        background-color: #991b1b !important;
-        color: white !important;
-        padding: 10px 25px !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        font-size: 11px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-left: 10px;
-    }
-
-    .btn-delete-cancel {
-        background-color: #f3f4f6 !important;
-        color: #4b5563 !important;
-        padding: 10px 25px !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        font-size: 11px !important;
-    }
-</style>
 @endsection

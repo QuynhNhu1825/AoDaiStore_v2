@@ -13,7 +13,7 @@ class AdminRatingController extends Controller
 
 public function index(Request $request)
 {
-    $query = DB::table('danhgia')
+    $reviews = DB::table('danhgia')
         ->join(
             'taikhoan',
             'danhgia.MaTaiKhoan',
@@ -25,8 +25,17 @@ public function index(Request $request)
             'danhgia.MaSanPham',
             '=',
             'sanpham.MaSanPham'
-        )
-        ->select(
+        );
+
+    $reviewStats = (clone $reviews)
+        ->selectRaw('COUNT(*) AS total')
+        ->selectRaw("SUM(CASE WHEN danhgia.PhanHoi IS NULL OR TRIM(danhgia.PhanHoi) = '' THEN 1 ELSE 0 END) AS unanswered")
+        ->first();
+    $reviewTotal = (int) $reviewStats->total;
+    $reviewUnanswered = (int) $reviewStats->unanswered;
+    $reviewAnswered = $reviewTotal - $reviewUnanswered;
+
+    $query = $reviews->select(
             'danhgia.MaDanhGia',
             'danhgia.NoiDung',
             'danhgia.HinhAnh',
@@ -81,7 +90,9 @@ public function index(Request $request)
         ->paginate(10)
         ->withQueryString();
 
-    return view('admin.comments.index', compact('comments'));
+    return view('admin.comments.index', compact(
+        'comments', 'reviewTotal', 'reviewUnanswered', 'reviewAnswered'
+    ));
 }
 
     // Ẩn đánh giá

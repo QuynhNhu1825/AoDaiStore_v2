@@ -49,7 +49,6 @@
 
 <div class="max-w-7xl mx-auto pb-10 space-y-5 admin-order-show">
 
-    {{-- Thông báo kết quả sẽ hiển thị bằng toast SweetAlert2 --}}
 
     {{-- QUAY LẠI --}}
     <a href="{{ route('orders.index') }}"
@@ -247,7 +246,6 @@
                      </div>
                  </div>
 
-             {{-- Đã xử lý: không hiển thị thông báo cố định; kết quả thao tác dùng toast 4 giây. --}}
              @endif
 
              {{-- XỬ LÝ ĐƠN HÀNG --}}
@@ -610,7 +608,7 @@
         display: block !important;
         position: static; width: 100%;
         margin: 0; padding: 0; color: #242424;
-        font-family: Arial, sans-serif; font-size: 10.5px; line-height: 1.4;
+        font-size: 10.5px; line-height: 1.4;
         background: white !important;
     }
     .invoice-topline { height: 5px; background: #831c30 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
@@ -673,46 +671,18 @@ function printSaleReceipt() {
 }
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    if (typeof Swal === 'undefined') return;
-
-    const toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 4000,
-        timerProgressBar: true,
-        showCloseButton: true,
-        customClass: { popup: 'heritage-toast' },
-        didOpen: (element) => {
-            element.addEventListener('mouseenter', Swal.stopTimer);
-            element.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-    });
-
-    const successMessage = @json(session('success'));
-    const errorMessage = @json(session('error'));
-    if (successMessage) toast.fire({ icon: 'success', title: successMessage });
-    if (errorMessage) toast.fire({ icon: 'error', title: errorMessage });
-
     document.querySelectorAll('.admin-order-show form[data-confirm-title]').forEach(function (form) {
         form.addEventListener('submit', async function (event) {
             if (form.dataset.confirmed === '1') return;
             event.preventDefault();
-            const result = await Swal.fire({
+            const result = await confirmNotification({
                 title: form.dataset.confirmTitle,
                 text: form.dataset.confirmText || '',
                 icon: form.dataset.confirmIcon || 'question',
-                showCancelButton: true,
                 confirmButtonText: 'Xác nhận',
                 cancelButtonText: 'Quay lại',
-                confirmButtonColor: '#831c30',
-                cancelButtonColor: '#78716c',
-                reverseButtons: true,
-                focusCancel: true,
-                customClass: { popup: 'heritage-confirm', confirmButton: 'heritage-confirm-btn' }
             });
             if (result.isConfirmed) {
                 form.dataset.confirmed = '1';
@@ -722,10 +692,4 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-<style>
-.heritage-toast { border-radius: 14px !important; font-family: inherit !important; font-size: 13px !important; box-shadow: 0 12px 35px rgba(39,15,22,.13) !important; }
-.heritage-confirm { border-radius: 18px !important; font-family: inherit !important; }
-.heritage-confirm-btn { border-radius: 10px !important; }
-</style>
-
 @endsection

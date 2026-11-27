@@ -24,7 +24,10 @@ class AdminColorController extends Controller
             });
         }
 
-        $colors = $query->orderBy('MaMau', 'desc')->get();
+        $colors = $query
+            ->orderBy('MaMau', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.colors.index', compact(
             'colors',

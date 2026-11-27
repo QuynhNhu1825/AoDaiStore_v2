@@ -3,7 +3,7 @@
 @section('title', 'Quản lý đơn hàng')
 
 @section('content')
-<div class="w-full max-w-full space-y-4 admin-orders-page" id="full-container">
+<div class="w-full max-w-full min-w-0 space-y-4 admin-orders-page" id="full-container">
 
     <style>
         .admin-orders-page input:focus, .admin-orders-page select:focus {
@@ -11,6 +11,20 @@
         }
         .admin-orders-page tbody tr { transition: background .18s ease; }
         .admin-orders-page button, .admin-orders-page a { transition: background .18s ease, color .18s ease; }
+        /* Bộ lọc: 3 combobox, không để cột trống */
+        .admin-orders-page .orders-filter { grid-template-columns: minmax(0, 1fr); }
+        .admin-orders-page .orders-filter-selects { grid-template-columns: minmax(0, 1fr); }
+        .admin-orders-page .orders-filter input,
+        .admin-orders-page .orders-filter select { min-height: 38px; }
+        .admin-orders-page .orders-filter select { padding-right: 26px; }
+        .admin-orders-page .orders-filter-actions > * { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; }
+        @media (min-width: 640px) {
+            .admin-orders-page .orders-filter-selects { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (min-width: 1280px) {
+            .admin-orders-page .orders-filter { grid-template-columns: minmax(150px, 1.2fr) minmax(0, 3fr) auto; }
+        }
+        .admin-orders-page .orders-table td { vertical-align: middle; }
         /* Bảng trên desktop, thẻ đơn hàng trên điện thoại */
         @media (max-width: 767px) {
             .orders-table-wrap { overflow-x: visible; padding: 10px; background: #fafafa; }
@@ -33,7 +47,9 @@
                 content: attr(data-label); flex: 0 0 38%; text-align: left;
                 font-size: 11px; font-weight: 700; color: #78716c;
             }
-            .orders-table .order-card td > div { max-width: 62%; }
+            .orders-table .order-card td > div { max-width: 62%; min-width: 0; }
+            .orders-table .order-card td[data-label="Trạng thái"] { display: grid; grid-template-columns: 38% minmax(0, 1fr); }
+            .orders-table .order-card td[data-label="Trạng thái"] > a { grid-column: 2; }
             .orders-table .order-card td[data-label="Thao tác"] > div {
                 max-width: 62%; justify-content: flex-end;
             }
@@ -42,69 +58,33 @@
         }
     </style>
 
-    {{-- THỐNG KÊ ĐƠN HÀNG: 4 THẺ, RESPONSIVE --}}
+    {{-- THỐNG KÊ ĐƠN HÀNG: 5 THẺ, RESPONSIVE --}}
     <div class="grid grid-cols-2 xl:grid-cols-5 gap-2 sm:gap-3">
-        @foreach([
-            ['label' => 'Tổng đơn hàng', 'value' => $totalOrders, 'icon' => 'fa-receipt', 'color' => 'red'],
-            ['label' => 'Chờ xác nhận', 'value' => $pendingOrders, 'icon' => 'fa-clock', 'color' => 'amber'],
-            ['label' => 'Đang giao', 'value' => $shippingOrders, 'icon' => 'fa-truck', 'color' => 'indigo'],
-            ['label' => 'Đã giao', 'value' => $deliveredOrders, 'icon' => 'fa-check-circle', 'color' => 'green'],
-            ['label' => 'Chờ duyệt hủy', 'value' => $pendingCancellationOrders ?? 0, 'icon' => 'fa-exclamation-circle', 'color' => 'amber'],
-        ] as $stat)
-            @php
-                $statColors = [
-                    'red' => ['bg-red-50 text-red-800', 'border-red-100'],
-                    'amber' => ['bg-amber-50 text-amber-700', 'border-amber-100'],
-                    'indigo' => ['bg-indigo-50 text-indigo-700', 'border-indigo-100'],
-                    'green' => ['bg-green-50 text-green-700', 'border-green-100'],
-                ];
-                $palette = $statColors[$stat['color']];
-            @endphp
-            <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border {{ $palette[1] }} flex items-center gap-2 sm:gap-4 min-w-0">
-                <div class="shrink-0 w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl {{ $palette[0] }}">
-                    <i class="fas {{ $stat['icon'] }} text-sm sm:text-lg"></i>
-                </div>
-                <div class="min-w-0">
-                    <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide font-bold leading-tight">{{ $stat['label'] }}</p>
-                    <p class="text-lg sm:text-xl font-bold text-red-900 mt-1">{{ $stat['value'] }}</p>
-                </div>
-            </div>
-        @endforeach
+        <x-admin.stat-card label="Tổng đơn hàng" :value="$totalOrders" icon="fas fa-receipt" color="green" />
+        <x-admin.stat-card label="Chờ xác nhận" :value="$pendingOrders" icon="fas fa-clock" color="amber" />
+        <x-admin.stat-card label="Đang giao" :value="$shippingOrders" icon="fas fa-truck" color="indigo" />
+        <x-admin.stat-card label="Đã giao" :value="$deliveredOrders" icon="fas fa-circle-check" color="green" />
+        <x-admin.stat-card label="Chờ duyệt hủy" :value="$pendingCancellationOrders" icon="fas fa-exclamation-circle" color="amber" />
     </div>
-
-    {{-- THÔNG BÁO --}}
-    @if(session('success'))
-        <div class="admin-order-alert flex items-start gap-3 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl" role="alert">
-            <i class="fas fa-check-circle mt-0.5"></i>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="admin-order-alert flex items-start gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl" role="alert">
-            <i class="fas fa-exclamation-circle mt-0.5"></i>
-            <span>{{ session('error') }}</span>
-        </div>
-    @endif
 
     {{-- BỘ LỌC --}}
     <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
         <form action="{{ route('orders.index') }}" method="GET"
-              class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(180px,1.2fr)_minmax(0,3fr)_auto] gap-3 items-stretch xl:items-center">
+              class="orders-filter grid gap-3 items-stretch">
             <div class="relative min-w-0">
                 <span class="absolute inset-y-0 left-3 flex items-center text-stone-400">
                     <i class="fas fa-search text-[11px]"></i>
                 </span>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       aria-label="Tìm theo họ tên hoặc số điện thoại"
-                       placeholder="Họ tên hoặc số điện thoại..."
+                       aria-label="Tìm theo mã đơn hàng, họ tên hoặc số điện thoại"
+                       placeholder="Tìm theo mã đơn hàng, họ tên hoặc số điện thoại"
                        class="w-full pl-9 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-[11px] focus:ring-0 focus:border-red-700 transition-all">
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 md:col-span-2 xl:col-span-1 gap-2 min-w-0">
+            <div class="orders-filter-selects grid gap-2 min-w-0">
                 <select name="status" aria-label="Trạng thái đơn hàng"
                         class="bg-stone-50 border border-stone-200 rounded-xl py-2.5 px-3 text-[11px] focus:ring-0 focus:border-red-700 cursor-pointer w-full min-w-0">
-                    <option value="">-- Trạng thái đơn --</option>
+                    <option value="">--Trạng thái đơn hàng--</option>
                     @foreach([
                         'ChoXacNhan' => 'Chờ xác nhận',
                         'DaXacNhan' => 'Đã xác nhận',
@@ -117,27 +97,20 @@
                 </select>
                 <select name="payment_method" aria-label="Phương thức thanh toán"
                         class="bg-stone-50 border border-stone-200 rounded-xl py-2.5 px-3 text-[11px] focus:ring-0 focus:border-red-700 cursor-pointer w-full min-w-0">
-                    <option value="">-- Phương thức --</option>
+                    <option value="">--Phương thức thanh toán--</option>
                     <option value="cod" @selected(request('payment_method') === 'cod')>COD</option>
                     <option value="vietqr" @selected(request('payment_method') === 'vietqr')>VietQR</option>
                 </select>
                 <select name="payment_status" aria-label="Trạng thái thanh toán"
                         class="bg-stone-50 border border-stone-200 rounded-xl py-2.5 px-3 text-[11px] focus:ring-0 focus:border-red-700 cursor-pointer w-full min-w-0">
-                    <option value="">-- Thanh toán --</option>
+                    <option value="">--Trạng thái thanh toán--</option>
                     <option value="ChuaThanhToan" @selected(request('payment_status') === 'ChuaThanhToan')>Chưa thanh toán</option>
                     <option value="ChoXacNhanThanhToan" @selected(request('payment_status') === 'ChoXacNhanThanhToan')>Chờ xác nhận</option>
                     <option value="DaThanhToan" @selected(request('payment_status') === 'DaThanhToan')>Đã thanh toán</option>
                 </select>
-                <select name="cancellation_status" aria-label="Trạng thái yêu cầu hủy"
-                        class="bg-stone-50 border border-stone-200 rounded-xl py-2.5 px-3 text-[11px] w-full min-w-0">
-                    <option value="">-- Yêu cầu hủy --</option>
-                    @foreach(['KhongCo' => 'Không có yêu cầu', 'ChoDuyet' => 'Chờ duyệt hủy', 'DaDuyet' => 'Đã duyệt hủy', 'TuChoi' => 'Đã từ chối'] as $value => $label)
-                        <option value="{{ $value }}" @selected(request('cancellation_status') === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
             </div>
 
-            <div class="flex items-center gap-2 md:col-span-2 xl:col-span-1">
+            <div class="orders-filter-actions flex items-center gap-2">
                 <button type="submit"
                         class="flex-1 xl:flex-none bg-red-800 text-white px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-900 transition-all shadow-sm whitespace-nowrap">
                     <i class="fas fa-filter mr-1"></i> Lọc
@@ -151,7 +124,7 @@
     </div>
 
     {{-- DANH SÁCH ĐƠN HÀNG --}}
-    <div class="bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
 
         <div class="orders-table-wrap overflow-x-auto">
             <table class="orders-table w-full min-w-[940px] text-left text-xs border-collapse">
@@ -217,7 +190,7 @@
                                    + (float) $order->PhiVanChuyen;
                         @endphp
 
-                        <tr class="order-card hover:bg-rose-50/40 transition">
+                        <tr class="order-card hover:bg-red-50/40 transition">
                             <td data-label="Mã đơn" class="px-3 py-3 whitespace-nowrap">
                                 <span class="font-bold text-red-900">
                                     #{{ $order->MaDonHang }}
@@ -225,12 +198,10 @@
                             </td>
 
                             <td data-label="Khách hàng" class="px-3 py-3">
-                                <p class="font-semibold text-stone-800">
-                                    {{ $order->HoTenNguoiNhan }}
-                                </p>
-                                <p class="hidden md:block text-xs text-stone-500 mt-1">
-                                    {{ $order->SDTNguoiNhan }}
-                                </p>
+                                <div class="min-w-0">
+                                    <p class="font-semibold text-stone-800 break-words">{{ $order->HoTenNguoiNhan }}</p>
+                                    <p class="text-xs text-stone-500 mt-1">{{ $order->SDTNguoiNhan }}</p>
+                                </div>
                             </td>
 
                             <td data-label="Tổng tiền" class="px-3 py-3 whitespace-nowrap font-bold text-stone-800">
@@ -253,7 +224,7 @@
                             </td>
 
                             <td data-label="Trạng thái" class="px-3 py-3">
-                                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap {{ $statusColors[$order->TrangThai] ?? 'bg-stone-100 text-stone-600' }}">
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold {{ $statusColors[$order->TrangThai] ?? 'bg-stone-100 text-stone-600' }}">
                                     {{ $statusLabels[$order->TrangThai] ?? $order->TrangThai }}
                                 </span>
                                 @if($order->TrangThaiYeuCauHuy === 'ChoDuyet')
@@ -274,7 +245,7 @@
 
                                     {{-- XEM CHI TIẾT --}}
                                     <a href="{{ route('orders.show', $order->MaDonHang) }}"
-                                       title="Xem chi tiết"
+                                       title="Xem chi tiết đơn hàng" aria-label="Xem chi tiết đơn hàng #{{ $order->MaDonHang }}"
                                        class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-red-200 text-red-800 hover:bg-red-800 hover:text-white transition">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -286,8 +257,7 @@
                                               data-title="Xác nhận thanh toán?"
                                               data-text="Xác nhận giao dịch và chuyển đơn hàng #{{ $order->MaDonHang }} sang trạng thái Đã xác nhận?"
                                               data-icon="question"
-                                              data-confirm-text="Xác nhận"
-                                              data-confirm-color="#15803d">
+                                              data-confirm-text="Xác nhận">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit"
@@ -306,8 +276,7 @@
                                               data-title="Xác nhận đơn hàng?"
                                               data-text="Bạn muốn chuyển đơn hàng #{{ $order->MaDonHang }} sang trạng thái Đã xác nhận?"
                                               data-icon="question"
-                                              data-confirm-text="Xác nhận"
-                                              data-confirm-color="#15803d">
+                                              data-confirm-text="Xác nhận">
                                             @csrf
                                             <input type="hidden" name="status" value="DaXacNhan">
                                             <button type="submit"
@@ -325,8 +294,7 @@
                                               data-title="Bắt đầu giao hàng?"
                                               data-text="Bạn muốn chuyển đơn #{{ $order->MaDonHang }} cho đơn vị vận chuyển?"
                                               data-icon="info"
-                                              data-confirm-text="Tiến hành giao"
-                                              data-confirm-color="#4338ca">
+                                              data-confirm-text="Tiến hành giao">
                                             @csrf
                                             <input type="hidden" name="status" value="DangGiao">
                                             <button type="submit"
@@ -344,8 +312,7 @@
                                               data-title="Xác nhận đã giao?"
                                               data-text="Khách hàng đã nhận được đơn #{{ $order->MaDonHang }} thành công?"
                                               data-icon="success"
-                                              data-confirm-text="Đã giao"
-                                              data-confirm-color="#1d4ed8">
+                                              data-confirm-text="Đã giao">
                                             @csrf
                                             <input type="hidden" name="status" value="DaGiao">
                                             <button type="submit"
@@ -363,8 +330,7 @@
                                               data-title="Xác nhận hủy đơn?"
                                               data-text="Bạn chắc chắn muốn hủy đơn hàng #{{ $order->MaDonHang }}? Số lượng sản phẩm sẽ được hoàn kho."
                                               data-icon="warning"
-                                              data-confirm-text="Hủy đơn"
-                                              data-confirm-color="#dc2626">
+                                              data-confirm-text="Hủy đơn">
                                             @csrf
                                             <input type="hidden" name="status" value="DaHuy">
                                             <button type="submit"
@@ -392,7 +358,7 @@
 
         {{-- PHÂN TRANG --}}
         @if($orders->hasPages())
-            <div class="p-4 border-t border-stone-100">
+            <div class="px-4 py-3 border-t border-red-100 bg-red-50">
                 {{ $orders->appends(request()->query())->links('pagination::tailwind') }}
             </div>
         @endif
@@ -401,18 +367,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Tự động ẩn thông báo thành công/lỗi
-    document.querySelectorAll('.admin-order-alert').forEach(function(alert) {
-        setTimeout(function() {
-            alert.style.transition = 'opacity 0.5s ease';
-            alert.style.opacity = '0';
-            setTimeout(function() {
-                alert.remove();
-            }, 500);
-        }, 4000);
-    });
-
-    // 2. Xử lý đồng bộ toàn bộ Form xác nhận bằng SweetAlert2
     document.querySelectorAll('.form-confirm').forEach(form => {
         form.addEventListener('submit', function (e) {
             e.preventDefault(); // Chặn hành động submit mặc định
@@ -422,19 +376,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const text = this.dataset.text || 'Bạn có chắc chắn muốn tiếp tục?';
             const icon = this.dataset.icon || 'warning';
             const confirmText = this.dataset.confirmText || 'Đồng ý';
-            const confirmColor = this.dataset.confirmColor || '#3085d6';
 
-            Swal.fire({
+            confirmNotification({
                 title: title,
                 text: text,
                 icon: icon,
-                showCancelButton: true,
-                confirmButtonColor: confirmColor,
-                cancelButtonColor: '#9ca3af',
-                confirmButtonText: `<i class="fas fa-check"></i> ${confirmText}`,
-                cancelButtonText: 'Hủy bỏ',
-                background: '#ffffff',
-                borderRadius: '10px'
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Hủy bỏ'
             }).then((result) => {
                 if (result.isConfirmed) {
                     this.submit(); // Tiếp tục submit nếu nhấn Xác nhận

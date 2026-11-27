@@ -31,26 +31,6 @@
 
     </div>
 
-    {{-- THÔNG BÁO LỖI --}}
-    @if($errors->any())
-
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs">
-
-            <div class="font-bold mb-2">
-                <i class="fas fa-exclamation-circle mr-1"></i>
-                Vui lòng kiểm tra lại thông tin:
-            </div>
-
-            <ul class="list-disc pl-5 space-y-1">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-
-        </div>
-
-    @endif
-
     {{-- FORM THÊM CHẤT LIỆU --}}
     <div class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
 

@@ -707,10 +707,6 @@ editForm.addEventListener('submit', function () {
     .details summary::-webkit-details-marker {
         display: none;
     }
-
-    .serif {
-        font-family: 'Playfair Display', serif;
-    }
 </style>
 
 @endsection

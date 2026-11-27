@@ -4,7 +4,6 @@
 
 @section('content')
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <section class="max-w-7xl mx-auto py-8 sm:py-12 lg:py-16 px-3 sm:px-4 min-h-screen">
 
@@ -25,19 +24,6 @@
                     Quay lại cửa hàng
             </a>
         </div>
-
-    {{-- ==================== THÔNG BÁO ==================== --}}
-    @if(session('error'))
-        <div role="alert" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-            ⚠️ {{ session('error') }}
-        </div>
-    @endif
-
-    @if(session('success'))
-        <div role="status" class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4">
-            {{ session('success') }}
-        </div>
-    @endif
 
     @guest
         @if(!empty($message))
@@ -380,28 +366,12 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-    // ==================== TOAST (DÙNG CHUNG) ====================
-    const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 2000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer);
-            toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-    });
-
     // ==================== XỬ LÝ CHO NGƯỜI ĐÃ ĐĂNG NHẬP ====================
     function confirmClearCart() {
-        Swal.fire({
+        confirmNotification({
             title: 'Xóa toàn bộ giỏ hàng?',
             text: 'Bạn sẽ không thể hoàn tác hành động này!',
             icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#991b1b',
-            cancelButtonColor: '#78716c',
             confirmButtonText: 'Đồng ý, xóa hết!',
             cancelButtonText: 'Hủy bỏ'
         }).then((result) => {
@@ -410,12 +380,9 @@
     }
 
     function confirmRemoveItem(button) {
-        Swal.fire({
+        confirmNotification({
             title: 'Xóa sản phẩm này?',
             icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#991b1b',
-            cancelButtonColor: '#78716c',
             confirmButtonText: 'Xóa',
             cancelButtonText: 'Hủy'
         }).then((result) => {
@@ -438,21 +405,20 @@
                 success: function (response) {
                     if (response.success) {
                         inputField.val(response.new_qty);
-                        Toast.fire({
+                        showNotification({
                             icon: 'success',
-                            title: 'Đã cập nhật số lượng'
+                            title: 'Đã cập nhật số lượng',
+                            timer: 2000
                         }).then(() => location.reload());
                     }
                 },
                 error: function (xhr) {
                 const response = xhr.responseJSON;
 
-                Swal.fire({
+                showNotification({
                     icon: 'warning',
                     title: 'Không đủ số lượng!',
-                    text: response?.message || 'Số lượng sản phẩm vượt quá tồn kho hiện tại.',
-                    confirmButtonColor: '#A71920',
-                    confirmButtonText: 'Đã hiểu'
+                    text: response?.message || 'Số lượng sản phẩm vượt quá tồn kho hiện tại.'
                 });
             }
             });
@@ -733,12 +699,10 @@ function renderGuestCart(cart) {
 
     // Kiểm tra tồn kho khi tăng số lượng
     if (step > 0 && newQty > stock) {
-        Swal.fire({
+        showNotification({
             icon: 'warning',
             title: 'Không đủ số lượng!',
-            text: `Sản phẩm chỉ còn ${stock} sản phẩm trong kho. Bạn đang có ${currentQty} sản phẩm trong giỏ.`,
-            confirmButtonText: 'Đã hiểu',
-            confirmButtonColor: '#A71920'
+            text: `Sản phẩm chỉ còn ${stock} sản phẩm trong kho. Bạn đang có ${currentQty} sản phẩm trong giỏ.`
         });
 
         return;
@@ -748,7 +712,7 @@ function renderGuestCart(cart) {
 
     localStorage.setItem('guest_cart', JSON.stringify(cart));
 
-    Toast.fire({
+    showNotification({
         icon: 'success',
         title: 'Đã cập nhật số lượng'
     });
@@ -757,12 +721,9 @@ function renderGuestCart(cart) {
     renderGuestCart(cart);
 }
     function guestRemoveItem(index) {
-        Swal.fire({
+        confirmNotification({
             title: 'Xóa sản phẩm này?',
             icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#991b1b',
-            cancelButtonColor: '#78716c',
             confirmButtonText: 'Xóa',
             cancelButtonText: 'Hủy'
         }).then((result) => {
@@ -781,13 +742,10 @@ function renderGuestCart(cart) {
     }
 
     function guestClearCart() {
-        Swal.fire({
+        confirmNotification({
             title: 'Xóa toàn bộ giỏ hàng?',
             text: 'Bạn sẽ không thể hoàn tác hành động này!',
             icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#991b1b',
-            cancelButtonColor: '#78716c',
             confirmButtonText: 'Đồng ý, xóa hết!',
             cancelButtonText: 'Hủy bỏ'
         }).then((result) => {
@@ -954,25 +912,22 @@ function checkoutSelected() {
     ).map(checkbox => checkbox.value);
 
     if (selectedIds.length === 0) {
-        Swal.fire({
+        showNotification({
             icon: 'warning',
             title: 'Chưa chọn sản phẩm',
-            text: 'Vui lòng chọn ít nhất một sản phẩm để đặt hàng.',
-            confirmButtonColor: '#991b1b'
+            text: 'Vui lòng chọn ít nhất một sản phẩm để đặt hàng.'
         });
         return;
     }
 
     if (isGuest) {
         sessionStorage.setItem('heritage_guest_selected_cart', JSON.stringify(selectedIds));
-        Swal.fire({
+        confirmNotification({
             icon: 'info',
             title: 'Vui lòng đăng nhập',
             text: 'Đăng nhập để đồng bộ giỏ hàng trước khi thanh toán.',
-            showCancelButton: true,
             confirmButtonText: 'Đăng nhập',
             cancelButtonText: 'Để sau',
-            confirmButtonColor: '#991b1b'
         }).then(result => {
             if (result.isConfirmed) window.location.href = "{{ route('login') }}";
         });

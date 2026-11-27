@@ -6,18 +6,9 @@
 <div class="accounts-page w-full max-w-full min-w-0 space-y-4">
     {{-- THỐNG KÊ --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-red-100 flex items-center gap-4">
-            <div class="w-11 h-11 shrink-0 flex items-center justify-center bg-red-50 rounded-xl text-red-800"><i class="fas fa-users"></i></div>
-            <div class="min-w-0"><p class="text-[10px] text-stone-500 uppercase tracking-widest font-bold">Tổng tài khoản</p><p class="text-xl font-bold text-red-900 mt-1">{{ $totalAccounts }}</p></div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-4">
-            <div class="w-11 h-11 shrink-0 flex items-center justify-center bg-green-50 rounded-xl text-green-700"><i class="fas fa-user-check"></i></div>
-            <div class="min-w-0"><p class="text-[10px] text-stone-500 uppercase tracking-widest font-bold">Đang hoạt động</p><p class="text-xl font-bold text-stone-800 mt-1">{{ $activeAccounts }}</p></div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-4">
-            <div class="w-11 h-11 shrink-0 flex items-center justify-center bg-slate-100 rounded-xl text-slate-600"><i class="fas fa-user-lock"></i></div>
-            <div class="min-w-0"><p class="text-[10px] text-stone-500 uppercase tracking-widest font-bold">Bị khóa</p><p class="text-xl font-bold text-stone-800 mt-1">{{ $lockedAccounts }}</p></div>
-        </div>
+        <x-admin.stat-card label="Tổng tài khoản" :value="$totalAccounts" icon="fas fa-users" color="blue" />
+        <x-admin.stat-card label="Đang hoạt động" :value="$activeAccounts" icon="fas fa-user-check" color="green" />
+        <x-admin.stat-card label="Bị khóa" :value="$lockedAccounts" icon="fas fa-user-lock" color="slate" />
     </div>
 
     {{-- TÌM KIẾM --}}
@@ -99,27 +90,8 @@
 </div>
 
 {{-- THÔNG BÁO VÀ XÁC NHẬN THAO TÁC --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const popupStyle = { popup: 'account-glass-popup', confirmButton: 'account-confirm-btn', cancelButton: 'account-cancel-btn' };
-
-    @if(session('success'))
-        Swal.fire({
-            icon: 'success', title: 'Thành công!', text: @json(session('success')),
-            timer: 3000, timerProgressBar: true, showConfirmButton: false,
-            customClass: popupStyle
-        });
-    @endif
-
-    @if(session('error'))
-        Swal.fire({
-            icon: 'error', title: 'Thông báo lỗi', text: @json(session('error')),
-            timer: 3000, timerProgressBar: true, showConfirmButton: false,
-            customClass: popupStyle
-        });
-    @endif
-
     // Chỉ xác nhận khóa/mở tài khoản User; tài khoản Admin không có form thao tác.
     document.querySelectorAll('.account-lock-form').forEach(form => {
         form.addEventListener('submit', async (event) => {
@@ -128,16 +100,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const action = form.dataset.action;
             const name = form.dataset.accountName;
-            const result = await Swal.fire({
+            const result = await confirmNotification({
                 title: action === 'khóa' ? 'Xác nhận khóa tài khoản' : 'Xác nhận mở khóa',
                 text: `Bạn có chắc muốn ${action} tài khoản "${name}" không?`,
                 icon: 'question',
-                showCancelButton: true,
                 confirmButtonText: action === 'khóa' ? 'Đồng ý khóa' : 'Đồng ý mở khóa',
                 cancelButtonText: 'Hủy bỏ',
-                reverseButtons: true,
-                buttonsStyling: false,
-                customClass: popupStyle
             });
 
             if (result.isConfirmed) {
@@ -150,9 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <style>
-.account-glass-popup { background: rgba(255,255,255,.97) !important; border-radius: 20px !important; box-shadow: 0 20px 40px rgba(0,0,0,.12) !important; }
-.account-confirm-btn { background: #991b1b !important; color: #fff !important; padding: 10px 22px !important; border-radius: 12px !important; font-weight: 700 !important; font-size: 12px !important; }
-.account-cancel-btn { background: #f3f4f6 !important; color: #57534e !important; padding: 10px 22px !important; border-radius: 12px !important; font-weight: 700 !important; font-size: 12px !important; margin-right: 8px !important; }
 .accounts-page { min-width: 0; }
 @media (max-width: 767px) {
     .accounts-page .accounts-table-wrap { overflow: visible; background: #fafaf9; padding: 10px; }

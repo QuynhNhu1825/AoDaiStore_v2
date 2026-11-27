@@ -25,7 +25,8 @@ class AdminMaterialController extends Controller
 
         $materials = $query
             ->orderBy('MaChatLieu', 'desc')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.materials.index', compact(
             'materials',

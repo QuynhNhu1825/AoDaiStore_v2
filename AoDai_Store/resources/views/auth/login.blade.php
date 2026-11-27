@@ -28,24 +28,6 @@
         <!-- HEADER -->
         <div class="text-center mb-6">
 
-            <!-- THÔNG BÁO THÀNH CÔNG -->
-            @if(session('success'))
-                <div id="loginSuccessAlert"
-                     class="mb-4 rounded-xl bg-green-100
-                            text-green-700 px-4 py-3 text-sm">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            <!-- THÔNG BÁO LỖI -->
-            @if($errors->any())
-                <div id="loginErrorAlert"
-                     class="mb-4 rounded-xl bg-red-100
-                            text-red-700 px-4 py-3 text-sm">
-                    {{ $errors->first() }}
-                </div>
-            @endif
-
             <h2 class="text-xl font-bold text-[#5d534a]">
                 ĐĂNG NHẬP
             </h2>
@@ -160,23 +142,6 @@ document.addEventListener('DOMContentLoaded', function () {
             this.setAttribute('aria-pressed', String(showPassword));
         });
     }
-
-    // THÔNG BÁO TỰ ẨN SAU 5 GIÂY
-    ['loginSuccessAlert', 'loginErrorAlert'].forEach(function (id) {
-
-        const alert = document.getElementById(id);
-
-        if (!alert) return;
-
-        setTimeout(function () {
-            alert.style.transition = 'opacity 0.3s';
-            alert.style.opacity = '0';
-
-            setTimeout(function () {
-                alert.remove();
-            }, 300);
-        }, 5000);
-    });
 
 });
 </script>

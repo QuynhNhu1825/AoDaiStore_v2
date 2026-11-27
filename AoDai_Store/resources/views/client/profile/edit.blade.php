@@ -17,25 +17,6 @@
         </p>
     </div>
 
-    {{-- THÔNG BÁO --}}
-    @if(session('success'))
-        <div id="success-alert"
-             class="mb-5 p-4 rounded-xl bg-green-50
-                    border border-green-200 text-green-700">
-            <i class="fa-solid fa-circle-check mr-2"></i>
-            {{ session('success') }}
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div id="error-alert"
-             class="mb-5 p-4 rounded-xl bg-red-50
-                    border border-red-200 text-red-700">
-            <i class="fa-solid fa-circle-exclamation mr-2"></i>
-            {{ session('error') }}
-        </div>
-    @endif
-
     @if(empty($user->SDT) || empty($user->DiaChi))
         <div class="mb-5 p-4 bg-amber-50
                     border border-amber-200 rounded-xl
@@ -274,28 +255,5 @@
     </div>
 
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    ['success-alert', 'error-alert'].forEach(id => {
-        const alertBox = document.getElementById(id);
-
-        if (alertBox) {
-            setTimeout(() => {
-                alertBox.classList.add(
-                    'opacity-0',
-                    'transition-opacity',
-                    'duration-500'
-                );
-
-                setTimeout(() => {
-                    alertBox.remove();
-                }, 500);
-
-            }, 3000);
-        }
-    });
-});
-</script>
 
 @endsection

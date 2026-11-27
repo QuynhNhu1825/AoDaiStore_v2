@@ -1,19 +1,13 @@
 @extends('layouts.admin')
-@section('title', 'Thống kê ')
+@section('title', 'Thống kê')
 @section('content')
-<div class="w-full min-w-0 space-y-5" style="font-family:Inter,sans-serif">
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-        @foreach([
-            ['label'=>'Doanh thu cửa hàng','value'=>number_format($tongDoanhThu,0,',','.').' đ','icon'=>'fa-wallet','color'=>'text-red-800','bg'=>'bg-red-50'],
-            ['label'=>'Tổng đơn hàng','value'=>number_format($tongDonHang,0,',','.'),'icon'=>'fa-receipt','color'=>'text-blue-700','bg'=>'bg-blue-50'],
-            ['label'=>'Đơn đã giao','value'=>number_format($donDaGiao,0,',','.'),'icon'=>'fa-circle-check','color'=>'text-green-700','bg'=>'bg-green-50'],
-            ['label'=>'Sản phẩm đã bán','value'=>number_format($soSanPhamDaBan,0,',','.'),'icon'=>'fa-box','color'=>'text-amber-700','bg'=>'bg-amber-50']
-        ] as $stat)
-        <div class="bg-white border border-red-100 shadow-sm rounded-2xl p-4 flex items-center justify-between min-w-0 gap-3">
-            <div class="min-w-0"><p class="text-[11px] text-stone-500 font-semibold">{{ $stat['label'] }}</p><p class="text-xl font-bold text-stone-800 mt-2 break-words">{{ $stat['value'] }}</p></div>
-            <div class="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center {{ $stat['bg'] }} {{ $stat['color'] }}"><i class="fas {{ $stat['icon'] }} text-lg"></i></div>
-        </div>
-        @endforeach
+<div class="w-full min-w-0 space-y-5">
+
+    <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
+        <x-admin.stat-card label="Doanh thu đơn đã giao" :value="$tongDoanhThu" unit="đ" icon="fas fa-wallet" />
+        <x-admin.stat-card label="Tổng đơn hàng" :value="$tongDonHang" icon="fas fa-receipt" color="green" />
+        <x-admin.stat-card label="Đã giao" :value="$donDaGiao" icon="fas fa-circle-check" color="green" />
+        <x-admin.stat-card label="Sản phẩm đã bán" :value="$soSanPhamDaBan" icon="fas fa-box" color="amber" />
     </div>
     
     <form method="GET" action="{{ route('statistics.index') }}" class="bg-white border border-red-100 shadow-sm rounded-2xl p-4">
@@ -24,19 +18,26 @@
             <a href="{{ route('statistics.index') }}" class="rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 text-center font-semibold text-xs px-5 py-2.5"><i class="fas fa-redo mr-1"></i>
                     Đặt lại</a>
         </div>
-        @if($errors->any())<p class="mt-3 text-xs text-red-700">{{ $errors->first() }}</p>@endif
     </form>
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <section class="bg-white rounded-2xl border border-red-100 shadow-sm p-5 min-w-0">
             <h3 class="font-bold text-sm text-red-900 mb-1">Doanh thu theo thời gian</h3>
-            <p class="text-[11px] text-stone-500 mb-4">Doanh thu từ đơn đã giao, theo ngày trong khoảng lọc</p>
-            <div class="relative h-64"><canvas id="revenueChart" aria-label="Biểu đồ doanh thu theo ngày" role="img"></canvas></div>
+            <p class="text-[11px] text-stone-500 mb-4">Tiền hàng và phí vận chuyển của đơn đã giao, tính theo ngày đặt</p>
+            @if($doanhThuTheoNgay->isNotEmpty())
+                <div class="relative h-64"><canvas id="revenueChart" aria-label="Biểu đồ doanh thu theo ngày đặt" role="img"></canvas></div>
+            @else
+                <p class="py-8 text-center text-xs text-stone-500">Chưa có đơn đã giao trong khoảng thời gian này.</p>
+            @endif
         </section>
         <section class="bg-white rounded-2xl border border-red-100 shadow-sm p-5 min-w-0">
             <h3 class="font-bold text-sm text-red-900 mb-1">Đơn hàng theo trạng thái</h3>
             <p class="text-[11px] text-stone-500 mb-4">Số lượng đơn hàng trong khoảng thời gian lọc</p>
-            <div class="relative h-64"><canvas id="statusChart" aria-label="Biểu đồ đơn hàng theo trạng thái" role="img"></canvas></div>
+            @if($tongDonHang > 0)
+                <div class="relative h-64"><canvas id="statusChart" aria-label="Biểu đồ đơn hàng theo trạng thái" role="img"></canvas></div>
+            @else
+                <p class="py-8 text-center text-xs text-stone-500">Chưa có đơn hàng trong khoảng thời gian này.</p>
+            @endif
         </section>
     </div>
 
@@ -67,21 +68,29 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     if (typeof Chart === 'undefined') return;
-    Chart.defaults.font.family = 'Inter, sans-serif';
-    const dates = @json($doanhThuTheoNgay->pluck('ngay'));
-    const revenue = @json($doanhThuTheoNgay->pluck('tong_tien'));
-    const statuses = @json(collect($donTheoTrangThai)->pluck('label'));
-    const counts = @json(collect($donTheoTrangThai)->pluck('count'));
-    new Chart(document.getElementById('revenueChart'), {
-        type: 'line', data: {labels: dates, datasets:[{label:'Doanh thu (đ)',data:revenue,borderColor:'#831c30',backgroundColor:'rgba(131,28,48,.08)',fill:true,tension:.3,pointRadius:3}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>new Intl.NumberFormat('vi-VN').format(ctx.parsed.y)+' đ'}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>new Intl.NumberFormat('vi-VN',{notation:'compact'}).format(v)}}}}
-    });
-    new Chart(document.getElementById('statusChart'), {
-        type:'doughnut',data:{labels:statuses,datasets:[{data:counts,backgroundColor:['#f59e0b','#3b82f6','#8b5cf6','#16a34a','#a8a29e'],borderWidth:2,borderColor:'#fff'}]},
-        options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}}}
-    });
+    await document.fonts.ready;
+    Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+    const revenueChart = document.getElementById('revenueChart');
+    if (revenueChart) {
+        const dates = @json($doanhThuTheoNgay->pluck('ngay'));
+        const revenue = @json($doanhThuTheoNgay->pluck('tong_tien'));
+        new Chart(revenueChart, {
+            type: 'line', data: {labels: dates.map(date => date ?? 'Không rõ ngày đặt'), datasets:[{label:'Doanh thu (đ)',data:revenue,borderColor:'#831c30',backgroundColor:'rgba(131,28,48,.08)',fill:true,tension:.3,pointRadius:3}]},
+            options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>new Intl.NumberFormat('vi-VN').format(ctx.parsed.y)+' đ'}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>new Intl.NumberFormat('vi-VN',{notation:'compact'}).format(v)}}}}
+        });
+    }
+
+    const statusChart = document.getElementById('statusChart');
+    if (statusChart) {
+        const statuses = @json(collect($donTheoTrangThai)->pluck('label'));
+        const counts = @json(collect($donTheoTrangThai)->pluck('count'));
+        new Chart(statusChart, {
+            type:'doughnut',data:{labels:statuses,datasets:[{data:counts,backgroundColor:['#f59e0b','#3b82f6','#8b5cf6','#16a34a','#a8a29e','#475569'],borderWidth:2,borderColor:'#fff'}]},
+            options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}}}
+        });
+    }
 });
 </script>
 @endsection

@@ -326,20 +326,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.vietqr-alert').forEach(function(alert) {
-        setTimeout(function() {
-            alert.style.transition = 'opacity 0.5s ease';
-            alert.style.opacity = '0';
-
-            setTimeout(function() {
-                alert.remove();
-            }, 500);
-        }, 4000);
-    });
-});
-
-
-document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('vietqr-confirm-form');
 
     if (!form) return;
@@ -347,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
 
-        const result = await Swal.fire({
+        const result = await confirmNotification({
             title: 'Xác nhận chuyển khoản?',
             html: `
                 <p style="color:#57534e;font-size:14px;margin-bottom:16px;">
@@ -393,18 +379,8 @@ document.addEventListener('DOMContentLoaded', function () {
             `,
             icon: 'question',
             iconColor: '#7f1d1d',
-            showCancelButton: true,
             confirmButtonText: 'Đã chuyển khoản',
             cancelButtonText: 'Hủy bỏ',
-            confirmButtonColor: '#7f1d1d',
-            cancelButtonColor: '#78716c',
-            reverseButtons: true,
-            buttonsStyling: true,
-            customClass: {
-                popup: 'vietqr-swal-popup',
-                confirmButton: 'vietqr-swal-button',
-                cancelButton: 'vietqr-swal-button'
-            }
         });
 
         if (result.isConfirmed) {

@@ -97,8 +97,6 @@
     @endif
 
 </div>
-{{-- SWEETALERT2 --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -111,16 +109,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const currentForm = this;
 
-            Swal.fire({
+            confirmNotification({
                 icon: 'warning',
                 title: 'Xóa sản phẩm yêu thích?',
                 text: 'Bạn có chắc muốn xóa sản phẩm này khỏi danh sách yêu thích?',
-                showCancelButton: true,
                 confirmButtonText: 'Đồng ý xóa',
                 cancelButtonText: 'Hủy',
-                confirmButtonColor: '#A71920',
-                cancelButtonColor: '#78716c',
-                reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
                     currentForm.submit();
@@ -130,30 +124,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     });
-
-    // THÔNG BÁO XÓA THÀNH CÔNG
-    @if(session('success'))
-        Swal.fire({
-            icon: 'success',
-            title: 'Đã xóa yêu thích!',
-            text: @json(session('success')),
-            timer: 1500,
-            timerProgressBar: true,
-            showConfirmButton: false
-        });
-    @endif
-
-    // THÔNG BÁO XÓA THẤT BẠI
-    @if(session('error'))
-        Swal.fire({
-            icon: 'error',
-            title: 'Không thể xóa!',
-            text: @json(session('error')),
-            confirmButtonText: 'Đã hiểu',
-            confirmButtonColor: '#A71920'
-        });
-    @endif
-
 });
 </script>
 @endsection

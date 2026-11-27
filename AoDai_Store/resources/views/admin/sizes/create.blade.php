@@ -26,7 +26,7 @@
                 </div>
 
                 <div>
-                    <h2 class="serif text-xl font-bold text-red-900">
+                    <h2 class="text-xl font-bold text-red-900">
                         Thêm kích cỡ mới
                     </h2>
                     <p class="text-[10px] text-stone-500 mt-1">
@@ -99,9 +99,4 @@
 
 </div>
 
-<style>
-    .serif {
-        font-family: 'Playfair Display', serif;
-    }
-</style>
 @endsection

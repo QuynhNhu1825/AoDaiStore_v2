@@ -6,33 +6,6 @@
 
 <div class="max-w-4xl mx-auto py-10 px-4">
 
-    {{-- THÔNG BÁO --}}
-    @if(session('success'))
-        <div id="success-alert"
-            class="mb-5 flex items-center gap-3 p-4
-                    bg-green-50 border border-green-200
-                    text-green-700 rounded-xl transition-opacity duration-500">
-            <i class="fa-solid fa-circle-check text-lg"></i>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const alert = document.getElementById('success-alert');
-
-            if (alert) {
-                setTimeout(() => {
-                    alert.classList.add('opacity-0');
-
-                    setTimeout(() => {
-                        alert.remove();
-                    }, 500);
-                }, 3000);
-            }
-        });
-    </script>
-
     {{-- KHUNG THÔNG TIN --}}
     <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
 

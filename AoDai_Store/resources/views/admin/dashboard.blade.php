@@ -3,38 +3,14 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="w-full min-w-0 space-y-6 font-sans">
+<div class="w-full min-w-0 space-y-6">
 
     {{-- THẺ THỐNG KÊ --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <a href="{{ route('admin.products.index') }}" class="group flex items-center justify-between gap-3 rounded-2xl border border-red-100 bg-white p-5 shadow-sm transition hover:shadow-md min-w-0">
-            <div class="min-w-0">
-                <p class="text-[11px] font-semibold text-stone-500">Tổng sản phẩm</p>
-                <p class="mt-2 text-3xl font-bold text-red-900">{{ number_format($totalProducts, 0, ',', '.') }}</p>
-            </div>
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-800"><i class="fas fa-shirt text-xl"></i></div>
-        </a>
-        <a href="{{ route('admin.categories.index') }}" class="group flex items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm transition hover:shadow-md min-w-0">
-            <div class="min-w-0">
-                <p class="text-[11px] font-semibold text-stone-500">Danh mục sản phẩm</p>
-                <p class="mt-2 text-3xl font-bold text-stone-800">{{ number_format($totalCategories, 0, ',', '.') }}</p>
-            </div>
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><i class="fas fa-layer-group text-xl"></i></div>
-        </a>
-        <a href="{{ route('admin.accounts.index') }}" class="group flex items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm transition hover:shadow-md min-w-0">
-            <div class="min-w-0">
-                <p class="text-[11px] font-semibold text-stone-500">Tổng tài khoản</p>
-                <p class="mt-2 text-3xl font-bold text-stone-800">{{ number_format($totalAccounts, 0, ',', '.') }}</p>
-            </div>
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><i class="fas fa-users text-xl"></i></div>
-        </a>
-        <a href="{{ route('orders.index') }}" class="group flex items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm transition hover:shadow-md min-w-0">
-            <div class="min-w-0">
-                <p class="text-[11px] font-semibold text-stone-500">Tổng đơn hàng</p>
-                <p class="mt-2 text-3xl font-bold text-stone-800">{{ number_format($totalOrders, 0, ',', '.') }}</p>
-            </div>
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><i class="fas fa-receipt text-xl"></i></div>
-        </a>
+        <x-admin.stat-card label="Tổng sản phẩm" :value="$totalProducts" icon="fas fa-shirt" :href="route('admin.products.index')" />
+        <x-admin.stat-card label="Danh mục sản phẩm" :value="$totalCategories" icon="fas fa-layer-group" color="amber" :href="route('admin.categories.index')" />
+        <x-admin.stat-card label="Tổng tài khoản" :value="$totalAccounts" icon="fas fa-users" color="blue" :href="route('admin.accounts.index')" />
+        <x-admin.stat-card label="Tổng đơn hàng" :value="$totalOrders" icon="fas fa-receipt" color="green" :href="route('orders.index')" />
     </div>
 
     {{-- TRUY CẬP NHANH VÀ TỔNG QUAN --}}
