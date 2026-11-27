@@ -66,9 +66,10 @@
 </style>
 
 <script>
+    const notificationDuration = 3000;
     const activeNotifications = new Map();
 
-    function showNotification({ icon = 'info', title, text, timer = { success: 3500, info: 5000 }[icon] ?? 0 }) {
+    function showNotification({ icon = 'info', title, text }) {
         const key = JSON.stringify([icon, title, text]);
         if (activeNotifications.has(key)) return activeNotifications.get(key);
 
@@ -115,7 +116,7 @@
                 };
                 closeButton.addEventListener('click', dismiss, { once: true });
                 stack.append(notification);
-                if (timer > 0) timeoutId = setTimeout(dismiss, timer);
+                timeoutId = setTimeout(dismiss, notificationDuration);
             });
         });
         activeNotifications.set(key, dismissed);

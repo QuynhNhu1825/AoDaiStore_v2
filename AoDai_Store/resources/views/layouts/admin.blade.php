@@ -7,7 +7,7 @@
     <link rel="icon" type="image/jpeg" href="{{ asset('img/logo/logo.jpg') }}?v=2">
     <title>@yield('title', 'Quản trị') - AD Heritage</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite('resources/css/app.css')
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @include('partials.notifications')
