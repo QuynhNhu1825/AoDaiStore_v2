@@ -53,7 +53,9 @@ class StatisticsController extends Controller
         }
 
         $deliveredOrders = (clone $orders)->where('donhang.TrangThai', 'DaGiao');
-        $doanhThuTheoNgay = (clone $deliveredOrders)->toBase()
+        $doanhThuTheoNgay = (clone $deliveredOrders)
+            ->where('donhang.TrangThaiThanhToan', 'DaThanhToan')
+            ->toBase()
             ->selectRaw('DATE(NgayDat) as ngay, SUM(COALESCE(TienHang, 0) + COALESCE(PhiVanChuyen, 0)) as tong_tien')
             ->groupByRaw('DATE(NgayDat)')
             ->orderBy('ngay')
