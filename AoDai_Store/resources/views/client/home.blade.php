@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error('Lỗi lọc sản phẩm:', error);
-                alert('Không thể tải sản phẩm. Vui lòng thử lại.');
+                showNotification({ icon: 'error', title: 'Không thể tải sản phẩm. Vui lòng thử lại.' });
             }
         } finally {
             if (!controller.signal.aborted) container.style.opacity = '1';

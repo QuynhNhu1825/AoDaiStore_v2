@@ -2,130 +2,77 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 
 class StatisticsController extends Controller
 {
     public function index(Request $request)
     {
-        $request->validate([
-            'tu_ngay' => ['nullable', 'date'],
-            'den_ngay' => [
-                'nullable',
-                'date',
-                'after_or_equal:tu_ngay'
-            ],
+        $endDateRules = ['nullable', 'date_format:Y-m-d'];
+        if ($request->filled('tu_ngay')) {
+            $endDateRules[] = 'after_or_equal:tu_ngay';
+        }
+
+        $dates = $request->validate([
+            'tu_ngay' => ['nullable', 'date_format:Y-m-d'],
+            'den_ngay' => $endDateRules,
+        ], [
+            'tu_ngay.date_format' => 'Ngày bắt đầu không hợp lệ.',
+            'den_ngay.date_format' => 'Ngày kết thúc không hợp lệ.',
+            'den_ngay.after_or_equal' => 'Vui lòng chọn Đến ngày bằng hoặc sau Từ ngày.',
         ]);
 
-        // 1. Khoảng thời gian thống kê
-        $tuNgay = $request->input(
-            'tu_ngay',
-            now()->startOfMonth()->toDateString()
-        );
+        $tuNgay = $dates['tu_ngay'] ?? null;
+        $denNgay = $dates['den_ngay'] ?? null;
+        $orders = Order::query();
 
-        $denNgay = $request->input(
-            'den_ngay',
-            now()->toDateString()
-        );
+        if ($tuNgay !== null) {
+            $orders->where('donhang.NgayDat', '>=', Carbon::parse($tuNgay)->startOfDay());
+        }
 
-        $from = Carbon::parse($tuNgay)->startOfDay();
-        $to = Carbon::parse($denNgay)->endOfDay();
+        if ($denNgay !== null) {
+            $orders->where('donhang.NgayDat', '<', Carbon::parse($denNgay)->addDay()->startOfDay());
+        }
 
-        // 2. Truy vấn đơn hàng
-        $orders = DB::table('donhang')
-            ->whereBetween('NgayDat', [$from, $to]);
-
-        // 3. Tổng số đơn hàng
-        $tongDonHang = (clone $orders)->count();
-
-        // 4. Đơn hàng đã giao
-        $donDaGiao = (clone $orders)
-            ->where('TrangThai', 'DaGiao')
-            ->count();
-
-        // 5. Chi tiết các đơn đã giao
-        $soldDetails = DB::table('chitietdonhang as ct')
-            ->join(
-                'donhang as dh',
-                'dh.MaDonHang',
-                '=',
-                'ct.MaDonHang'
-            )
-            ->whereBetween('dh.NgayDat', [$from, $to])
-            ->where('dh.TrangThai', 'DaGiao');
-
-        // 6. Tổng doanh thu
-        $tongDoanhThu = (clone $soldDetails)
-            ->sum('ct.ThanhTien');
-
-        // 7. Tổng số lượng sản phẩm đã bán
-        $soSanPhamDaBan = (clone $soldDetails)
-            ->sum('ct.SoLuong');
-
-        // 8. Đơn hàng theo trạng thái
-        $statusLabels = [
-            'ChoXacNhan' => 'Chờ xác nhận',
-            'DaXacNhan' => 'Đã xác nhận',
-            'DangGiao' => 'Đang giao',
-            'DaGiao' => 'Đã giao',
-            'DaHuy' => 'Đã hủy',
-        ];
-
-        $statusCounts = (clone $orders)
-            ->select('TrangThai')
-            ->selectRaw('COUNT(*) as total')
-            ->groupBy('TrangThai')
-            ->pluck('total', 'TrangThai');
-
-        $donTheoTrangThai = collect($statusLabels)
-            ->map(function ($label, $code) use ($statusCounts) {
-                return [
-                    'label' => $label,
-                    'count' => (int) ($statusCounts[$code] ?? 0),
-                ];
-            })
+        $statusCounts = (clone $orders)->statusCounts();
+        $tongDonHang = $statusCounts->sum();
+        $donDaGiao = $statusCounts->get('DaGiao', 0);
+        $donTheoTrangThai = collect(Order::STATUS_LABELS)
+            ->map(fn ($label, $status) => [
+                'label' => $label,
+                'count' => $statusCounts->get($status, 0),
+            ])
             ->values()
             ->all();
 
-        // 9. Doanh thu theo ngày
-        $doanhThuTheoNgay = (clone $soldDetails)
-            ->selectRaw(
-                'DATE(dh.NgayDat) as ngay,
-                 SUM(ct.ThanhTien) as tong_tien'
-            )
-            ->groupByRaw('DATE(dh.NgayDat)')
+        $otherCount = $statusCounts->except(array_keys(Order::STATUS_LABELS))->sum();
+        if ($otherCount > 0) {
+            $donTheoTrangThai[] = ['label' => 'Trạng thái khác', 'count' => $otherCount];
+        }
+
+        $deliveredOrders = (clone $orders)->where('donhang.TrangThai', 'DaGiao');
+        $doanhThuTheoNgay = (clone $deliveredOrders)->toBase()
+            ->selectRaw('DATE(NgayDat) as ngay, SUM(COALESCE(TienHang, 0) + COALESCE(PhiVanChuyen, 0)) as tong_tien')
+            ->groupByRaw('DATE(NgayDat)')
             ->orderBy('ngay')
             ->get();
+        $tongDoanhThu = $doanhThuTheoNgay->sum('tong_tien');
 
-        // 10. Top 5 sản phẩm bán chạy
-        // Lấy tên sản phẩm thông qua quan hệ biến thể
-        $sanPhamBanChay = (clone $soldDetails)
-            ->join(
-                'chitietsanpham as ctsp',
-                'ctsp.MaChiTietSP',
-                '=',
-                'ct.MaChiTietSP'
-            )
-            ->join(
-                'sanpham as sp',
-                'sp.MaSanPham',
-                '=',
-                'ctsp.MaSanPham'
-            )
-            ->select(
-                'sp.MaSanPham',
-                'sp.TenSanPham'
-            )
-            ->selectRaw(
-                'SUM(ct.SoLuong) as so_luong_ban'
-            )
-            ->groupBy(
-                'sp.MaSanPham',
-                'sp.TenSanPham'
-            )
+        $soldDetails = $deliveredOrders->toBase()->join(
+            'chitietdonhang as ct', 'ct.MaDonHang', '=', 'donhang.MaDonHang'
+        );
+        $soSanPhamDaBan = (clone $soldDetails)->sum('ct.SoLuong');
+
+        $sanPhamBanChay = $soldDetails
+            ->join('chitietsanpham as ctsp', 'ctsp.MaChiTietSP', '=', 'ct.MaChiTietSP')
+            ->join('sanpham as sp', 'sp.MaSanPham', '=', 'ctsp.MaSanPham')
+            ->select('sp.MaSanPham', 'sp.TenSanPham')
+            ->selectRaw('SUM(ct.SoLuong) as so_luong_ban')
+            ->groupBy('sp.MaSanPham', 'sp.TenSanPham')
             ->orderByDesc('so_luong_ban')
+            ->orderBy('sp.MaSanPham')
             ->limit(5)
             ->get();
 

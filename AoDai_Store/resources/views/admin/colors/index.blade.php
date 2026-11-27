@@ -115,7 +115,7 @@
                                     style="background-color: {{ preg_match('/^#[0-9A-Fa-f]{6}$/', $item->MaHex ?? '') ? $item->MaHex : '#FFFFFF' }}">
                                 </span>
 
-                                <span class="text-[10px] text-stone-500 font-mono">
+                                <span class="text-[10px] text-stone-500">
                                     {{ $item->MaHex ?: 'Chưa có mã HEX' }}
                                 </span>
 
@@ -171,73 +171,28 @@
         </table>
         </div>
 
+        @if($colors->hasPages())
+            <div class="px-4 py-3 border-t border-red-100 bg-red-50">
+                {{ $colors->links('pagination::tailwind') }}
+            </div>
+        @endif
     </div>
 
 </div>
 
-{{-- SWEETALERT --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    @if(session('success'))
-        Swal.fire({
-            icon: 'success',
-            title: '<span class="serif text-2xl">Thành công!</span>',
-            text: @json(session('success')),
-            timer: 2000,
-            showConfirmButton: false,
-            customClass: {
-                popup: 'glass-popup'
-            }
-        });
-    @endif
-
-    @if(session('error'))
-        Swal.fire({
-            icon: 'error',
-            title: '<span class="serif text-2xl text-red-800">Thông báo lỗi</span>',
-            text: @json(session('error')),
-            confirmButtonText: 'Đóng',
-            buttonsStyling: false,
-            customClass: {
-                popup: 'glass-popup',
-                confirmButton: 'btn-delete-confirm'
-            }
-        });
-    @endif
-
     // XÁC NHẬN XÓA MỀM
     function confirmDeleteColor(id, name) {
 
-        Swal.fire({
-            title: '<span class="serif">Xác nhận xóa bỏ</span>',
+        confirmNotification({
+            title: 'Xác nhận xóa bỏ',
 
-            html: `
-                <div class="mt-3 text-stone-500 text-sm">
-                    Màu sắc
-                    <b class="text-stone-900">"${escapeHtml(name)}"</b>
-                    sẽ được chuyển vào trạng thái đã xóa.
-                    <br>
-                    <span class="text-red-600 font-bold">
-                        Dữ liệu vẫn được lưu trong hệ thống.
-                    </span>
-                </div>
-            `,
+            text: `Màu sắc "${name}" sẽ được chuyển vào trạng thái đã xóa. Dữ liệu vẫn được lưu trong hệ thống.`,
 
             icon: 'warning',
-            showCancelButton: true,
             confirmButtonText: 'Đồng ý xóa',
             cancelButtonText: 'Hủy bỏ',
-            buttonsStyling: false,
-
-            customClass: {
-                popup: 'glass-popup',
-                confirmButton: 'btn-delete-confirm',
-                cancelButton: 'btn-delete-cancel'
-            },
-
-            reverseButtons: true
-
         }).then(result => {
 
             if (result.isConfirmed) {
@@ -259,52 +214,7 @@
         });
     }
 
-    function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, function(char) {
-            return {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            }[char];
-        });
-    }
 </script>
-
-<style>
-    .serif {
-        font-family: 'Playfair Display', serif;
-    }
-
-    .glass-popup {
-        background: rgba(255, 255, 255, 0.95) !important;
-        backdrop-filter: blur(10px);
-        border-radius: 24px !important;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
-    }
-
-    .btn-delete-confirm {
-        background-color: #991b1b !important;
-        color: white !important;
-        padding: 10px 25px !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        font-size: 11px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-left: 10px;
-    }
-
-    .btn-delete-cancel {
-        background-color: #f3f4f6 !important;
-        color: #4b5563 !important;
-        padding: 10px 25px !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        font-size: 11px !important;
-    }
-</style>
 
 <style>
     .colors-page { min-width: 0; }

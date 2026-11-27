@@ -26,7 +26,7 @@ class AdminCategoryController extends Controller
         }
 
         $categories = $query->orderByDesc('MaDanhMuc')
-            ->paginate(8)
+            ->paginate(10)
             ->withQueryString();
 
         return view('admin.categories.index', compact('categories'));

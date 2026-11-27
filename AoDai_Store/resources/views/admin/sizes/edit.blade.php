@@ -18,18 +18,6 @@
         </a>
     </div>
 
-    {{-- THÔNG BÁO LỖI --}}
-    @if($errors->any())
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs">
-            <div class="font-bold mb-2"><i class="fas fa-exclamation-circle mr-1"></i>Vui lòng kiểm tra lại thông tin:</div>
-            <ul class="list-disc pl-5 space-y-1">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     {{-- FORM CHỈNH SỬA --}}
     <div class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
         <div class="px-6 py-4 bg-red-50 border-b border-red-100">
@@ -90,7 +78,6 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('update-form');
@@ -100,25 +87,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (confirmed || !form.checkValidity()) return;
         event.preventDefault();
 
-        if (typeof Swal === 'undefined') {
-            if (window.confirm('Bạn có chắc chắn muốn lưu thay đổi kích cỡ không?')) {
-                confirmed = true;
-                form.requestSubmit();
-            }
-            return;
-        }
-
-        Swal.fire({
+        confirmNotification({
             title: 'Xác nhận cập nhật',
             text: 'Bạn có chắc chắn muốn lưu thay đổi cho kích cỡ này không?',
             icon: 'question',
-            showCancelButton: true,
             confirmButtonText: 'Lưu thay đổi',
             cancelButtonText: 'Hủy bỏ',
-            confirmButtonColor: '#991b1b',
-            cancelButtonColor: '#78716c',
-            reverseButtons: true,
-            customClass: { popup: 'size-edit-popup' }
         }).then(function (result) {
             if (result.isConfirmed) {
                 confirmed = true;
@@ -128,11 +102,4 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-<style>
-.size-edit-popup {
-    background: rgba(255,255,255,.96) !important;
-    border-radius: 24px !important;
-    box-shadow: 0 20px 40px rgba(0,0,0,.1) !important;
-}
-</style>
 @endsection

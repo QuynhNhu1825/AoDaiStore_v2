@@ -21,17 +21,6 @@
         </a>
     </div>
 
-    @if($errors->any())
-        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-xs" role="alert">
-            <p class="font-bold mb-2"><i class="fas fa-exclamation-circle mr-1"></i> Vui lòng kiểm tra thông tin:</p>
-            <ul class="list-disc pl-5 space-y-1">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <div class="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
         <div class="px-5 sm:px-7 py-5 bg-red-50 border-b border-red-100">
             <h2 class="font-bold text-red-900 text-sm uppercase tracking-wide">Thông tin tài khoản</h2>
@@ -114,22 +103,17 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.getElementById('account-edit-form').addEventListener('submit', function (event) {
         if (!this.checkValidity()) return;
         event.preventDefault();
         const form = this;
-        Swal.fire({
+        confirmNotification({
             title: 'Xác nhận cập nhật',
             text: 'Cậu có chắc muốn lưu các thay đổi cho tài khoản này?',
             icon: 'question',
-            showCancelButton: true,
             confirmButtonText: 'Lưu thay đổi',
             cancelButtonText: 'Hủy bỏ',
-            confirmButtonColor: '#991b1b',
-            cancelButtonColor: '#78716c',
-            reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) HTMLFormElement.prototype.submit.call(form);
         });

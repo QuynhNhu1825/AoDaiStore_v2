@@ -25,28 +25,6 @@
     </div>
 
 
-    {{-- THÔNG BÁO LỖI --}}
-    @if(session('error'))
-        <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
-            <i class="fas fa-exclamation-circle mr-2"></i>
-            {{ session('error') }}
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200">
-            <p class="font-bold text-red-700 text-sm mb-2">
-                Vui lòng kiểm tra lại thông tin:
-            </p>
-
-            <ul class="list-disc list-inside text-sm text-red-600 space-y-1">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
 
     <form action="{{ route('admin.products.store') }}"
           method="POST"
@@ -581,7 +559,7 @@
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
-            alert('Vui lòng chọn file hình ảnh hợp lệ!');
+            showNotification({ icon: 'warning', title: 'Vui lòng chọn file hình ảnh hợp lệ!' });
             this.value = '';
             return;
         }

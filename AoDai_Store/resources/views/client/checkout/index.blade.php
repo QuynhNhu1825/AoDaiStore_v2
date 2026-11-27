@@ -16,23 +16,6 @@
             </p>
         </div>
 
-        @if ($errors->any())
-            <div class="mb-6 bg-red-100 border border-red-300 text-red-700 px-5 py-4 rounded-xl">
-                <strong class="font-bold">Vui lòng kiểm tra lại thông tin!</strong>
-                <ul class="list-disc ml-5 mt-2 text-sm">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="mb-6 bg-red-100 border border-red-300 text-red-700 px-5 py-4 rounded-xl">
-                {{ session('error') }}
-            </div>
-        @endif
-
         <form action="{{ route('order.store') }}" method="POST">
             @csrf
 
@@ -320,7 +303,7 @@ document.querySelector('form[action="{{ route('order.store') }}"]')
 
         if (parts.some(part => !part)) {
             event.preventDefault();
-            alert('Vui lòng nhập đầy đủ địa chỉ nhận hàng.');
+            showNotification({ icon: 'warning', title: 'Vui lòng nhập đầy đủ địa chỉ nhận hàng.' });
             return;
         }
 

@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    @include('partials.notifications')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -84,42 +85,6 @@
                 Hãy đăng ký để trải nghiệm dịch vụ
             </p>
         </div>
-
-        <!-- THÔNG BÁO THÀNH CÔNG -->
-        @if(session('success'))
-            <div id="successAlert"
-                 role="status"
-                 class="mb-4 rounded-xl bg-green-100
-                        text-green-700 px-4 py-3 text-sm">
-
-                <i class="fas fa-circle-check mr-1"></i>
-                {{ session('success') }}
-
-            </div>
-        @endif
-
-        <!-- THÔNG BÁO LỖI -->
-        @if($errors->any())
-            <div id="errorAlert"
-                 role="alert"
-                 class="mb-4 rounded-xl bg-red-100
-                        text-red-700 px-4 py-3 text-sm">
-
-                <div class="flex items-center gap-2 mb-2">
-                    <i class="fas fa-circle-exclamation"></i>
-                    <span class="font-semibold">
-                        Đăng ký chưa thành công
-                    </span>
-                </div>
-
-                <ul class="list-disc pl-5 space-y-1">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-
-            </div>
-        @endif
 
         <!-- FORM -->
         <form method="POST"
@@ -407,23 +372,6 @@
                         );
                     });
                 });
-
-            // THÔNG BÁO TỰ ẨN SAU 5 GIÂY
-            ['successAlert', 'errorAlert'].forEach(function (id) {
-                const alert = document.getElementById(id);
-
-                if (!alert) return;
-
-                setTimeout(function () {
-                    alert.style.transition = 'opacity 0.4s';
-                    alert.style.opacity = '0';
-
-                    setTimeout(function () {
-                        alert.remove();
-                    }, 400);
-
-                }, 5000);
-            });
 
         });
     </script>

@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class Order extends Model
 {
@@ -17,6 +19,14 @@ class Order extends Model
 
     const CREATED_AT = 'NgayDat';
     const UPDATED_AT = 'NgayCapNhat';
+
+    public const STATUS_LABELS = [
+        'ChoXacNhan' => 'Chờ xác nhận',
+        'DaXacNhan' => 'Đã xác nhận',
+        'DangGiao' => 'Đang giao',
+        'DaGiao' => 'Đã giao',
+        'DaHuy' => 'Đã hủy',
+    ];
 
     protected $fillable = [
         'MaTaiKhoan',
@@ -54,17 +64,20 @@ class Order extends Model
      */
     public function getTrangThaiTextAttribute()
     {
-        return match ($this->TrangThai) {
-            'ChoXacNhan' => 'Chờ xác nhận',
-            'DaXacNhan' => 'Đã xác nhận',
-            'DangGiao' => 'Đang giao',
-            'DaGiao' => 'Đã giao',
-            'DaHuy' => 'Đã hủy',
+        return self::STATUS_LABELS[$this->TrangThai] ?? match ($this->TrangThai) {
             'ChuaThanhToan' => 'Chưa thanh toán',
             'ChoXacNhanThanhToan' => 'Chờ xác nhận thanh toán',
             'DaThanhToan' => 'Đã thanh toán',
             default => $this->TrangThai,
         };
+    }
+
+    public function scopeStatusCounts(Builder $query): Collection
+    {
+        return $query->selectRaw('TrangThai, COUNT(*) as total')
+            ->groupBy('TrangThai')
+            ->pluck('total', 'TrangThai')
+            ->map(fn ($total) => (int) $total);
     }
 
     /**

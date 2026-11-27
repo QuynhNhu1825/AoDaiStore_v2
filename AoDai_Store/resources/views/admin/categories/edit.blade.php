@@ -19,18 +19,6 @@
         </a>
     </div>
 
-    {{-- THÔNG BÁO LỖI --}}
-    @if($errors->any())
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs" role="alert">
-            <div class="font-bold mb-2"><i class="fas fa-exclamation-circle mr-1"></i>Vui lòng kiểm tra lại thông tin:</div>
-            <ul class="list-disc pl-5 space-y-1">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     {{-- FORM CHỈNH SỬA --}}
     <div class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
         <div class="px-4 sm:px-6 py-4 bg-red-50 border-b border-red-100">
@@ -102,56 +90,19 @@
     </div>
 </div>
 
-{{-- SWEETALERT --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.getElementById('update-category-form').addEventListener('submit', async function (event) {
         if (!this.checkValidity()) return;
         event.preventDefault();
 
-        const result = await Swal.fire({
+        const result = await confirmNotification({
             title: 'Xác nhận cập nhật',
             text: 'Bạn có chắc chắn muốn lưu những thay đổi cho danh mục này không?',
             icon: 'question',
-            showCancelButton: true,
             confirmButtonText: 'Lưu thay đổi',
             cancelButtonText: 'Hủy bỏ',
-            buttonsStyling: false,
-            reverseButtons: true,
-            customClass: {
-                popup: 'glass-popup',
-                confirmButton: 'btn-save-confirm',
-                cancelButton: 'btn-save-cancel'
-            }
         });
         if (result.isConfirmed) this.submit();
     });
 </script>
-<style>
-    .glass-popup {
-        background: rgba(255,255,255,.96) !important;
-        backdrop-filter: blur(10px);
-        border-radius: 24px !important;
-        box-shadow: 0 20px 40px rgba(0,0,0,.1) !important;
-    }
-    .btn-save-confirm {
-        background-color: #991b1b !important;
-        color: #fff !important;
-        padding: 10px 25px !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        font-size: 11px !important;
-        text-transform: uppercase;
-        letter-spacing: .1em;
-        margin-left: 10px;
-    }
-    .btn-save-cancel {
-        background-color: #f3f4f6 !important;
-        color: #4b5563 !important;
-        padding: 10px 25px !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        font-size: 11px !important;
-    }
-</style>
 @endsection

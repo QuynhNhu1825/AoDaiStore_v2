@@ -4,90 +4,15 @@
 
 @section('content')
 
-@php
-    // Thống kê toàn bộ đánh giá, không phụ thuộc phân trang
-    $reviewStats = \Illuminate\Support\Facades\DB::table('danhgia')
-        ->selectRaw('COUNT(*) AS total')
-        ->selectRaw("SUM(CASE WHEN PhanHoi IS NULL OR TRIM(PhanHoi) = '' THEN 1 ELSE 0 END) AS unanswered")
-        ->selectRaw("SUM(CASE WHEN PhanHoi IS NOT NULL AND TRIM(PhanHoi) <> '' THEN 1 ELSE 0 END) AS answered")
-        ->first();
-
-    $reviewTotal = (int) ($reviewStats->total ?? 0);
-    $reviewUnanswered = (int) ($reviewStats->unanswered ?? 0);
-    $reviewAnswered = (int) ($reviewStats->answered ?? 0);
-@endphp
-
 <div class="w-full max-w-full min-w-0 space-y-4 admin-comments-page"
      id="full-container">
 
     {{-- ================= THỐNG KÊ ================= --}}
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
 
-        {{-- TỔNG ĐÁNH GIÁ --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-red-100
-                    p-3 sm:p-4 flex items-center gap-2 sm:gap-4 min-w-0">
-
-            <div class="shrink-0 w-9 h-9 sm:w-12 sm:h-12
-                        flex items-center justify-center
-                        bg-red-50 text-red-800 rounded-xl">
-                <i class="far fa-comment-dots text-sm sm:text-lg"></i>
-            </div>
-
-            <div class="min-w-0">
-                <p class="text-[9px] sm:text-[10px] text-stone-500
-                          uppercase tracking-wide font-bold leading-tight">
-                    Tổng đánh giá
-                </p>
-
-                <p class="text-lg sm:text-xl font-bold text-red-900 mt-1">
-                    {{ number_format($reviewTotal, 0, ',', '.') }}
-                </p>
-            </div>
-        </div>
-
-        {{-- CHƯA PHẢN HỒI --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-amber-100
-                    p-3 sm:p-4 flex items-center gap-2 sm:gap-4 min-w-0">
-
-            <div class="shrink-0 w-9 h-9 sm:w-12 sm:h-12
-                        flex items-center justify-center
-                        bg-amber-50 text-amber-700 rounded-xl">
-                <i class="far fa-comment text-sm sm:text-lg"></i>
-            </div>
-
-            <div class="min-w-0">
-                <p class="text-[9px] sm:text-[10px] text-stone-500
-                          uppercase tracking-wide font-bold leading-tight">
-                    Chưa phản hồi
-                </p>
-
-                <p class="text-lg sm:text-xl font-bold text-red-900 mt-1">
-                    {{ number_format($reviewUnanswered, 0, ',', '.') }}
-                </p>
-            </div>
-        </div>
-
-        {{-- ĐÃ PHẢN HỒI --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-green-100
-                    p-3 sm:p-4 flex items-center gap-2 sm:gap-4 min-w-0">
-
-            <div class="shrink-0 w-9 h-9 sm:w-12 sm:h-12
-                        flex items-center justify-center
-                        bg-green-50 text-green-700 rounded-xl">
-                <i class="fas fa-check-circle text-sm sm:text-lg"></i>
-            </div>
-
-            <div class="min-w-0">
-                <p class="text-[9px] sm:text-[10px] text-stone-500
-                          uppercase tracking-wide font-bold leading-tight">
-                    Đã phản hồi
-                </p>
-
-                <p class="text-lg sm:text-xl font-bold text-red-900 mt-1">
-                    {{ number_format($reviewAnswered, 0, ',', '.') }}
-                </p>
-            </div>
-        </div>
+        <x-admin.stat-card label="Tổng đánh giá" :value="$reviewTotal" icon="far fa-comment-dots" />
+        <x-admin.stat-card label="Chưa phản hồi" :value="$reviewUnanswered" icon="far fa-comment" color="amber" />
+        <x-admin.stat-card label="Đã phản hồi" :value="$reviewAnswered" icon="fas fa-circle-check" color="green" />
     </div>
 
     
@@ -211,9 +136,9 @@
          class="w-full max-w-full bg-white rounded-2xl
                 shadow-sm border border-red-100 overflow-hidden">
 
-        <div class="w-full min-w-0 overflow-hidden comments-table-wrap">
+        <div class="w-full min-w-0 overflow-x-auto comments-table-wrap">
 
-            <table class="comments-table w-full min-w-[1050px]
+            <table class="comments-table w-full min-w-0
                           table-fixed text-left border-collapse text-xs">
 
                 <thead>
@@ -515,8 +440,6 @@
     </div>
 </div>
 
-{{-- ================= SWEETALERT2 ================= --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     // Mở / đóng form phản hồi
@@ -542,24 +465,14 @@
 
         const form = event.currentTarget;
 
-        Swal.fire({
+        confirmNotification({
             title: options.title,
             text: options.text,
             icon: options.icon || 'question',
 
-            showCancelButton: true,
 
             confirmButtonText: options.confirmText,
             cancelButtonText: 'Quay lại',
-
-            confirmButtonColor: options.confirmColor || '#831c30',
-            cancelButtonColor: '#78716c',
-
-            reverseButtons: true,
-
-            customClass: {
-                popup: 'glass-popup'
-            }
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
@@ -576,7 +489,6 @@
             text: 'Đánh giá này sẽ không còn hiển thị cho khách hàng.',
             icon: 'warning',
             confirmText: 'Ẩn đánh giá',
-            confirmColor: '#991b1b'
         });
     }
 
@@ -587,57 +499,9 @@
             text: 'Đánh giá này sẽ được hiển thị lại cho khách hàng.',
             icon: 'question',
             confirmText: 'Hiển thị',
-            confirmColor: '#831c30'
         });
     }
-
-    // Toast thông báo thành công / thất bại
-    function showRatingToast(icon, title, message) {
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: icon,
-            title: title,
-            text: message,
-            showConfirmButton: false,
-            showCloseButton: true,
-            timer: 4000,
-            timerProgressBar: true,
-            customClass: {
-                popup: 'glass-popup'
-            },
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
-            }
-        });
-    }
-
-    @if(session('success'))
-        showRatingToast(
-            'success',
-            'Thao tác thành công',
-            @json(session('success'))
-        );
-    @endif
-
-    @if(session('error'))
-        showRatingToast(
-            'error',
-            'Thao tác thất bại',
-            @json(session('error'))
-        );
-    @endif
-
-    @if($errors->has('PhanHoi'))
-        showRatingToast(
-            'error',
-            'Không thể lưu phản hồi',
-            @json($errors->first('PhanHoi'))
-        );
-    @endif
 </script>
-
 
 <style>
     .admin-comments-page {
@@ -654,6 +518,8 @@
         box-shadow: 0 0 0 3px rgba(131, 28, 48, .08);
     }
 
+    .admin-comments-page #comment-table-container { min-width: 0; max-width: 100%; }
+
     .admin-comments-page .comments-table tbody tr {
         transition: background .2s ease;
     }
@@ -662,6 +528,7 @@
         width: 100%;
         min-width: 0;
         table-layout: fixed;
+        max-width: 100%;
     }
     .admin-comments-page .comments-table th,
     .admin-comments-page .comments-table td {
@@ -680,7 +547,16 @@
         box-sizing: border-box;
     }
     .admin-comments-page .comments-table td img { max-width: 100%; height: auto; }
-    .admin-comments-page .comments-table-wrap { max-width: 100%; overflow-x: hidden; }
+    .admin-comments-page .comments-table-wrap { max-width: 100%; overflow-x: auto; }
+    .admin-comments-page .comments-table td .whitespace-nowrap {
+        white-space: normal;
+    }
+    .admin-comments-page .comments-table td button {
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    .admin-comments-page .comments-table td button i { flex-shrink: 0; }
     @media (min-width: 768px) and (max-width: 1280px) {
         .admin-comments-page .comments-table th { font-size: 9px; letter-spacing: 0; }
         .admin-comments-page .comments-table td { font-size: 10px; }
@@ -750,7 +626,7 @@
         }
 
         .admin-comments-page .comments-table .comment-card td > * {
-            max-width: 63%;
+            max-width: calc(65% - 12px);
             min-width: 0;
             overflow-wrap: anywhere;
         }
@@ -816,15 +692,9 @@
 
         .admin-comments-page .comments-table
         .comment-card td > * {
-            max-width: 60%;
+            max-width: calc(62% - 12px);
         }
     }
 
-    /* Popup SweetAlert */
-    .glass-popup {
-        background: rgba(255, 255, 255, .98) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, .12) !important;
-    }
 </style>
 @endsection

@@ -47,19 +47,6 @@
         </div>
 
 
-        @if(session('success'))
-            <div id="success-alert" role="alert" class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg transition-opacity duration-500">{{ session('success') }}</div>
-        @endif
-
-        @if(session('error'))
-            <div id="error-alert"
-                 role="alert"
-                 class="mb-6 p-4 bg-red-50 border border-red-200
-                        text-red-700 rounded-lg transition-opacity duration-500">
-                {{ session('error') }}
-            </div>
-        @endif
-
         {{-- ================= QUAY LẠI ================= --}}
         <div class="mb-6">
             <a href="{{ route('home') }}"
@@ -156,57 +143,7 @@
                     </div>
 
                     
-                    {{-- Yêu cầu đang chờ duyệt: luôn hiển thị vì vẫn có hiệu lực --}}
-                    @if($order->TrangThaiYeuCauHuy === 'ChoDuyet')
-                        <div class="mx-4 sm:mx-6 my-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm flex items-start gap-3">
-                            <i class="fas fa-clock mt-0.5"></i>
-                            <div>
-                                <strong>Yêu cầu hủy đơn hàng đang chờ xét duyệt.</strong>
-                                <p class="mt-1">Đơn hàng chưa bị hủy. Cửa hàng sẽ cập nhật kết quả sau khi xem xét.</p>
-                                @if($order->NgayYeuCauHuy)
-                                    <p class="mt-1 text-xs">Gửi lúc: {{ \Carbon\Carbon::parse($order->NgayYeuCauHuy)->format('d/m/Y H:i') }}</p>
-                                @endif
-                            </div>
-                        </div>
-                    @elseif(in_array($order->TrangThaiYeuCauHuy, ['DaDuyet', 'TuChoi'], true))
-                        {{-- Kết quả xử lý: chỉ hiện nếu chưa bấm Đã hiểu trên trình duyệt này --}}
-                        <div class="cancel-result-notice hidden mx-4 sm:mx-6 my-4 p-4 rounded-xl border text-sm
-                            {{ $order->TrangThaiYeuCauHuy === 'DaDuyet'
-                                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                                : 'bg-stone-50 border-stone-200 text-stone-700' }}"
-                             data-user-id="{{ auth()->id() }}"
-                             data-order-id="{{ $order->MaDonHang }}"
-                             data-result="{{ $order->TrangThaiYeuCauHuy }}"
-                             data-reviewed-at="{{ $order->NgayXuLyYeuCauHuy ? \Carbon\Carbon::parse($order->NgayXuLyYeuCauHuy)->timestamp : '0' }}"
-                             role="status">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="flex items-start gap-3 min-w-0">
-                                    <i class="fas fa-info-circle mt-0.5 shrink-0"></i>
-                                    <div class="leading-relaxed">
-                                        <strong>Kết quả yêu cầu hủy đơn #{{ $order->MaDonHang }}</strong>
-                                        <p class="mt-1">
-                                            @if($order->TrangThaiYeuCauHuy === 'DaDuyet')
-                                                @if($order->PhuongThucThanhToan === 'vietqr' && $order->TrangThaiThanhToan === 'DaThanhToan')
-                                                    Yêu cầu hủy đã được chấp thuận. Đơn hàng đã được hủy. Số tiền đã thanh toán qua VietQR sẽ được cửa hàng hoàn trả thủ công trong vòng 1–2 ngày làm việc. Vui lòng kiểm tra tài khoản ngân hàng của bạn. Hệ thống không tự động chuyển tiền.
-                                                @else
-                                                    Yêu cầu hủy đã được chấp thuận. Đơn hàng đã được hủy thành công.
-                                                @endif
-                                            @elseif($orderStatus === 'DaGiao')
-                                                Yêu cầu hủy trước đó không được chấp thuận. Đơn hàng hiện đã được giao.
-                                            @elseif($orderStatus === 'DangGiao')
-                                                Yêu cầu hủy chưa được chấp thuận. Đơn hàng hiện đang được vận chuyển.
-                                            @else
-                                                Yêu cầu hủy chưa được chấp thuận. Đơn hàng tiếp tục được xử lý.
-                                            @endif
-                                        </p>
-                                    </div>
-                                </div>
-                                <button type="button" class="dismiss-cancel-notice shrink-0 px-3 py-1.5 rounded-lg border border-current/20 font-semibold hover:bg-white/70 transition" aria-label="Đánh dấu đã xem thông báo hủy đơn">
-                                    Đã hiểu
-                                </button>
-                            </div>
-                        </div>
-                    @endif
+                    @include('client.order.partials.cancellation-notice', ['orderStatus' => $orderStatus, 'spacing' => 'mx-4 sm:mx-6 my-4'])
 
                     {{-- ========== DANH SÁCH SẢN PHẨM ========== --}}
                     <div class="divide-y divide-stone-100">
@@ -594,54 +531,9 @@
 
 </section>
 
-{{-- ================= SWEETALERT2 ================= --}}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
-    // Chỉ hiển thị kết quả xét duyệt hủy một lần trên trình duyệt này.
-    // Khóa dùng chung với trang chi tiết đơn hàng.
-    document.querySelectorAll('.cancel-result-notice').forEach(function (notice) {
-        const key = [
-            'heritage_cancel_notice',
-            notice.dataset.userId,
-            notice.dataset.orderId,
-            notice.dataset.result,
-            notice.dataset.reviewedAt
-        ].join('_');
-
-        let seen = false;
-        try { seen = localStorage.getItem(key) === 'seen'; } catch (error) {}
-        if (seen) return;
-
-        notice.classList.remove('hidden');
-        const dismiss = notice.querySelector('.dismiss-cancel-notice');
-        if (!dismiss) return;
-        dismiss.addEventListener('click', function () {
-            try { localStorage.setItem(key, 'seen'); } catch (error) {}
-            notice.classList.add('hidden');
-        });
-    });
-
-
-    // Tự động ẩn thông báo sau 3 giây
-    ['success-alert', 'error-alert'].forEach(function (id) {
-
-        const alert = document.getElementById(id);
-
-        if (!alert) return;
-
-        setTimeout(function () {
-
-            alert.classList.add('opacity-0');
-
-            setTimeout(function () {
-                alert.remove();
-            }, 500);
-
-        }, 3000);
-    });
 
     // Xác nhận hủy đơn hàng
     document.querySelectorAll('.cancel-order-form')
@@ -651,13 +543,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 event.preventDefault();
 
-                Swal.fire({
+                confirmNotification({
                     title: form.dataset.request === '1' ? 'Gửi yêu cầu hủy?' : 'Xác nhận hủy đơn hàng?',
                     text: form.dataset.request === '1' ? 'Yêu cầu sẽ được gửi đến Admin xét duyệt. Đơn hàng chưa bị hủy ngay.' : 'Bạn có chắc chắn muốn hủy đơn hàng này?',
                     icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#991b1b',
-                    cancelButtonColor: '#78716c',
                     confirmButtonText: form.dataset.request === '1' ? 'Gửi yêu cầu' : 'Đồng ý hủy',
                     cancelButtonText: 'Quay lại'
                 }).then(function (result) {
@@ -678,13 +567,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 event.preventDefault();
 
-                Swal.fire({
+                confirmNotification({
                     title: 'Xác nhận đã nhận hàng?',
                     text: 'Bạn xác nhận đã nhận được đơn hàng này?',
                     icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#991b1b',
-                    cancelButtonColor: '#78716c',
                     confirmButtonText: 'Đã nhận hàng',
                     cancelButtonText: 'Quay lại'
                 }).then(function (result) {
@@ -705,16 +591,12 @@ document.querySelectorAll('.reorder-form')
 
             event.preventDefault();
 
-            Swal.fire({
+            confirmNotification({
                 title: 'Xác nhận mua lại?',
                 text: 'Sản phẩm sẽ được thêm vào giỏ hàng và chuyển đến trang xác nhận đơn hàng. Giá và tồn kho được tính theo thời điểm hiện tại.',
                 icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#991b1b',
-                cancelButtonColor: '#78716c',
                 confirmButtonText: 'Mua lại',
                 cancelButtonText: 'Quay lại',
-                reverseButtons: true
             }).then(function (result) {
 
                 if (result.isConfirmed) {

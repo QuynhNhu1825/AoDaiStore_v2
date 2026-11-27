@@ -20,6 +20,7 @@
 
     {{-- ==================== SWEETALERT2 ==================== --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @include('partials.notifications')
 
     <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -339,49 +340,6 @@
 
                     sessionStorage.removeItem(mergeLockKey);
                 }
-            });
-        </script>
-    @endif
-
-
-    {{-- ========================================================
-        THÔNG BÁO THÀNH CÔNG
-    ======================================================== --}}
-    @if(session('success'))
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Thành công!',
-                    text: @json(session('success')),
-
-                    confirmButtonText: 'Đóng',
-                    confirmButtonColor: '#991b1b',
-
-                    timer: 3500,
-                    timerProgressBar: true
-                });
-            });
-        </script>
-    @endif
-
-
-    {{-- ========================================================
-        THÔNG BÁO THẤT BẠI
-    ======================================================== --}}
-    @if(session('error'))
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Thao tác thất bại!',
-                    text: @json(session('error')),
-
-                    confirmButtonText: 'Đóng',
-                    confirmButtonColor: '#991b1b'
-                });
             });
         </script>
     @endif
