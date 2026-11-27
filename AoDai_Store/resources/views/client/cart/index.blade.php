@@ -407,8 +407,7 @@
                         inputField.val(response.new_qty);
                         showNotification({
                             icon: 'success',
-                            title: 'Đã cập nhật số lượng',
-                            timer: 2000
+                            title: 'Đã cập nhật số lượng'
                         }).then(() => location.reload());
                     }
                 },

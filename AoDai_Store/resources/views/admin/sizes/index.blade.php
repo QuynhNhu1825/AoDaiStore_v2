@@ -245,8 +245,7 @@
                 showNotification({
                     icon: 'success',
                     title: 'Thành công!',
-                    text: result.value.message,
-                    timer: 1500
+                    text: result.value.message
                 }).then(() => {
                     window.location.reload();
                 });
