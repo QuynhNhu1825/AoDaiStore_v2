@@ -358,7 +358,7 @@
 
         {{-- PHÂN TRANG --}}
         @if($orders->hasPages())
-            <div class="px-4 py-3 border-t border-red-100 bg-red-50">
+            <div class="admin-pagination px-4 py-3 border-t border-red-100 bg-red-50">
                 {{ $orders->appends(request()->query())->links('pagination::tailwind') }}
             </div>
         @endif
